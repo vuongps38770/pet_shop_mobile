@@ -7,8 +7,10 @@ import { colors } from 'shared/theme/colors';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
-import {fetchCategorByType} from '../product.slice'
+import { fetchCategorByType } from '../product.slice'
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import CurvedUpIcon from 'assets/icons/curved-up.svg';
+import CurvedDownIcon from 'assets/icons/curved-down.svg';
 const screenWidth = Dimensions.get('window').width
 interface CategoryType {
   id: string;
@@ -22,17 +24,17 @@ const data: CategoryType[] = [
 ];
 
 
-export const AllCategoriesScreen= ()=> {
+export const AllCategoriesScreen = () => {
   const [selectedCategoryType, setSelectedCategoryType] = useState('DOG');
   const [currentCategoryId, setCurrentCategoryId] = useState<string>("");
   const dispatch = useDispatch<AppDispatch>()
   const navigation = useMainNavigation()
-  const categoryList = useSelector((state:RootState)=>state.product.categories)
+  const categoryList = useSelector((state: RootState) => state.product.categories)
 
 
 
   useEffect(() => {
-    dispatch(fetchCategorByType({type:selectedCategoryType}))
+    dispatch(fetchCategorByType({ type: selectedCategoryType }))
   }, [selectedCategoryType])
 
 
@@ -69,6 +71,7 @@ export const AllCategoriesScreen= ()=> {
 
 
   const renderItemCategory = ({ item }: { item: CategoryRespondDto }) => {
+    const isSelected = item._id === currentCategoryId;
     return (
       <View >
         <View style={{
@@ -79,10 +82,10 @@ export const AllCategoriesScreen= ()=> {
             flexDirection: 'row',
             padding: 15,
             borderWidth: 1,
-            borderColor: item._id == currentCategoryId ? colors.app.primary.main : '#ccc',
+            borderColor: isSelected ? colors.app.primary.main : '#ccc',
             borderRadius: 10,
-            shadowColor: item._id == currentCategoryId ? colors.app.primary.main : '#000',
-            backgroundColor:colors.grey['100'],
+            shadowColor: isSelected ? colors.app.primary.main : '#000',
+            backgroundColor: colors.grey['100'],
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 5,
@@ -108,9 +111,10 @@ export const AllCategoriesScreen= ()=> {
                 alignItems: 'flex-end',
                 justifyContent: 'center'
               }}>
-              <Image
-                source={require('../../../../../assets/icons/icondowarrow.png')}
-              />
+              {isSelected
+                ? <CurvedUpIcon width={20} height={20} fill={colors.app.primary.main} />
+                : <CurvedDownIcon width={20} height={20}  />
+              }
             </TouchableOpacity>
 
           </View>

@@ -6,6 +6,7 @@ import authReducer from '../features/auth/auth.slice'
 import homeSlice from '../features/home/homeSlice'
 import productSlice from '../features/product/product.slice'
 import cartSlice from '../features/cart/cart.slice'
+import favoriteReducer from '../features/favorite/favorite.slice'
 
 
 
@@ -14,7 +15,8 @@ export const store = configureStore({
     auth:authReducer,
     home:homeSlice,
     product:productSlice,
-    cart:cartSlice
+    cart:cartSlice,
+    favorite: favoriteReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

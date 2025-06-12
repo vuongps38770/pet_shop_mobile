@@ -36,6 +36,8 @@ const CartScreen = () => {
     acc[item.product_id].push(item);
     return acc;
   }, {} as { [productId: string]: typeof items });
+
+  
   const productIds = Object.keys(groupedItems);
 
   // Tính tổng tiền chỉ các item được chọn

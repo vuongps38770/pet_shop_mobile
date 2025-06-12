@@ -14,6 +14,7 @@ import { assets } from 'shared/theme/assets';
 import { colors } from 'shared/theme/colors';
 import { logOut,checkPhone } from '../../auth/auth.slice'
 import AppModal from "shared/components/modals/AppModal";
+import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 
 const ProfileScreen = () => {
   const groupedMenuItems = [
@@ -68,7 +69,7 @@ const ProfileScreen = () => {
   ];
   const [isModalVisible,setIsModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
-
+  const navigator = useMainNavigation();
   const handleLogout = () => {
     setIsModalVisible(true);
   };
@@ -106,6 +107,9 @@ const ProfileScreen = () => {
             onPress={()=>{
               if(item.id=="7"){
                 handleLogout()
+              }
+              if(item.id=="4"){
+                navigator.navigate("FavouriteScreen")
               }
             }}>
               <View

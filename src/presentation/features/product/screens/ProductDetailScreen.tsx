@@ -34,6 +34,10 @@ import { AppDispatch, RootState } from 'src/presentation/store/store';
 import { fetchProductDetail } from '../product.slice'
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { addToCart, resetStatus } from 'src/presentation/features/cart/cart.slice';
+import { addToFavorite, removeFromFavorite } from '../../favorite/favorite.slice';
+import { HeartAnimatedIcon } from 'shared/components/HeartAnimatedIcon';
+import { debounce } from 'lodash';
+
 const screenWidth = Dimensions.get('window').width;
 
 
@@ -50,18 +54,19 @@ const ProductDetailScreen = () => {
   const { items, addToCartStatus } = useSelector((state: RootState) => state.cart)
   const [isExistedInCart, setIsExistedInCart] = useState(false);
 
+  const { addToFavoriteStatus } = useSelector((state: RootState) => state.favorite)
   // Ref để kiểm soát việc hiển thị toast chỉ sau lần render đầu tiên
   const isFirstRenderForAddToCartStatus = useRef(true);
 
   const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([])
-
+  const [localFavorite, setLocalFavorite] = useState<boolean | null>(null);
   // Thêm hàm renderAddToCartButton
   const renderAddToCartButton = () => {
     // Nếu không có group, chỉ có 1 variant thì lấy luôn variant đầu tiên
     const noGroup = !product?.variantGroups || product?.variantGroups.length === 0;
     const autoVariant = noGroup && product?.variants && product.variants.length > 0 ? product.variants[0] : undefined;
     const needSelectVariant = !matchedVariant && !autoVariant;
-    const isProductUnactivated= !product?.isActivate
+    const isProductUnactivated = !product?.isActivate
     /**todo: sau này thêm check ngừng kinh doanh */
     // if(isProductUnactivated){
     //   return (
@@ -113,10 +118,10 @@ const ProductDetailScreen = () => {
       );
     }
 
-    
-    
-  };
 
+
+  };
+  const { favoriteIds } = useSelector((state: RootState) => state.favorite)
 
 
   const matchedVariant = product?.variants.find(variant => {
@@ -189,7 +194,39 @@ const ProductDetailScreen = () => {
 
 
 
-  if (!product|| isFetching) {
+
+
+  useEffect(() => {
+    console.log("addToFavoriteStatus", addToFavoriteStatus);
+    console.log("favoriteIds", favoriteIds);
+
+  }, [addToFavoriteStatus]);
+  const handleFavorite = debounce((isFavorite, productId) => {
+    setLocalFavorite(!isFavorite);
+    console.log("handleFavorite", isFavorite, productId);
+
+    if (!isFavorite) {
+      dispatch(addToFavorite({ productId }));
+    } else {
+      dispatch(removeFromFavorite(productId));
+    }
+  }, 300);
+
+
+
+
+  useEffect(() => {
+    if (product) {
+      setLocalFavorite(favoriteIds.includes(product._id));
+    }
+  }, [favoriteIds, product?._id]);
+
+
+
+
+
+
+  if (!product || isFetching) {
     if (Platform.OS === 'web') {
       return (
         <View style={{ flex: 1, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }}>
@@ -217,8 +254,14 @@ const ProductDetailScreen = () => {
           <TouchableOpacity style={styles.backButton} onPress={() => mainNav.goBack()}>
             <Image source={assets.icons.back} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.heartButton}>
-            <Image source={assets.icons.details.heartinactive} />
+          <TouchableOpacity style={styles.heartButton} onPress={() => dispatch(addToFavorite({ productId: product._id }))}>
+            <HeartAnimatedIcon
+              isFavorite={favoriteIds.includes(product._id)}
+              /** debounce */
+              onPress={() => {
+                handleFavorite(favoriteIds.includes(product._id), product._id);
+              }}
+            />
           </TouchableOpacity>
         </View>
 

@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   Keyboard,
   RefreshControl,
+  Pressable,
 } from 'react-native';
 import { colors } from 'shared/theme/colors';
 import { assets } from 'shared/theme/assets';
@@ -22,6 +23,10 @@ import { Fonts } from 'shared/theme/fonts';
 import ProductCard from 'shared/components/flat-list-items/ProductCard'
 import HomeLogo from 'assets/images/logo.svg'
 import PawIcon from 'assets/icons/paw-icon.svg'
+import NotifiIcon from 'assets/icons/bell.svg'
+import CategoryIcon from 'assets/icons/category-svgrepo-com.svg'
+
+
 const HomeScreen = () => {
   const mainNav = useMainNavigation()
   const dispatch = useDispatch<AppDispatch>()
@@ -101,25 +106,18 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => mainNav.navigate('Notification')}>
-            <Image
-              source={assets.icons.homeScreen.bell}
+          <Pressable onPress={() => mainNav.navigate('Notification')}>
+            <View
               style={styles.headerIcon}
-
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => mainNav.navigate('AllCategoriesScreen')}>
-            <Image
-              source={assets.icons.homeScreen.bell}
-              style={styles.headerIcon}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => mainNav.navigate('CartScreen')}>
-            <Image
-              source={assets.icons.homeScreen.cart}
-              style={styles.headerIcon}
-            />
-          </TouchableOpacity>
+            >
+              <NotifiIcon width={25} height={25}/>
+            </View>
+          </Pressable>
+          <Pressable onPress={() => mainNav.navigate('AllCategoriesScreen')}>
+            <View style={styles.headerIcon}>
+              <CategoryIcon width={25} height={25}/>
+            </View>
+          </Pressable>
         </View>
       </Animated.View>
 
@@ -258,9 +256,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   headerIcon: {
-    width: 40,
-    height: 40,
-
+    padding: 10,
+    backgroundColor: colors.grey[400],
+    borderRadius: 50,
+    shadowColor: colors.black,
+    shadowOpacity: 0.1,
+    elevation: 4,
+    shadowRadius: 4,
   },
   searchContainer: {
     flexDirection: 'row',

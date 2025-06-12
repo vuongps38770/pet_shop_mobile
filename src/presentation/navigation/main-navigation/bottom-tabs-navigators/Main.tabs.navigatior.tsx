@@ -10,6 +10,8 @@ import CartScreen from "src/presentation/features/cart/screens/CartScreen";
 
 import HomeIcon from 'assets/icons/home.svg'
 import UserIcon from 'assets/icons/user.svg'
+import CartIcon from 'assets/icons/cart.svg'
+import SearchIcon from 'assets/icons/Search.svg'
 
 
 
@@ -18,7 +20,7 @@ const TabNavigator = () => {
     HomeTab: "Trang Chủ",
     SearchTab: "Loại",
     CartTab: "Giỏ hàng",
-    ProflieTab: "Cá nhân",
+    ProfileTab: "Cá nhân",
   };
 
   const Tab = createBottomTabNavigator<MainBottomTabParamList>();
@@ -30,16 +32,16 @@ const TabNavigator = () => {
         style={focused ? { transform: [{ translateY: animationRef }] } : {}}
       >
         {routeName === "HomeTab" && (
-          <HomeIcon width={28} height={28} color={colors.app.primary.main} fill={focused ? colors.white : colors.black} />
+          <HomeIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
         )}
         {routeName === "SearchTab" && (
-          <UserIcon width={28} height={28} fill={focused ? colors.white : colors.black} />
+          <SearchIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
         )}
         {routeName === "CartTab" &&
-          <UserIcon width={28} height={28} fill={focused ? colors.white : colors.black} />
+          <CartIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
         }
-        {routeName === "ProflieTab" &&
-          <UserIcon width={28} height={28} fill={focused ? colors.white : colors.black} />
+        {routeName === "ProfileTab" &&
+          <UserIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
         }
       </Animated.View>
     );
@@ -106,8 +108,10 @@ const TabNavigator = () => {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
+      <Tab.Screen name="SearchTab" component={ProfileScreen} />
       <Tab.Screen name="CartTab" component={CartScreen} />
-      <Tab.Screen name="ProflieTab" component={ProfileScreen} />
+      <Tab.Screen name="ProfileTab" component={ProfileScreen} />
+      
 
 
     </Tab.Navigator>
