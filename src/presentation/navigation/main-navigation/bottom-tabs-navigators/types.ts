@@ -4,6 +4,6 @@ export type MainBottomTabParamList = {
   HomeTab: undefined;
   SearchTab: undefined;
   CartTab: undefined;
-  ProflieTab: undefined;
+  ProfileTab: undefined;
 };
 export type MainBottomTabRouteName = keyof MainBottomTabParamList;

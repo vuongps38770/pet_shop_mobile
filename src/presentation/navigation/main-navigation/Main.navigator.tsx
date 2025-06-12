@@ -9,6 +9,8 @@ import { AppDispatch } from "src/presentation/store/store";
 import { useEffect } from "react";
 
 import { getCart } from "src/presentation/features/cart/cart.slice";
+import { getFavoriteListIds } from "src/presentation/features/favorite/favorite.slice";
+import FavoriteScreen from "src/presentation/features/favorite/screens/FavoriteScreen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -17,6 +19,7 @@ const MainNavigator = () => {
     const dispatch = useDispatch<AppDispatch>();
     useEffect(() => {
         dispatch(getCart());
+        dispatch(getFavoriteListIds());
     }, []);
     return (
         <Stack.Navigator screenOptions={{ animation: 'fade' }} >
@@ -40,6 +43,12 @@ const MainNavigator = () => {
             <Stack.Screen
                 name="AllCategoriesScreen"
                 component={AllCategoriesScreen}
+                options={{ headerShown: false }}
+            />
+
+            <Stack.Screen
+                name="FavouriteScreen"
+                component={FavoriteScreen}
                 options={{ headerShown: false }}
             />
 
