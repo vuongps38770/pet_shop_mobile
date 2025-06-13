@@ -24,10 +24,11 @@ const ProfileScreen = () => {
         title: "Personal Info",
         icon: assets.icons.profileScreen.user,
         color: colors.white,
+       
       },
       {
         id: "2",
-        title: "Addresses",
+        title: "Address",
         icon: assets.icons.profileScreen.adderss,
         color: colors.white,
       },
@@ -110,6 +111,9 @@ const ProfileScreen = () => {
               }
               if(item.id=="4"){
                 navigator.navigate("FavouriteScreen")
+              }
+              if (item.id == "2") {
+                navigator.navigate("NewAddressScreen");
               }
             }}>
               <View

@@ -7,6 +7,7 @@ import homeSlice from '../features/home/homeSlice'
 import productSlice from '../features/product/product.slice'
 import cartSlice from '../features/cart/cart.slice'
 import favoriteReducer from '../features/favorite/favorite.slice'
+import newAddressReducer from '../features/address/newaddress.slice'
 
 
 
@@ -16,7 +17,9 @@ export const store = configureStore({
     home:homeSlice,
     product:productSlice,
     cart:cartSlice,
-    favorite: favoriteReducer
+    favorite: favoriteReducer,
+    newAddress: newAddressReducer
+    
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

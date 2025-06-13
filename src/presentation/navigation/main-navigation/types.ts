@@ -13,6 +13,7 @@ export type MainStackParamList = {
   CartScreen: undefined;
   FavouriteScreen:undefined;
   AllCategoriesScreen:undefined,
-  ProductShow:{filter:FilterOptions, title:string},
+  ProductShow: { filter: FilterOptions, title: string },
+  NewAddressScreen: undefined,
   ScreenReviews: undefined;
 };
