@@ -15,4 +15,5 @@ export type MainStackParamList = {
   AllCategoriesScreen:undefined,
   ProductShow: { filter: FilterOptions, title: string },
   NewAddressScreen: undefined,
+  ScreenReviews: undefined;
 };
