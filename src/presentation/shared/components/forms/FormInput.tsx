@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TextInput, Text, StyleSheet } from "react-native";
+import { View, TextInput, Text, StyleSheet} from "react-native";
 import { LAYOUT, SPACING } from "../../theme/layout";
 
 interface FormInputProps {
@@ -18,6 +18,7 @@ interface FormInputProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   maxLength?: number;
+  inputWrapperStyle?: any;
 }
 
 export const FormInput = (props: FormInputProps) => {
@@ -46,6 +47,7 @@ export const FormInput = (props: FormInputProps) => {
       <View
         style={[
           styles.inputWrapper,
+          props.inputWrapperStyle,
           error && touched && styles.inputError,
           multiline && { height: numberOfLines * 24 },
         ]}
@@ -64,6 +66,7 @@ export const FormInput = (props: FormInputProps) => {
           multiline={multiline}
           numberOfLines={numberOfLines}
           maxLength={maxLength}
+
         />
 
         {rightIcon && <View style={styles.rightIcon}>{rightIcon}</View>}
@@ -89,6 +92,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#ccc",
+    borderBottomWidth: 2,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
