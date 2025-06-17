@@ -28,7 +28,7 @@ export const getFavoriteList = createAsyncThunk<
     { rejectValue: string }
 >('favorite/get-list', async (_, { rejectWithValue }) => {
     try {
-        const res = await axiosInstance.post('favorite/get-favorite-list');
+        const res = await axiosInstance.get('favorite/get-favorite-list');
         return res.data.data as ProductRespondSimplizeDto[];
     } catch (error: any) {
         return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');

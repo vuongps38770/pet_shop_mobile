@@ -12,17 +12,21 @@ import { getCart } from "src/presentation/features/cart/cart.slice";
 import { getFavoriteListIds } from "src/presentation/features/favorite/favorite.slice";
 import FavoriteScreen from "src/presentation/features/favorite/screens/FavoriteScreen";
 import { NewAddressScreen } from "src/presentation/features/address/screens/NewAddressScreen";
+import AddressPickScreen from "src/presentation/features/address/screens/AddressPickScreen";
+import AllAddressesScreen from "src/presentation/features/address/screens/AllAddressesScreen";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
 
 const MainNavigator = () => {
-    const dispatch = useDispatch<AppDispatch>();
-    useEffect(() => {
-        dispatch(getCart());
-        dispatch(getFavoriteListIds());
-    }, []);
-    return (
+  const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => {
+    dispatch(getCart());
+    dispatch(getFavoriteListIds());
+  }, []);
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
       <Stack.Navigator screenOptions={{ animation: "fade" }}>
         <Stack.Screen
           name="MainScreen"
@@ -57,8 +61,23 @@ const MainNavigator = () => {
           component={NewAddressScreen}
           options={{ headerShown: false }}
         />
+
+        <Stack.Screen
+          name="AddressPickScreen"
+          component={AddressPickScreen}
+          options={{ headerShown: false }}
+        />
+
+
+        <Stack.Screen
+          name="AllAddressesScreen"
+          component={AllAddressesScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
-    );
+    </SafeAreaView>
+
+  );
 }
 
 export default MainNavigator;
