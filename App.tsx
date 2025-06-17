@@ -1,21 +1,38 @@
 import React from 'react';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { AppNavigator } from './src/presentation/navigation/App.navigator';
 import { store } from 'src/presentation/store/store';
+import { AppNavigator } from 'src/presentation/navigation/App.navigator';
+import SplashScreen from 'src/presentation/shared/components/SplashScreen';
+import { useSplashScreen } from 'src/presentation/shared/hooks/useSplashScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaView } from 'react-native';
 
-export default function App() {
-  return (
-    /* todo: sau này thêm store */
-    <Provider store={store}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-        <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'transparent' }}>
-          <AppNavigator />
+const AppContent = () => {
+    const isReady = useSplashScreen(2500);
+
+    if (!isReady) {
+        return <SplashScreen />;
+    }
+    return (
+        <AppNavigator />
+    );
+};
+
+const App = () => {
+    return (
+
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1 }}>
+                <Provider store={store}>
+                    <AppContent />
+                </Provider>
+            </SafeAreaView>
         </GestureHandlerRootView>
 
-      </SafeAreaView>
-    </Provider>
-  );
-}
+
+
+    );
+};
+
+export default App;

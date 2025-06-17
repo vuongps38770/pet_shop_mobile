@@ -113,7 +113,7 @@ const ProfileScreen = () => {
                 navigator.navigate("FavouriteScreen")
               }
               if (item.id == "2") {
-                navigator.navigate("NewAddressScreen");
+                navigator.navigate("AllAddressesScreen");
               }
             }}>
               <View
