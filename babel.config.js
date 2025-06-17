@@ -3,6 +3,14 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
+      ['module:react-native-dotenv', {
+        moduleName: '@env',
+        path: '.env',
+        blocklist: null,
+        allowlist: null,
+        safe: false,
+        allowUndefined: true,
+      }],
       [
         'module-resolver',
         {
@@ -10,7 +18,7 @@ module.exports = function (api) {
           alias: {
 
             app: './src/app',
-            theme: './src/presentation/theme',
+            theme: './src/presentation/shared/theme',
             shared: './src/presentation/shared'
           },
         },
