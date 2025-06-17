@@ -10,7 +10,7 @@ module.exports = function (api) {
           alias: {
 
             app: './src/app',
-            theme: './src/presentation/theme',
+            theme: './src/presentation/shared/theme',
             shared: './src/presentation/shared'
           },
         },
