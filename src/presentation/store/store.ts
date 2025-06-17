@@ -7,7 +7,7 @@ import homeSlice from '../features/home/homeSlice'
 import productSlice from '../features/product/product.slice'
 import cartSlice from '../features/cart/cart.slice'
 import favoriteReducer from '../features/favorite/favorite.slice'
-import newAddressReducer from '../features/address/newaddress.slice'
+import newAddressReducer from '../features/address/address.slice'
 
 
 

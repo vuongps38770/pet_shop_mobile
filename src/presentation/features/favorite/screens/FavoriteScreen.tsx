@@ -47,10 +47,7 @@ const FavoriteScreen = () => {
                 <TouchableOpacity onPress={() => mainNav.goBack()} style={styles.backButton}>
                     <Image source={assets.icons.back} style={styles.backIcon} />
                 </TouchableOpacity>
-                <View style={styles.deliveryContainer}>
-                    <Text style={styles.deliverToText}>Deliver to</Text>
-                    <Text style={styles.addressText}>5033 Lakeway Ct</Text>
-                </View>
+                
             </View>
 
             {/* Search Bar */}
@@ -112,6 +109,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 15,
         paddingHorizontal: 10,
+        marginTop:10
     },
     backButton: {
         padding: 5,

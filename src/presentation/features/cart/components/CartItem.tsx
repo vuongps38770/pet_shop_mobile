@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { CartRespondDto } from '../../../dto/res/cart-respond.dto';
 import { colors } from '../../../shared/theme/colors';
 import { Checkbox } from 'react-native-paper';
@@ -17,63 +17,100 @@ interface CartItemProps {
 }
 
 const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease, onDecrease, onRemove, quantities }) => {
+    const swipeableRef = useRef<Swipeable>(null);
+    const translateX = useRef(new Animated.Value(0)).current;
+    const opacity = useRef(new Animated.Value(1)).current;
+
     const unitText = (item.groups || [])
         .map(g => `${g.name}: ${g.unit?.name || ''}`)
         .join(' - ');
     const quantity = quantities?.[item._id] ?? item.quantity;
 
+    const handleRemove = () => {
+        Animated.parallel([
+            Animated.timing(translateX, {
+                toValue: -500,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(opacity, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+        ]).start(() => {
+            onRemove(item._id);
+        });
+    };
+
     const renderRightActions = () => (
-        <TouchableOpacity style={styles.deleteButton} onPress={() => onRemove(item._id)}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleRemove}>
             <Text style={styles.deleteButtonText}>Xoá</Text>
         </TouchableOpacity>
     );
 
     return (
-        <Swipeable renderRightActions={renderRightActions}>
-            <View style={styles.rowContainer}>
-                <View style={styles.leftBlock}>
-                    <Checkbox
-                        status={checked ? 'checked' : 'unchecked'}
-                        onPress={() => onCheck(item._id)}
-                        color={colors.app.primary.main}
-                    />
-                </View>
-                <View style={styles.rightBlock}>
-                    <View style={styles.container2}>
-                        <Image source={{ uri: item.images[0] }} style={styles.image} />
-                        <View style={styles.quantityContainer}>
-                            <TouchableOpacity style={styles.button} onPress={() => onDecrease(item._id)}>
-                                <Text style={styles.buttonText}>-</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.quantityText}>{quantity.toString().padStart(2, '0')}</Text>
-                            <TouchableOpacity style={styles.button} onPress={() => onIncrease(item._id)}>
-                                <Text style={styles.buttonText}>+</Text>
-                            </TouchableOpacity>
+        <Animated.View style={[
+            styles.container,
+            {
+                transform: [{ translateX }],
+                opacity,
+            }
+        ]}>
+            <Swipeable
+                ref={swipeableRef}
+                renderRightActions={renderRightActions}
+                friction={2}
+                rightThreshold={40}
+                overshootRight={true}
+            >
+                <View style={styles.rowContainer}>
+                    <View style={styles.leftBlock}>
+                        <Checkbox
+                            status={checked ? 'checked' : 'unchecked'}
+                            onPress={() => onCheck(item._id)}
+                            color={colors.app.primary.main}
+                        />
+                    </View>
+                    <View style={styles.rightBlock}>
+                        <View style={styles.container2}>
+                            <Image source={{ uri: item.images[0] }} style={styles.image} />
+                            <View style={styles.quantityContainer}>
+                                <TouchableOpacity style={styles.button} onPress={() => onDecrease(item._id)}>
+                                    <Text style={styles.buttonText}>-</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.quantityText}>{quantity.toString().padStart(2, '0')}</Text>
+                                <TouchableOpacity style={styles.button} onPress={() => onIncrease(item._id)}>
+                                    <Text style={styles.buttonText}>+</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View style={styles.infoContainer}>
+                            <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
+                            <Text style={styles.unitText}>{unitText}</Text>
+                            <Text style={styles.price}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
                         </View>
                     </View>
-                    <View style={styles.infoContainer}>
-                        <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
-                        <Text style={styles.unitText}>{unitText}</Text>
-                        <Text style={styles.price}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
-                    </View>
                 </View>
-            </View>
-        </Swipeable>
+            </Swipeable>
+        </Animated.View>
     );
 };
 
 export default CartItem;
 
 const styles = StyleSheet.create({
+    container: {
+        marginVertical: 8,
+        marginHorizontal: 2,
+    },
     rowContainer: {
         flexDirection: 'row',
         backgroundColor: colors.white,
         borderRadius: 12,
         padding: 10,
-        marginVertical: 8,
         alignItems: 'center',
         elevation: 2,
-        marginHorizontal: 2,
     },
     leftBlock: {
         justifyContent: 'center',
@@ -147,7 +184,7 @@ const styles = StyleSheet.create({
         height: '90%',
         borderRadius: 10,
         marginRight: 8,
-        marginTop:12
+        marginTop: 12
     },
     deleteButtonText: {
         color: colors.white,
