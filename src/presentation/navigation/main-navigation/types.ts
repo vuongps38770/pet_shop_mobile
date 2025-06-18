@@ -17,5 +17,8 @@ export type MainStackParamList = {
   NewAddressScreen: undefined,
   ScreenReviews: undefined;
   AddressPickScreen:undefined
-  AllAddressesScreen:undefined
+  AllAddressesScreen: undefined
+  OrderScreen: undefined;
+  PendingScreen: undefined;
+
 };
