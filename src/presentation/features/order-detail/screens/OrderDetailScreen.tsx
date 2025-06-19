@@ -3,6 +3,9 @@ import React from 'react'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { OrderScreenTabParamList } from '../types/type';
 import { colors } from 'theme/colors';
+import AwaitingShippingScreen from './AwaitingShippingScreen';
+import DeliveredScreen from './DeliveredScreen';
+import CanceledScreen from './CanceledScreen';
 
 const Tab = createMaterialTopTabNavigator<OrderScreenTabParamList>();
 const OrderDetailScreen = () => {
@@ -42,15 +45,15 @@ const OrderDetailScreen = () => {
 
             <Tab.Screen name="AwaitingShipping"
                 options={{ tabBarLabel: 'Chờ giao hàng' }}
-                component={() => <View />} />
+                component={AwaitingShippingScreen} />
 
             <Tab.Screen name="Delivered"
                 options={{ tabBarLabel: 'Đã giao' }}
-                component={() => <View />} />
+                component={DeliveredScreen} />
 
             <Tab.Screen name="Canceled"
                 options={{ tabBarLabel: 'Đã huỷ' }}
-                component={() => <View />} />
+                component={CanceledScreen} />
         </Tab.Navigator>
     );
 }
