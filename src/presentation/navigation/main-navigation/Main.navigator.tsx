@@ -15,6 +15,9 @@ import { NewAddressScreen } from "src/presentation/features/address/screens/NewA
 import AddressPickScreen from "src/presentation/features/address/screens/AddressPickScreen";
 import AllAddressesScreen from "src/presentation/features/address/screens/AllAddressesScreen";
 import { SafeAreaView } from "react-native-safe-area-context";
+import OrderScreen from "src/presentation/features/order/screens/OrderScreen";
+import PendingScreen from "src/presentation/features/order/screens/PendingScreen";
+     
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -68,15 +71,24 @@ const MainNavigator = () => {
           options={{ headerShown: false }}
         />
 
-
         <Stack.Screen
           name="AllAddressesScreen"
           component={AllAddressesScreen}
           options={{ headerShown: false }}
         />
+
+        <Stack.Screen
+          name="OrderScreen"
+          component={OrderScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PendingScreen"
+          component={PendingScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </SafeAreaView>
-
   );
 }
 

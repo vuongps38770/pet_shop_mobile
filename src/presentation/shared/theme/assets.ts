@@ -57,6 +57,11 @@ export const assets = {
     },
     user: {
       back: require("../../../../assets/icons/back.png"),
+    },
+    orderScreen: {
+      momo: require("../../../../assets/icons/LogoMoMo.png"),
+      vnpay: require("../../../../assets/icons/vnpaylogo.png"),
+     
     }
   },
 
