@@ -3,6 +3,9 @@ import React from 'react'
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { OrderScreenTabParamList } from '../types/type';
 import { colors } from 'theme/colors';
+import WaitForPaymentScreen from './WaitForPaymentScreen';
+import AwaitingConfirmationScreen from './AwaitingConfirmationScreen';
+import AwaitingpickupScreen from './AwaitingpickupScreen';
 import AwaitingShippingScreen from './AwaitingShippingScreen';
 import DeliveredScreen from './DeliveredScreen';
 import CanceledScreen from './CanceledScreen';
@@ -33,15 +36,15 @@ const OrderDetailScreen = () => {
         >
             <Tab.Screen name="WaitForPayment"
                 options={{ tabBarLabel: 'Chờ thanh toán' }}
-                component={() => <View />} />
+                component={WaitForPaymentScreen} />
 
             <Tab.Screen name="AwaitingConfirm"
                 options={{ tabBarLabel: 'Chờ xác nhận' }}
-                component={() => <View />} />
+                component={AwaitingConfirmationScreen} />
 
             <Tab.Screen name="AwaitingPickup"
                 options={{ tabBarLabel: 'Chờ lấy hàng' }}
-                component={() => <View />} />
+                component={AwaitingpickupScreen} />
 
             <Tab.Screen name="AwaitingShipping"
                 options={{ tabBarLabel: 'Chờ giao hàng' }}
