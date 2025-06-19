@@ -19,5 +19,4 @@ export type MainStackParamList = {
   AddressPickScreen:undefined
   AllAddressesScreen:undefined
   ProfileDetail: undefined;
-  
 };
