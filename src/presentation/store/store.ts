@@ -13,7 +13,6 @@ import profileReducer from '../features/profile/profile.slice';
 
 
 
-
 export const store = configureStore({
   reducer: {
     auth:authReducer,

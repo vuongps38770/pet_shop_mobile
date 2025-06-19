@@ -34,7 +34,7 @@ const ProfileDetail = () => {
   useEffect(() => {
     dispatch(getUserInfo());
   }, [dispatch]);
-
+  
   useEffect(() => {
     if (user) {
       setEditName(user.name);

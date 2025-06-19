@@ -12,5 +12,4 @@ export type UserInfoRespondDto = {
 
     avatar: string;
 
-    
 }

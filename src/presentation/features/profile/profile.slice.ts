@@ -14,7 +14,6 @@ const initialState: ProfileState = {
   error: null,
 };
 
-// 👉 1. Lấy thông tin người dùng
 export const getUserInfo = createAsyncThunk<UserInfoRespondDto, void, { rejectValue: string }>(
   'user/getUserInfo',
   async (_, { rejectWithValue }) => {
@@ -27,7 +26,6 @@ export const getUserInfo = createAsyncThunk<UserInfoRespondDto, void, { rejectVa
   }
 );
 
-// 👉 2. Cập nhật avatar
 export const updateAvatar = createAsyncThunk<
   UserInfoRespondDto,
   { uri: string; type: string; name: string },
@@ -51,14 +49,12 @@ export const updateAvatar = createAsyncThunk<
   }
 });
 
-// 👉 3. Cập nhật thông tin người dùng
 export const updateProfile = createAsyncThunk<
   UserInfoRespondDto,
   Partial<Omit<UserInfoRespondDto, 'avatar' | 'createdAt'>>,
   { rejectValue: string }
 >('user/updateProfile', async (payload, { rejectWithValue }) => {
   try {
-    // SỬA LẠI endpoint TẠI ĐÂY
     const res = await axiosInstance.post('/users/update-info', payload);
 
     return res.data.data;
