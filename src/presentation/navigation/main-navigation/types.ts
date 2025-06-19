@@ -20,5 +20,4 @@ export type MainStackParamList = {
   AllAddressesScreen: undefined
   OrderScreen: undefined;
   PendingScreen: undefined;
-
 };
