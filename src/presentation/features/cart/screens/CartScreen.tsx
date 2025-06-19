@@ -6,14 +6,20 @@ import { getCart, addToCart, removeFromCart, setSelectedIds, selectAll, deselect
 import CartItem from '../components/CartItem';
 import { colors } from '../../../shared/theme/colors';
 import { PriceFormatter } from 'app/utils/priceFormatter';
+import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 
 const CartScreen = () => {
+  const navigation = useMainNavigation();
   const dispatch = useDispatch<AppDispatch>();
   const { items, selectedIds } = useSelector((state: RootState) => state.cart || []);
 
   // State lưu số lượng tạm thời để debounce
   const [quantities, setQuantities] = useState<{ [id: string]: number }>({});
   const debounceTimers = useRef<{ [id: string]: NodeJS.Timeout }>({});
+
+  const handleOder = () => {
+    navigation.navigate('OrderScreen');
+  }
 
   useEffect(() => {
     dispatch(getCart());
@@ -176,7 +182,7 @@ const CartScreen = () => {
           </View>
 
           {/* Nút thanh toán */}
-          <TouchableOpacity style={styles.payButton}>
+          <TouchableOpacity style={styles.payButton} onPress={handleOder}>
             <Text style={styles.payButtonText}>PROCEED PAY</Text>
           </TouchableOpacity>
         </>
