@@ -6,6 +6,7 @@ export type MainStackParamList = {
   Setting: undefined;
   Profile: undefined;
   User: undefined;
+  ProfileDetail:undefined;
   Addresses: undefined;
   ProductDetail: { productId?: string };
   CheckoutScreen: undefined;
@@ -20,4 +21,5 @@ export type MainStackParamList = {
   AllAddressesScreen: undefined
   OrderScreen: undefined;
   PendingScreen: undefined;
+  OrderDetail: undefined;
 };

@@ -4,21 +4,15 @@ import { blue } from 'react-native-reanimated/lib/typescript/Colors'
 import { Typography } from 'shared/components/Typography';
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { colors } from 'theme/colors';
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 
-type WaitForPaymentItemProps = {
-    order: {
-        _id: string,
-        name: string,
-        productCount: number,
-        totalPrice: number,
-        expiredAt: string, // ISO string
-        image: string,
-        attributes?: string, // VD: "Black, GPS + Cellular"
-        createdAt?: string, // ISO string
-    }
+interface WaitForPaymentItemProps {
+    order: OrderRespondDto;
+    onPress?: () => void;
 }
 
-const formatCountdown = (expiredAt: string) => {
+const formatCountdown = (expiredAt?: Date) => {
+    if (!expiredAt) return '--:--:--';
     const now = new Date().getTime();
     const expire = new Date(expiredAt).getTime();
     let diff = Math.max(0, Math.floor((expire - now) / 1000));
@@ -29,7 +23,8 @@ const formatCountdown = (expiredAt: string) => {
 }
 
 //giờ phút 
-const formatDateTime = (isoString: string) => {
+const formatDateTime = (isoString?: Date) => {
+    if (!isoString) return '';
     const date = new Date(isoString);
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')
         }/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')
@@ -37,37 +32,46 @@ const formatDateTime = (isoString: string) => {
 };
 
 
-const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order }) => {
-    const [countdown, setCountdown] = useState(formatCountdown(order.expiredAt));
+const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onPress }) => {
+    // Lấy thông tin sản phẩm đầu tiên
+    const firstItem = order.orderDetailItems[0];
+    const name = firstItem?.productName || '';
+    const image = firstItem?.image || '';
+    const productCount = order.orderDetailItems.length;
+    const attributes = firstItem?.variantName || '';
+    const expiredAt = order.expiredDate;
+    const createdAt = order.createdDate;
+
+    const [countdown, setCountdown] = useState(formatCountdown(expiredAt));
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setCountdown(formatCountdown(order.expiredAt));
+            setCountdown(formatCountdown(expiredAt));
         }, 1000);
         return () => clearInterval(timer);
-    }, [order.expiredAt]);
+    }, [expiredAt]);
 
     return (
-        <View style={styles.container}>
+        <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
             <View style={styles.headerRow}>
                 <View style={styles.dot} />
-                <Text style={styles.orderId}>ORDER #{order._id}</Text>
+                <Text style={styles.orderId}>ORDER #{order.sku}</Text>
                 <View style={{ flex: 1 }} />
                 <Text style={styles.date}>
-                    {order.createdAt ? formatDateTime(order.createdAt) : ''}
+                    {createdAt ? formatDateTime(createdAt) : ''}
                 </Text>
 
             </View>
             <View style={styles.itemcontainer}>
-                <Image source={{ uri: order.image }} style={styles.productImage} />
+                <Image source={{ uri: image }} style={styles.productImage} />
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text style={styles.productName}>{order.name}</Text>
-                    <Text style={styles.productAttr}>{order.attributes}</Text>
+                    <Text style={styles.productName}>{name}</Text>
+                    <Text style={styles.productAttr}>{attributes}</Text>
                     <Text style={styles.countdown}>Thời hạn thanh toán còn lại <Text style={{ color: '#2979FF' }}>{countdown}</Text></Text>
                 </View>
             </View>
             <View style={styles.itembox}>
-                <Text>x{order.productCount} Sản Phẩm</Text>
+                <Text>x{productCount} Sản Phẩm</Text>
                 <Text style={styles.price}>{PriceFormatter.formatPrice(order.totalPrice)}</Text>
             </View>
             <View style={styles.actionRow}>
@@ -78,7 +82,7 @@ const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order }) => {
                     <Text style={styles.payNowText}>Thanh Toán Ngay</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </TouchableOpacity>
     )
 }
 

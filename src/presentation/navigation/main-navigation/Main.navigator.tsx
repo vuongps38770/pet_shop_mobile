@@ -17,6 +17,8 @@ import AllAddressesScreen from "src/presentation/features/address/screens/AllAdd
 import { SafeAreaView } from "react-native-safe-area-context";
 import OrderScreen from "src/presentation/features/order/screens/OrderScreen";
 import PendingScreen from "src/presentation/features/order/screens/PendingScreen";
+import ProfileDetail from "src/presentation/features/profile/screens/ProfileDetail";
+import OrderDetailScreen from "src/presentation/features/order-detail/screens/OrderDetailScreen";
      
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
@@ -40,6 +42,11 @@ const MainNavigator = () => {
         <Stack.Screen
           name="ProductDetail"
           component={ProductDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ProfileDetail"
+          component={ProfileDetail}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -85,6 +92,11 @@ const MainNavigator = () => {
         <Stack.Screen
           name="PendingScreen"
           component={PendingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OrderDetail"
+          component={OrderDetailScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

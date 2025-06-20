@@ -5,19 +5,21 @@ import { RadioButton } from "react-native-paper";
 import { colors } from "shared/theme/colors";
 
 interface PaymentCardProps {
-  type: "vnpay" | "momo";
+  title:string;
   selected: boolean;
   onSelect: () => void;
   icon: any;
+  key:string
 }
 
 export const PaymentCard: React.FC<PaymentCardProps> = ({
-  type,
+  title,
   selected,
   onSelect,
   icon,
+  key
 }) => {
-  const label = type === "vnpay" ? "VNPAY" : "MOMO";
+
 
   return (
     <TouchableOpacity
@@ -33,11 +35,11 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
       <View style={styles.cardContent}>
         <Image source={icon} style={styles.cardLogo} />
         <View style={styles.cardInfo}>
-          <Text style={styles.cardType}>{label}</Text>
+          <Text style={styles.cardType}>{title}</Text>
           <Text style={styles.cardNumberWhite}>1501 **** **** 0001</Text>
         </View>
         <RadioButton
-          value={type}
+          value={key}
           status={selected ? "checked" : "unchecked"}
           onPress={onSelect}
           color={colors.app.primary.main}

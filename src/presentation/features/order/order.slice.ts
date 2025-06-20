@@ -1,37 +1,111 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { OrderItemDTO, OrderrespondDTO} from 'src/presentation/dto/res/order-respond';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import axiosInstance from 'app/config/axios';
+import { CalculateOrderPriceReqDto, OrderCreateReqDto, OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
+import { CalculateOrderPriceResDto, OrderRespondDto, PaymentType } from 'src/presentation/dto/res/order-respond.dto';
 
-const initialState: OrderrespondDTO = {
-  method: 'vnpay',
-  items: [],
-  subtotal: 0,
-  tax: 2,
-  delivery: 3,
-  total: 0,
-};
+type StateProps = {
+  order: CalculateOrderPriceResDto | null,
+  caculateOrderReq: CalculateOrderPriceReqDto | null,
+
+
+
+  shippingAddressId?: string;
+  orderItems?: OrderReqItem[];
+  voucherCode?: string;
+  totalClientPrice?: number;
+  paymentType?: PaymentType;
+
+
+  createOrderStatus: 'pending'|'failed'|'success'|'idle'
+}
+const initialState: StateProps = {
+  order: null,
+  caculateOrderReq: null,
+  createOrderStatus:'idle'
+}
+
+export const caculateOrder = createAsyncThunk<
+  CalculateOrderPriceResDto,
+  CalculateOrderPriceReqDto,
+  { rejectValue: string }>(
+    'order/calculate-price',
+    async (orderItemReqDto, { rejectWithValue }) => {
+      try {
+        const res = await axiosInstance.post(`order/calculate-price`, orderItemReqDto);
+        return res.data.data as CalculateOrderPriceResDto;
+      } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+      }
+    }
+  )
+
+
+export const createOrder = createAsyncThunk<
+  OrderRespondDto,
+  OrderCreateReqDto,
+  { rejectValue: string }>(
+    'order/create-order',
+    async (orderItemReqDto, { rejectWithValue }) => {
+      try {
+        const res = await axiosInstance.post(`order/create-order`, orderItemReqDto);
+        console.log(res.data);
+        
+        return res.data.data as OrderRespondDto;
+      } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+      }
+    }
+  )
 
 const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {
-    setOrderMethod: (state, action: PayloadAction<'vnpay' | 'momo'>) => {
-      state.method = action.payload;
-    },
-    setOrderItems: (state, action: PayloadAction<OrderItemDTO[]>) => {
-      state.items = action.payload;
-
-      // Tính subtotal
-      state.subtotal = action.payload.reduce(
-        (sum, item) => sum + item.promotionalPrice * item.quantity,
-        0
-      );
-
-      // Tính total
-      state.total = state.subtotal + state.tax + state.delivery;
-    },
     resetOrder: () => initialState,
+    setShippingAddressId(state, action: PayloadAction<string>) {
+      state.shippingAddressId = action.payload;
+    },
+    setOrderItems(state, action: PayloadAction<OrderReqItem[]>) {
+      state.orderItems = action.payload;
+    },
+    setVoucherCode(state, action: PayloadAction<string>) {
+      state.voucherCode = action.payload;
+    },
+    setTotalClientPrice(state, action: PayloadAction<number>) {
+      state.totalClientPrice = action.payload;
+    },
+    setPaymentType(state, action: PayloadAction<PaymentType>) {
+      state.paymentType = action.payload;
+    },
   },
+  extraReducers: (builder) => {
+    builder.addCase(caculateOrder.fulfilled, (state, action) => {
+      state.order = action.payload
+    })
+
+    builder.addCase(caculateOrder.rejected, (state, action) => {
+      console.log(action.payload);
+    })
+
+    builder.addCase(createOrder.rejected, (state, action) => {
+      state.createOrderStatus='failed'
+    })
+    builder.addCase(createOrder.pending, (state, action) => {
+      state.createOrderStatus='pending'
+    })
+    builder.addCase(createOrder.fulfilled, (state, action) => {
+      state.createOrderStatus='success'
+    })
+    
+  }
 });
 
-export const { setOrderMethod, setOrderItems, resetOrder } = orderSlice.actions;
+export const {
+  resetOrder,
+  setShippingAddressId,
+  setOrderItems,
+  setVoucherCode,
+  setTotalClientPrice,
+  setPaymentType,
+} = orderSlice.actions;
 export default orderSlice.reducer;

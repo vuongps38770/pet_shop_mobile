@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView, ToastAndroid, Pressable, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
 import { getCart, addToCart, removeFromCart, setSelectedIds, selectAll, deselectAll } from '../cart.slice';
@@ -7,7 +7,7 @@ import CartItem from '../components/CartItem';
 import { colors } from '../../../shared/theme/colors';
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
-
+const screenWidth = Dimensions.get('window').width
 const CartScreen = () => {
   const navigation = useMainNavigation();
   const dispatch = useDispatch<AppDispatch>();
@@ -43,7 +43,7 @@ const CartScreen = () => {
     return acc;
   }, {} as { [productId: string]: typeof items });
 
-  
+
   const productIds = Object.keys(groupedItems);
 
   // Tính tổng tiền chỉ các item được chọn
@@ -106,88 +106,96 @@ const CartScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 24 }}>
-      {/* Header */}
-      <Text style={styles.header}>Cart</Text>
+    <View style={styles.container}>
+      <ScrollView style={styles.insideContainer} contentContainerStyle={{ paddingBottom: 60 }}>
+        {/* Header */}
+        <Text style={styles.header}>Cart</Text>
 
-      {/* Nút chọn tất cả */}
-      {items.length > 0 && (
-        <TouchableOpacity style={styles.selectAllBtn} onPress={handleSelectAll}>
-          <Text style={{ color: colors.app.primary.main, fontWeight: 'bold' }}>
-            {selectedIds.length === items.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {/* Nếu giỏ hàng trống */}
-      {items.length === 0 ? (
-        <View style={styles.emptyCartContainer}>
-          {/* Có thể thay icon bằng hình ảnh hoặc icon vector */}
-          <Text style={styles.emptyCartIcon}>🛒</Text>
-          <Text style={styles.emptyCartText}>Giỏ hàng của bạn đang trống</Text>
-        </View>
-      ) : (
-        <View style={styles.limitCartContainer}>
-          {productIds.map(productId => (
-            <View key={productId} style={styles.productGroupBlock}>
-              {groupedItems[productId].map(item => (
-                <CartItem
-                  key={item._id}
-                  item={item}
-                  checked={selectedIds.includes(item._id)}
-                  onCheck={handleCheck}
-                  onIncrease={handleIncrease}
-                  onDecrease={handleDecrease}
-                  onRemove={handleRemove}
-                  quantities={quantities}
-                />
-              ))}
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Promo code */}
-      {items.length > 0 && (
-        <View style={styles.promoContainer}>
-          <TextInput
-            placeholder="Promo code"
-            style={styles.promoInput}
-            placeholderTextColor={colors.text.secondary}
-          />
-          <TouchableOpacity style={styles.promoButton}>
-            <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 20 }}>+</Text>
+        {/* Nút chọn tất cả */}
+        {items.length > 0 && (
+          <TouchableOpacity style={styles.selectAllBtn} onPress={handleSelectAll}>
+            <Text style={{ color: colors.app.primary.main, fontWeight: 'bold' }}>
+              {selectedIds.length === items.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+            </Text>
           </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {/* Tổng kết */}
-      {items.length > 0 && (
-        <>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(subtotal)} </Text>
+        {/* Nếu giỏ hàng trống */}
+        {items.length === 0 ? (
+          <View style={styles.emptyCartContainer}>
+            {/* Có thể thay icon bằng hình ảnh hoặc icon vector */}
+            <Text style={styles.emptyCartIcon}>🛒</Text>
+            <Text style={styles.emptyCartText}>Giỏ hàng của bạn đang trống</Text>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Tax and Services</Text>
-            <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(tax)} </Text>
+        ) : (
+          <View style={styles.limitCartContainer}>
+            {productIds.map(productId => (
+              <View key={productId} style={styles.productGroupBlock}>
+                {groupedItems[productId].map(item => (
+                  <CartItem
+                    key={item._id}
+                    item={item}
+                    checked={selectedIds.includes(item._id)}
+                    onCheck={handleCheck}
+                    onIncrease={handleIncrease}
+                    onDecrease={handleDecrease}
+                    onRemove={handleRemove}
+                    quantities={quantities}
+                  />
+                ))}
+              </View>
+            ))}
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Delivery</Text>
-            <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(delivery)} </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>Total</Text>
-            <Text style={[styles.summaryValue, { fontWeight: 'bold' }]}>{PriceFormatter.formatPrice(total)} </Text>
-          </View>
+        )}
 
-          {/* Nút thanh toán */}
+        {/* Promo code */}
+        {items.length > 0 && (
+          <View style={styles.promoContainer}>
+            <TextInput
+              placeholder="Promo code"
+              style={styles.promoInput}
+              placeholderTextColor={colors.text.secondary}
+            />
+            <TouchableOpacity style={styles.promoButton}>
+              <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 20 }}>+</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+
+      </ScrollView>
+      {/* Tổng kết*/}
+      {(selectedIds.length > 0 &&
+        <View style={styles.outterButton}>
           <TouchableOpacity style={styles.payButton} onPress={handleOder}>
             <Text style={styles.payButtonText}>PROCEED PAY</Text>
           </TouchableOpacity>
-        </>
+        </View>
+
+        // <>
+        //   <View style={styles.summaryRow}>
+        //     <Text style={styles.summaryLabel}>Subtotal</Text>
+        //     <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(subtotal)} </Text>
+        //   </View>
+        //   <View style={styles.summaryRow}>
+        //     <Text style={styles.summaryLabel}>Tax and Services</Text>
+        //     <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(tax)} </Text>
+        //   </View>
+        //   <View style={styles.summaryRow}>
+        //     <Text style={styles.summaryLabel}>Delivery</Text>
+        //     <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(delivery)} </Text>
+        //   </View>
+        //   <View style={styles.summaryRow}>
+        //     <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>Total</Text>
+        //     <Text style={[styles.summaryValue, { fontWeight: 'bold' }]}>{PriceFormatter.formatPrice(total)} </Text>
+        //   </View>
+
+
+
+        // </>
       )}
-    </ScrollView>
+    </View>
+
   );
 };
 
@@ -198,6 +206,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.default,
     padding: 16,
+    position: 'relative'
+  },
+  insideContainer: {
+    flex: 1,
   },
   header: {
     fontSize: 22,
@@ -270,12 +282,23 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: 12,
   },
+  outterButton: {
+    position: 'absolute',
+    paddingHorizontal: 14,
+    width: screenWidth,
+    left: 0,
+    bottom: 0,
+  },
   payButton: {
     backgroundColor: colors.app.primary.main,
     borderRadius: 12,
-    paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 18,
+    height: 50,
+    justifyContent: 'center',
+    width: '100%',
+    borderColor: colors.app.primary.darker,
+    borderWidth: 4,
+    marginBottom: 10
   },
   payButtonText: {
     color: colors.white,

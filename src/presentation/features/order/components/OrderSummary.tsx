@@ -6,14 +6,14 @@ import { colors } from "shared/theme/colors";
 
 interface OrderSummaryProps {
   subtotal: number;
-  tax: number;
+  tax?: number;
   delivery: number;
   total: number;
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
   subtotal,
-  tax,
+
   delivery,
   total,
 }) => (
@@ -24,10 +24,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
       <Text style={styles.label}>Subtotal</Text>
       <Text style={styles.value}>{PriceFormatter.formatPrice(subtotal)}</Text>
     </View>
-    <View style={styles.row}>
+    {/* <View style={styles.row}>
       <Text style={styles.label}>Tax and Services</Text>
       <Text style={styles.value}>{PriceFormatter.formatPrice(tax)}</Text>
-    </View>
+    </View> */}
     <View style={styles.row}>
       <Text style={styles.label}>Delivery</Text>
       <Text style={styles.value}>{PriceFormatter.formatPrice(delivery)}</Text>
