@@ -29,6 +29,8 @@ import { OrderReqItem } from "src/presentation/dto/req/order.req.dto";
 import { LoadingView } from "shared/components/LoadingView";
 import { PaymentType } from "src/presentation/dto/res/order-respond.dto";
 import { useNavigation } from '@react-navigation/native';
+import { removeFromCart } from "../../cart/cart.slice";
+import { showToast } from 'src/presentation/shared/utils/toast';
 
 const OrderScreen = () => {
   const navigation = useMainNavigation();
@@ -86,12 +88,20 @@ const OrderScreen = () => {
 
   useEffect(() => {
     if (createOrderStatus === 'success') {
+      let slectedIdsClone = selectedIds
+      for(let s in slectedIdsClone){
+        dispatch(removeFromCart(slectedIdsClone[s]))
+      }
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainScreen' }],
       });
+      showToast.success(
+        'Đặt hàng thành công!',
+        `Đã thanh toán ${PriceFormatter.formatPrice(totalClientPrice || 0)}`
+      );
     }
-  }, [createOrderStatus]);
+  }, [createOrderStatus, totalClientPrice]);
 
   const handlePay = () => {
     console.log({
@@ -335,6 +345,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     marginTop: 32,
+    marginBottom: 32,
     alignItems: "center",
   },
   buttonText: {

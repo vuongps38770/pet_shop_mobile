@@ -5,14 +5,17 @@ import { PriceFormatter } from 'app/utils/priceFormatter'
 
 type AwaitingConfirmationItemProps = {
     orderss: {
-        _id: string,
+        sku: string,
         name: string,
         productCount: number,
         totalPrice: number,
         image: string,
         attributes?: string,
         createdAt?: string,
-    }
+    },
+    onCancel?: () => void,
+    statusLabel?: string,
+    onPress?: () => void,
 }
 
 const formatDateTime = (isoString: string) => {
@@ -22,13 +25,14 @@ const formatDateTime = (isoString: string) => {
         }`;
 };
 
-const AwaitingConfirmationItem: React.FC<AwaitingConfirmationItemProps> = ({ orderss }) => {
+const AwaitingConfirmationItem: React.FC<AwaitingConfirmationItemProps> = ({ orderss, onCancel, statusLabel, onPress }) => {
+    const Wrapper = onPress ? TouchableOpacity : View;
     return (
-        <View style={styles.container}>
+        <Wrapper style={styles.container} onPress={onPress} activeOpacity={onPress ? 0.85 : undefined}>
             <View style={styles.headerRow}>
                 <View style={styles.dot} />
                 <Text style={styles.orderType}>ĐẶT HÀNG</Text>
-                <Text style={styles.orderId}>#{orderss._id}</Text>
+                <Text style={styles.orderId}>#{orderss.sku}</Text>
                 <View style={{ flex: 1 }} />
                 <Text style={styles.date}>
                     {orderss.createdAt ? formatDateTime(orderss.createdAt) : ''}
@@ -44,13 +48,15 @@ const AwaitingConfirmationItem: React.FC<AwaitingConfirmationItemProps> = ({ ord
                 </View>
             </View>
             <View style={styles.statusRow}>
-                <Text style={styles.statusText}>Đang chờ xác nhận</Text>
+                <Text style={styles.statusText}>{statusLabel || 'Đang chờ xác nhận'}</Text>
                 <Text style={styles.price}>{PriceFormatter.formatPrice(orderss.totalPrice)}</Text>
             </View>
-            {/* <TouchableOpacity>
-                <Text style={styles.contactText}>Liên hệ với người bán</Text>
-            </TouchableOpacity> */}
-        </View>
+            {onCancel && (
+                <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
+                    <Text style={styles.cancelBtnText}>Huỷ đơn hàng</Text>
+                </TouchableOpacity>
+            )}
+        </Wrapper>
     )
 }
 
@@ -136,10 +142,17 @@ const styles = StyleSheet.create({
         color: colors.black,
         textAlign: 'right',
     },
-    contactText: {
-        color: colors.app.primary.main,
-        fontSize: 15,
-        fontWeight: '500',
+    cancelBtn: {
+        backgroundColor: '#FF4D4F',
+        borderRadius: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        alignSelf: 'flex-end',
         marginTop: 4,
+    },
+    cancelBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 15,
     },
 })

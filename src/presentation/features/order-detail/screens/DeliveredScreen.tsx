@@ -1,65 +1,150 @@
-import React from 'react';
-import { StyleSheet, View, FlatList } from 'react-native';
-import DeliveredItem, { DeliveredOrder } from '../components/DeliveredItem';
-
-const deliveredOrders: DeliveredOrder[] = [
-  {
-    _id: '23859640',
-    createdAt: "2025-01-15T10:00:00.000Z",
-    productName: 'Giá đỡ máy tính bảng FlexiStand',
-    productDesc: 'Bạc, Có thể điều chỉnh',
-    quantity: 1,
-    totalPrice: 2999,
-    image: 'https://cdn.tgdd.vn/Products/Images/54/303949/tai-nghe-bluetooth-true-wireless-anker-soundcore-r50i-thumb-1-600x600.jpg',
-    deliveredDate: '13 tháng 6 năm 2025',
-    
-  },
-  {
-    _id: '23859641',
-    createdAt: "2025-01-15T10:00:00.000Z",
-    productName: 'Bàn phím Bluetooth SlimKey',
-    productDesc: 'Đen, Bluetooth 5.0',
-    quantity: 2,
-    totalPrice: 5998,
-    image: 'https://cdn.tgdd.vn/Products/Images/54/303949/tai-nghe-bluetooth-true-wireless-anker-soundcore-r50i-thumb-1-600x600.jpg',
-    deliveredDate: '15 tháng 6 năm 2025',
-   
-  },
-];
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, FlatList, Text, TouchableOpacity, Modal, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from 'src/presentation/store/store';
+import { fetchDeliveredOrders, updateOrderStatus, resetStatus } from '../slices/delivered.slice';
+import DeliveredItem from '../components/DeliveredItem';
+import OrderDetailModal from '../components/OrderDetailModal';
+import { LoadingView } from 'shared/components/LoadingView';
+import { OrderStatus } from 'app/types/OrderStatus';
+import AppModal from 'shared/components/modals/AppModal';
 
 const DeliveredScreen = () => {
-  const handleBuyAgain = (order: DeliveredOrder) => {
-    // Xử lý khi nhấn Mua lại
-    console.log('Buy again:', order._id);
+  const dispatch = useDispatch<AppDispatch>();
+  const { data, fetchStatus, fetchError, updateStatus, updateStatusError } = useSelector((state: RootState) => state.orderDetail.delivered);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [actionOrderId, setActionOrderId] = useState<string>('');
+
+  useEffect(() => {
+    dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (updateStatus === 'success') {
+      dispatch(resetStatus());
+      setModalVisible(false);
+      setConfirmModalVisible(false);
+      // Reload data
+      dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }));
+    }
+  }, [updateStatus, dispatch]);
+
+  const handleItemPress = (order: any) => {
+    setSelectedOrder(order);
+    setModalVisible(true);
   };
-  const handleWriteReview = (order: DeliveredOrder) => {
-    // Xử lý khi nhấn Viết Đánh giá
-    console.log('Write review:', order._id);
+
+  const handleConfirmReceived = (orderId: string) => {
+    setActionOrderId(orderId);
+    setConfirmModalVisible(true);
   };
+
+  const handleConfirmReceivedAction = () => {
+    dispatch(updateOrderStatus({ 
+      orderId: actionOrderId, 
+      nextStatus: OrderStatus.RECEIVED 
+    }));
+  };
+
+  const handleReview = (orderId: string) => {
+    // TODO: Navigate to review screen
+    Alert.alert('Thông báo', 'Chức năng đánh giá sẽ được phát triển sau');
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setSelectedOrder(null);
+  };
+
+  if (fetchStatus === 'loading') {
+    return <LoadingView />;
+  }
+
+  if (fetchStatus === 'failed') {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{fetchError}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }))}
+        >
+          <Text style={styles.retryButtonText}>Thử lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={deliveredOrders}
-        keyExtractor={item => item._id}
+        data={data?.data || []}
         renderItem={({ item }) => (
-          <DeliveredItem
+          <DeliveredItem 
             order={item}
-            onBuyAgain={handleBuyAgain}
-            onWriteReview={handleWriteReview}
+            onPress={() => handleItemPress(item)}
+            onConfirmReceived={handleConfirmReceived}
+            onReview={handleReview}
           />
         )}
-        contentContainerStyle={{ padding: 16 }}
+        keyExtractor={(item) => item._id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+      />
+
+      <OrderDetailModal
+        visible={modalVisible}
+        order={selectedOrder}
+        onClose={handleCloseModal}
+        statusColorMode="green"
+      />
+
+      <AppModal
+        visible={confirmModalVisible}
+        title="Xác nhận"
+        content="Bạn có chắc chắn muốn xác nhận đã nhận hàng?"
+        onPositivePress={handleConfirmReceivedAction}
+        onNegativePress={() => setConfirmModalVisible(false)}
+        positiveButtonText="Xác nhận"
+        negativeButtonText="Hủy"
+        onClose={() => setConfirmModalVisible(false)}
       />
     </View>
   );
 };
 
-export default DeliveredScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F5F5',
+  },
+  listContainer: {
+    padding: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#FFAF42',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
+
+export default DeliveredScreen;

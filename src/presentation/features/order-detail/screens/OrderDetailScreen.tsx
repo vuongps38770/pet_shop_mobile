@@ -46,9 +46,9 @@ const OrderDetailScreen = () => {
                 options={{ tabBarLabel: 'Chờ lấy hàng' }}
                 component={AwaitingpickupScreen} />
 
-            <Tab.Screen name="AwaitingShipping"
+            {/* <Tab.Screen name="AwaitingShipping"
                 options={{ tabBarLabel: 'Chờ giao hàng' }}
-                component={AwaitingShippingScreen} />
+                component={AwaitingShippingScreen} /> */}
 
             <Tab.Screen name="Delivered"
                 options={{ tabBarLabel: 'Đã giao' }}

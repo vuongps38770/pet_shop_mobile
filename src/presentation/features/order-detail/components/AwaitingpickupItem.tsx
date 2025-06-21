@@ -1,73 +1,80 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
-import { colors } from 'theme/colors';
+import { colors } from 'theme/colors'
+import { PriceFormatter } from 'app/utils/priceFormatter'
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto'
+import { formatDateTimeVN } from 'app/utils/time'
 
-function formatPrice(price: number) {
-    return price.toLocaleString('vi-VN');
+type AwaitingPickupItemProps = {
+    order: OrderRespondDto;
+    onPress?: () => void;
+    onContactSeller?: () => void;
 }
 
-type AwaitingPickupProps = {
-    orderPickup: {
-        status: string;
-        product: {
-            name: string;
-            variant: string;
-            quantity: number;
-            price: number;
-            image: string;
-        };
-        totalItems: number;
-        totalPrice: number;
-        deliveryDeadline: string;
-        orderCode: string;
-        button: string;
+const AwaitingpickupItem: React.FC<AwaitingPickupItemProps> = ({ order, onPress, onContactSeller }) => {
+    const firstItem = order.orderDetailItems[0];
+    const name = firstItem?.productName || '';
+    const image = firstItem?.image || '';
+    const productCount = order.orderDetailItems.length;
+    const attributes = firstItem?.variantName || '';
+    const createdAt = order.createdAt;
+
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case 'PROCESSING':
+                return 'Đang xử lý';
+            case 'SHIPPED':
+                return 'Đã giao cho vận chuyển';
+            default:
+                return status;
+        }
     };
-};
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'PROCESSING':
+                return colors.orange.dark;
+            case 'SHIPPED':
+                return colors.blue.dark;
+            default:
+                return colors.grey[500];
+        }
+    };
 
-const AwaitingpickupItem: React.FC<AwaitingPickupProps> = ({ orderPickup }) => {
+    const Wrapper = onPress ? TouchableOpacity : View;
+    
     return (
-        <View style={styles.container}>
-            {/* Header */}
+        <Wrapper style={styles.container} onPress={onPress} activeOpacity={onPress ? 0.85 : undefined}>
             <View style={styles.headerRow}>
+                <View style={styles.dot} />
+                <Text style={styles.orderType}>ĐẶT HÀNG</Text>
+                <Text style={styles.orderId}>#{order.sku}</Text>
                 <View style={{ flex: 1 }} />
-                <Text style={styles.status}>{orderPickup.status}</Text>
+                <Text style={styles.date}>
+                    {formatDateTimeVN(createdAt)}
+                </Text>
             </View>
-            {/* Product Row */}
-            <View style={styles.productRow}>
-                <Image source={{ uri: orderPickup.product.image }} style={styles.productImage} />
-                <View style={{ flex: 1, marginLeft: 10 }}>
-                    <Text style={styles.productName}>{orderPickup.product.name}</Text>
-                    <View style={styles.variantRow}>
-                        <Text style={styles.variant}>{orderPickup.product.variant}</Text>
-                        <Text style={styles.quantity}>x{orderPickup.product.quantity}</Text>
-                        <View style={{ flex: 1 }} />
-                        <Text style={styles.price}>đ{formatPrice(orderPickup.product.price)}</Text>
-                    </View>
-
+            <View style={styles.itemRow}>
+                <Image source={{ uri: image }} style={styles.productImage} />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.productName}>{name}</Text>
+                    <Text style={styles.productAttr}>
+                        {attributes}, {productCount} × Mục
+                    </Text>
                 </View>
             </View>
-            {/* Tổng tiền */}
-            <View style={styles.totalRow}>
-                <Text style={styles.totalItems}>{orderPickup.totalItems} sản phẩm</Text>
-                <View style={styles.totalRight}>
-                    <Text style={styles.totalLabel}>Tổng Thanh toán:</Text>
-                    <Text style={styles.totalPrice}>đ{formatPrice(orderPickup.totalPrice)}</Text>
-                </View>
+            <View style={styles.statusRow}>
+                <Text style={[styles.statusText, { color: getStatusColor(order.status) }]}>
+                    {getStatusText(order.status)}
+                </Text>
+                <Text style={styles.price}>{PriceFormatter.formatPrice(order.totalPrice)}</Text>
             </View>
-            {/* Giao hàng trước + Button */}
-            <View style={styles.deliveryRow}>
-                <Text style={styles.deliveryText}>Giao hàng trước {orderPickup.deliveryDeadline} để đơn không bị huỷ.</Text>
-                <TouchableOpacity style={styles.button}>
-                    <Text style={styles.buttonText}>{orderPickup.button}</Text>
+            {onContactSeller && (
+                <TouchableOpacity style={styles.contactBtn} onPress={onContactSeller}>
+                    <Text style={styles.contactBtnText}>Liên hệ người bán</Text>
                 </TouchableOpacity>
-            </View>
-            {/* Mã đơn hàng */}
-            <View style={styles.codeRow}>
-                <Text style={styles.codeLabel}>Mã đơn hàng</Text>
-                <Text style={styles.codeValue}>{orderPickup.orderCode}</Text>
-            </View>
-        </View>
+            )}
+        </Wrapper>
     )
 }
 
@@ -75,29 +82,46 @@ export default AwaitingpickupItem
 
 const styles = StyleSheet.create({
     container: {
+        width: '100%',
+        padding: 16,
+        borderRadius: 12,
         backgroundColor: colors.white,
-        borderRadius: 10,
-        marginVertical: 10,
-        padding: 12,
+        marginTop: 16,
         shadowColor: colors.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 1,
-        borderWidth: 1,
-        borderColor: colors.border,
     },
     headerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 8,
     },
-    status: {
-        color: colors.orange.dark,
-        fontWeight: 'bold',
-        fontSize: 15,
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: colors.app.primary.main,
+        marginRight: 6,
     },
-    productRow: {
+    orderType: {
+        color: colors.grey[500],
+        fontWeight: 'bold',
+        fontSize: 13,
+        marginRight: 4,
+    },
+    orderId: {
+        color: colors.grey[500],
+        fontSize: 13,
+        fontWeight: '500',
+        marginRight: 8,
+    },
+    date: {
+        color: colors.grey[500],
+        fontSize: 13,
+    },
+    itemRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 8,
@@ -106,98 +130,46 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 8,
+        backgroundColor: '#eee',
     },
     productName: {
+        fontSize: 16,
         fontWeight: 'bold',
         color: colors.black,
-        fontSize: 15,
         marginBottom: 2,
     },
-    variantRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 2,
-    },
-    variant: {
-        color: colors.grey[600],
-        fontSize: 14,
-        marginRight: 8,
-    },
-    quantity: {
-        color: colors.grey[600],
-        fontSize: 14,
-    },
-    price: {
-        color: colors.black,
-        fontWeight: '500',
-        fontSize: 14,
-        marginTop: 2,
-    },
-    totalRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        paddingTop: 8,
-        marginBottom: 8,
-    },
-    totalItems: {
+    productAttr: {
         color: colors.grey[700],
         fontSize: 14,
+        marginBottom: 2,
     },
-    totalRight: {
+    statusRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-    },
-    totalLabel: {
-        color: colors.grey[500],
-        fontSize: 14,
-        marginRight: 4,
-    },
-    totalPrice: {
-        color: colors.orange.dark,
-        fontWeight: 'bold',
-        fontSize: 15,
-    },
-    deliveryRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 8,
     },
-    deliveryText: {
-        color: colors.grey[500],
-        fontSize: 13,
-        flex: 1,
-    },
-    button: {
-        backgroundColor: colors.app.primary.main,
-        borderRadius: 6,
-        paddingVertical: 8,
-        paddingHorizontal: 18,
-        marginLeft: 8,
-    },
-    buttonText: {
-        color: colors.white,
-        fontWeight: 'bold',
-        fontSize: 15,
-    },
-    codeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        paddingTop: 8,
-    },
-    codeLabel: {
-        color: colors.grey[500],
-        fontSize: 14,
-    },
-    codeValue: {
-        color: colors.black,
+    statusText: {
         fontSize: 14,
         fontWeight: '500',
+        maxWidth: '60%',
+    },
+    price: {
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: colors.black,
+        textAlign: 'right',
+    },
+    contactBtn: {
+        backgroundColor: colors.app.primary.main,
+        borderRadius: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        alignSelf: 'flex-end',
+        marginTop: 4,
+    },
+    contactBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 15,
     },
 })

@@ -1,5 +1,5 @@
 
-export type OrderRespondDto = {
+export type OrderRespondDto ={
     _id: string;
     userID: string;
     voucherID?: string;
@@ -13,17 +13,18 @@ export type OrderRespondDto = {
         lng?: number;
         receiverFullname: string;
     };
+    
 
 
-
-    paymentType: PaymentType;
+    paymentType: string;
     status: string;
     expiredDate?: Date;
     orderDetailItems: OrderDetailResDto[];
     shippingFree: number
     productPrice: number
     totalPrice: number;
-    createdDate: Date;
+    createdAt:string;
+    updatedAt:string;
     sku:string
 }
 
@@ -34,10 +35,10 @@ export type OrderDetailResDto = {
     variantId?: string;
     productName: string;
     variantName?: string;
-    image?: string;
+    image: string;
     quantity: number;
     sellingPrice: number;
-    promotionalPrice?: number;
+    promotionalPrice: number;
 }
 
 

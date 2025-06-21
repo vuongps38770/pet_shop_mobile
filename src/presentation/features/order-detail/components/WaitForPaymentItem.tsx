@@ -5,10 +5,13 @@ import { Typography } from 'shared/components/Typography';
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { colors } from 'theme/colors';
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { formatDateTimeVN } from 'app/utils/time';
 
 interface WaitForPaymentItemProps {
     order: OrderRespondDto;
-    onPress?: () => void;
+    onItemPress?: () => void;
+    onItemButtonPress?: () => void;
+    onCancelPress?: () => void;
 }
 
 const formatCountdown = (expiredAt?: Date) => {
@@ -32,15 +35,14 @@ const formatDateTime = (isoString?: Date) => {
 };
 
 
-const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onPress }) => {
-    // Lấy thông tin sản phẩm đầu tiên
+const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onItemPress, onItemButtonPress, onCancelPress }) => {
     const firstItem = order.orderDetailItems[0];
     const name = firstItem?.productName || '';
     const image = firstItem?.image || '';
     const productCount = order.orderDetailItems.length;
     const attributes = firstItem?.variantName || '';
     const expiredAt = order.expiredDate;
-    const createdAt = order.createdDate;
+    const createdAt = order.createdAt;
 
     const [countdown, setCountdown] = useState(formatCountdown(expiredAt));
 
@@ -52,15 +54,14 @@ const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onPress 
     }, [expiredAt]);
 
     return (
-        <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.container} onPress={onItemPress} activeOpacity={0.85}>
             <View style={styles.headerRow}>
                 <View style={styles.dot} />
                 <Text style={styles.orderId}>ORDER #{order.sku}</Text>
                 <View style={{ flex: 1 }} />
                 <Text style={styles.date}>
-                    {createdAt ? formatDateTime(createdAt) : ''}
+                    {formatDateTimeVN(order.createdAt)}
                 </Text>
-
             </View>
             <View style={styles.itemcontainer}>
                 <Image source={{ uri: image }} style={styles.productImage} />
@@ -75,10 +76,10 @@ const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onPress 
                 <Text style={styles.price}>{PriceFormatter.formatPrice(order.totalPrice)}</Text>
             </View>
             <View style={styles.actionRow}>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={onCancelPress}>
                     <Text style={styles.cancelText}>Cancel Order</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.payNowBtn}>
+                <TouchableOpacity style={styles.payNowBtn} onPress={onItemButtonPress}>
                     <Text style={styles.payNowText}>Thanh Toán Ngay</Text>
                 </TouchableOpacity>
             </View>

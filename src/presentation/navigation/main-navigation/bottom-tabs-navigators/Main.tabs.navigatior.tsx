@@ -12,6 +12,7 @@ import HomeIcon from 'assets/icons/home.svg'
 import UserIcon from 'assets/icons/user.svg'
 import CartIcon from 'assets/icons/cart.svg'
 import SearchIcon from 'assets/icons/Search.svg'
+import OrderDetailScreen from "src/presentation/features/order-detail/screens/OrderDetailScreen";
 
 
 
@@ -108,7 +109,7 @@ const TabNavigator = () => {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
-      <Tab.Screen name="SearchTab" component={ProfileScreen} />
+      <Tab.Screen name="SearchTab" component={OrderDetailScreen} />
       <Tab.Screen name="CartTab" component={CartScreen} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} />
       

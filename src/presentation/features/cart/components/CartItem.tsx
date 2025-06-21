@@ -25,6 +25,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
         .map(g => `${g.name}: ${g.unit?.name || ''}`)
         .join(' - ');
     const quantity = quantities?.[item._id] ?? item.quantity;
+    const isOutOfStock = item.isOutOfStock;
 
     const handleRemove = () => {
         Animated.parallel([
@@ -41,6 +42,24 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
         ]).start(() => {
             onRemove(item._id);
         });
+    };
+
+    const handleCheck = () => {
+        if (!isOutOfStock) {
+            onCheck(item._id);
+        }
+    };
+
+    const handleIncrease = () => {
+        if (!isOutOfStock) {
+            onIncrease(item._id);
+        }
+    };
+
+    const handleDecrease = () => {
+        if (!isOutOfStock) {
+            onDecrease(item._id);
+        }
     };
 
     const renderRightActions = () => (
@@ -64,34 +83,85 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
                 rightThreshold={40}
                 overshootRight={true}
             >
-                <View style={styles.rowContainer}>
+                <View style={[
+                    styles.rowContainer,
+                    isOutOfStock && styles.outOfStockContainer
+                ]}>
                     <View style={styles.leftBlock}>
                         <Checkbox
                             status={checked ? 'checked' : 'unchecked'}
-                            onPress={() => onCheck(item._id)}
+                            onPress={handleCheck}
                             color={colors.app.primary.main}
+                            disabled={isOutOfStock}
+                            uncheckedColor={isOutOfStock ? colors.grey[400] : colors.app.primary.main}
                         />
                     </View>
                     <View style={styles.rightBlock}>
                         <View style={styles.container2}>
-                            <Image source={{ uri: item.images[0] }} style={styles.image} />
+                            <View style={styles.imageContainer}>
+                                <Image
+                                    source={{ uri: item.images[0] }}
+                                    style={[
+                                        styles.image,
+                                        isOutOfStock && styles.outOfStockImage
+                                    ]}
+                                />
+
+                            </View>
                             <View style={styles.quantityContainer}>
-                                <TouchableOpacity style={styles.button} onPress={() => onDecrease(item._id)}>
-                                    <Text style={styles.buttonText}>-</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.button,
+                                        isOutOfStock && styles.disabledButton
+                                    ]}
+                                    onPress={handleDecrease}
+                                    disabled={isOutOfStock}
+                                >
+                                    <Text style={[
+                                        styles.buttonText,
+                                        isOutOfStock && styles.disabledButtonText
+                                    ]}>-</Text>
                                 </TouchableOpacity>
-                                <Text style={styles.quantityText}>{quantity.toString().padStart(2, '0')}</Text>
-                                <TouchableOpacity style={styles.button} onPress={() => onIncrease(item._id)}>
-                                    <Text style={styles.buttonText}>+</Text>
+                                <Text style={[
+                                    styles.quantityText,
+                                    isOutOfStock && styles.outOfStockText
+                                ]}>{quantity.toString().padStart(2, '0')}</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.button,
+                                        isOutOfStock && styles.disabledButton
+                                    ]}
+                                    onPress={handleIncrease}
+                                    disabled={isOutOfStock}
+                                >
+                                    <Text style={[
+                                        styles.buttonText,
+                                        isOutOfStock && styles.disabledButtonText
+                                    ]}>+</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                         <View style={styles.infoContainer}>
-                            <Text style={styles.productName} numberOfLines={2}>{item.productName}</Text>
-                            <Text style={styles.unitText}>{unitText}</Text>
-                            <Text style={styles.price}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
+                            <Text style={[
+                                styles.productName,
+                                isOutOfStock && styles.outOfStockText
+                            ]} numberOfLines={2}>{item.productName}</Text>
+                            <Text style={[
+                                styles.unitText,
+                                isOutOfStock && styles.outOfStockSecondaryText
+                            ]}>{unitText}</Text>
+                            <Text style={[
+                                styles.price,
+                                isOutOfStock && styles.outOfStockText
+                            ]}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
                         </View>
                     </View>
                 </View>
+                {isOutOfStock && (
+                    <View style={styles.outOfStockBadge}>
+                        <Image style={{ width: 100, height: 100 }} source={require('../../../../../assets/images/out-of-stock.png')} />
+                    </View>
+                )}
             </Swipeable>
         </Animated.View>
     );
@@ -112,6 +182,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         elevation: 2,
     },
+    outOfStockContainer: {
+        backgroundColor: colors.grey[100],
+        opacity: 0.7,
+    },
     leftBlock: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -125,11 +199,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
+    imageContainer: {
+        position: 'relative',
+    },
     image: {
         width: 120,
         height: 100,
         borderRadius: 10,
         marginRight: 12,
+    },
+    outOfStockImage: {
+        opacity: 0.5,
+    },
+    outOfStockBadge: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -50 }, { translateY: -50 }],
+        backgroundColor: colors.red.main,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    outOfStockText: {
+        color: colors.error,
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     infoContainer: {
         marginTop: 4,
@@ -145,6 +240,9 @@ const styles = StyleSheet.create({
         color: colors.text.secondary,
         fontSize: 13,
         marginBottom: 2,
+    },
+    outOfStockSecondaryText: {
+        color: colors.grey[500],
     },
     price: {
         fontWeight: 'bold',
@@ -164,10 +262,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    disabledButton: {
+        backgroundColor: colors.grey[300],
+    },
     buttonText: {
         color: '#fff',
         fontSize: 22,
         fontWeight: 'bold',
+    },
+    disabledButtonText: {
+        color: colors.grey[500],
     },
     quantityText: {
         marginHorizontal: 10,

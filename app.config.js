@@ -6,6 +6,9 @@ export default {
     slug: "myapp",
     extra: {
       LOCATIONIQ_API_KEY: process.env.LOCATIONIQ_API_KEY,
-    }
+    },
+    android: {
+      package: "com.qvdz.myapp",
+    },
   }
 };
