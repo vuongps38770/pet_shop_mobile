@@ -1,45 +1,169 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, View, ActivityIndicator, Modal, TouchableOpacity, ScrollView, Linking, Image } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import WaitForPaymentItem from '../components/WaitForPaymentItem'
 import { FlatList } from 'react-native'
 import { spacing } from 'theme/spacing';
-
-
-const orders = [
-    {
-      _id: "1",
-      name: "Apple Watch Series 8",
-      productCount: 10,
-      totalPrice: 999,
-      expiredAt: "2025-12-31T23:59:59.000Z",
-      image: "https://www.anphatpc.com.vn/media/news/2509_Top10tainghepcgaming_2.jpg",
-      attributes: "Black, GPS + Cellular",
-      createdAt: "2025-01-15T10:00:00.000Z"
-    },
-    {
-      _id: "2",
-      name: "Samsung Galaxy Buds 2 Pro",
-      productCount: 5,
-      totalPrice: 49559,
-      expiredAt: "2025-10-01T00:00:00.000Z",
-      image: "https://www.anphatpc.com.vn/media/news/2509_Top10tainghepcgaming_2.jpg",
-      attributes: "Graphite, Noise Canceling",
-      createdAt: "2025-03-10T14:30:00.000Z"
-    },
-  ];
-  
-  
-
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWaitForPaymentOrders, fetchZaloPayUrl, updateOrderStatus, resetStatus } from '../slices/waitForPayment.slice';
+import { RootState, AppDispatch } from 'src/presentation/store/store';
+import { OrderStatus } from 'app/types/OrderStatus';
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { PriceFormatter } from 'app/utils/priceFormatter';
+import { useFocusEffect } from '@react-navigation/native';
+import { LoadingView } from 'shared/components/LoadingView';
 
 const WaitForPaymentScreen = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, data } = useSelector((state: RootState) => state.orderDetail.waitForPayment)
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<OrderRespondDto | null>(null);
+
+  const { payUrl, getUrlStatus, updateStatus, updateStatusError } = useSelector((state: RootState) => state.orderDetail.waitForPayment)
+
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchWaitForPaymentOrders({ statuses: [OrderStatus.WAIT_FOR_PAYMENT] }));
+    }, [dispatch])
+  );
+
+
+  useEffect(() => {
+    if (getUrlStatus === 'success' && payUrl) {
+      console.log(payUrl);
+      Linking.openURL(payUrl);
+    }
+  }, [getUrlStatus, payUrl]);
+  const handleItemButtonPress = (orderId: string) => {
+    dispatch(fetchZaloPayUrl({ orderId, paymentUrl: "null" }))
+  };
+  const handleItemPress = (item: OrderRespondDto) => {
+    setSelectedOrder(item)
+    setModalVisible(true)
+  };
+
+
+
+  const handleCancelOrder = () => {
+    if (selectedOrder) {
+
+
+      dispatch(updateOrderStatus({ orderId: selectedOrder._id, nextStatus: OrderStatus.CANCELLED }))
+        .then((res: any) => {
+          if (res.meta.requestStatus === "fulfilled") {
+            setTimeout(() => {
+              setModalVisible(false);
+              dispatch(resetStatus());
+            }, 1200);
+          }
+        });
+    }
+  };
+  if (loading) {
+    return (
+      <LoadingView />
+    );
+  }
+  if (!loading && (!data || !data.data || data.data.length === 0)) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ fontSize: 50, width: 70, height: 70 }}>🛒</Text>
+        <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào chờ thanh toán</Text>
+      </View>
+    );
+  }
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: 'red' }}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={orders}
-        renderItem={({ item }) => <WaitForPaymentItem order={item} />}
+        data={data?.data || []}
+        renderItem={({ item }) => <WaitForPaymentItem order={item}
+          onItemButtonPress={() => handleItemButtonPress(item._id)}
+          onItemPress={() => handleItemPress(item)} />}
         keyExtractor={(item) => item._id}
-        showsVerticalScrollIndicator={false}/>
+        showsVerticalScrollIndicator={false} />
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setModalVisible(false);
+          dispatch(resetStatus());
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContentNew}>
+            <ScrollView>
+              <Text style={styles.modalTitleNew}>Order Details</Text>
+              <View style={styles.orderInfoRow}>
+                <Text style={styles.orderId}>ORDER #{selectedOrder?.sku || ''}</Text>
+                <View style={styles.statusBadge}><Text style={styles.statusBadgeText}>Pending Payment</Text></View>
+              </View>
+              <Text style={styles.orderDate}>Placed on {selectedOrder ? new Date(selectedOrder.createdAt).toLocaleDateString() : ''}</Text>
+              <View style={styles.sectionDivider} />
+              <Text style={styles.sectionTitle}>Các sản phẩm</Text>
+              {selectedOrder && selectedOrder.orderDetailItems.map((item) => (
+                <View key={item._id} style={styles.productRow}>
+                  <View style={styles.productImageBox}>
+                    {item.image ? (
+                      <Image source={{ uri: item.image }} resizeMode='cover' style={styles.image} />
+                    ) : (
+                      <View style={styles.fakeImage} />
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.productName}>{item.productName}</Text>
+                    <Text style={styles.productDesc}>{item.variantName}</Text>
+                    <Text style={styles.productQty}>sl: {item.quantity}</Text>
+                  </View>
+                  <Text style={styles.productPrice}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
+                </View>
+              ))}
+              <View style={styles.sectionDivider} />
+              <Text style={styles.sectionTitle}>Payment Information</Text>
+              <View style={styles.paymentRow}><Text style={styles.paymentLabel}>Giá sản phẩm</Text><Text style={styles.paymentValue}>{PriceFormatter.formatPrice(selectedOrder?.productPrice || 0)}</Text></View>
+              <View style={styles.paymentRow}><Text style={styles.paymentLabel}>Phí vận chuyển</Text><Text style={styles.paymentValue}>{PriceFormatter.formatPrice(selectedOrder?.shippingFree || 0)}</Text></View>
+              <View style={styles.paymentRow}><Text style={styles.paymentLabel}>Giảm giá</Text><Text style={styles.paymentValue}>{PriceFormatter.formatPrice(0)}</Text></View>
+              <View style={styles.paymentRow}><Text style={[styles.paymentLabel, { fontWeight: 'bold' }]}>Thành tiền</Text><Text style={[styles.paymentValue, { fontWeight: 'bold' }]}>{PriceFormatter.formatPrice(selectedOrder?.totalPrice || 0)}</Text></View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
+                <TouchableOpacity
+                  style={[styles.cancelBtn, { opacity: updateStatus === "loading" ? 0.6 : 1 }]}
+                  onPress={handleCancelOrder}
+                  disabled={updateStatus === "loading"}
+                >
+                  <Text style={styles.cancelBtnText}>{updateStatus === "loading" ? "Đang huỷ..." : "Huỷ đơn hàng"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.payBtn}
+                  onPress={() => {
+                    if (selectedOrder) dispatch(fetchZaloPayUrl({ orderId: selectedOrder._id, paymentUrl: "null" }));
+                  }}
+                >
+                  <Text style={styles.payBtnText}>Thanh toán</Text>
+                </TouchableOpacity>
+              </View>
+              {updateStatus === "success" && (
+                <Text style={{ color: 'green', textAlign: 'center', marginTop: 8 }}>Huỷ đơn thành công!</Text>
+              )}
+              {updateStatus === "failed" && (
+                <Text style={{ color: 'red', textAlign: 'center', marginTop: 8 }}>{updateStatusError}</Text>
+              )}
+              <TouchableOpacity style={styles.closeBtnNew} onPress={() => {
+                setModalVisible(false);
+                dispatch(resetStatus());
+              }}>
+                <Text style={styles.closeBtnTextNew}>Đóng</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -47,8 +171,170 @@ const WaitForPaymentScreen = () => {
 export default WaitForPaymentScreen
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: spacing.md,
-    }
+  container: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContentNew: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '92%',
+    maxHeight: '85%',
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  modalTitleNew: {
+    fontWeight: 'bold',
+    fontSize: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  orderInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  orderId: {
+    color: '#888',
+    fontSize: 13,
+  },
+  statusBadge: {
+    backgroundColor: '#FFE5C2',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  statusBadgeText: {
+    color: '#FFAF42',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  orderDate: {
+    color: '#888',
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 12,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  productRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+  },
+  productImageBox: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#eee',
+    borderRadius: 8,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fakeImage: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#ccc',
+    borderRadius: 6,
+  },
+  image: {
+    width: 35,
+    height: 35,
+    backgroundColor: '#ccc',
+    borderRadius: 6,
+
+  },
+  productName: {
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  productDesc: {
+    color: '#888',
+    fontSize: 13,
+  },
+  productQty: {
+    color: '#888',
+    fontSize: 13,
+  },
+  productPrice: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    marginLeft: 8,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  paymentLabel: {
+    color: '#888',
+    fontSize: 15,
+  },
+  paymentValue: {
+    fontSize: 15,
+  },
+  cancelBtn: {
+    backgroundColor: '#FF4D4F',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    marginRight: 8,
+  },
+  cancelBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  payBtn: {
+    backgroundColor: '#FFAF42',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    marginLeft: 8,
+  },
+  payBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  closeBtnNew: {
+    marginTop: 18,
+    alignSelf: 'center',
+    backgroundColor: '#eee',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 32,
+  },
+  closeBtnTextNew: {
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
 })

@@ -62,7 +62,7 @@ export const formatDate = (
   } = options;
 
   const date = new Date(timestamp);
-  
+
   // Format time
   const timeOptions: Intl.DateTimeFormatOptions = {
     hour: 'numeric',
@@ -169,7 +169,7 @@ export const formatDuration = (
   options: { showSeconds?: boolean; locale?: string } = {}
 ): string => {
   const { showSeconds = true, locale = 'vi-VN' } = options;
-  
+
   const hours = Math.floor(milliseconds / TIME_UNITS.HOUR);
   const minutes = Math.floor((milliseconds % TIME_UNITS.HOUR) / TIME_UNITS.MINUTE);
   const seconds = Math.floor((milliseconds % TIME_UNITS.MINUTE) / TIME_UNITS.SECOND);
@@ -221,10 +221,10 @@ export const isFuture = (date: Date): boolean => {
 export const getDayBounds = (date: Date = new Date()): { start: Date; end: Date } => {
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
-  
+
   const end = new Date(date);
   end.setHours(23, 59, 59, 999);
-  
+
   return { start, end };
 };
 
@@ -248,4 +248,24 @@ export const subtractTime = (
   unit: keyof typeof TIME_UNITS
 ): Date => {
   return new Date(date.getTime() - amount * TIME_UNITS[unit]);
-}; 
+};
+
+/**
+ * Format ISO date string or Date to 'dd/MM/yyyy HH:mm' (giờ phút, không giây, không timezone)
+ */
+export function formatDateTimeVN(isoStr: string): string {
+  console.log(isoStr);
+  
+  try {
+    const date = new Date(isoStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+  } catch (error) {
+    return"--/--/--- :"
+  }
+
+}

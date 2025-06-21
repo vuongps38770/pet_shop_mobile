@@ -71,7 +71,7 @@ const ProfileDetail = () => {
             const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!granted) return;
             const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              mediaTypes: 'images',
               allowsEditing: true,
               quality: 1,
             });
@@ -215,7 +215,6 @@ export default ProfileDetail;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
   },
   scrollContainer: {
     padding: 16,

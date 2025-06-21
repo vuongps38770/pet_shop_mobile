@@ -3,61 +3,56 @@ import { View, Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { colors } from 'shared/theme/colors';
 import { Typography } from 'shared/components/Typography';
 import { PriceFormatter } from 'app/utils/priceFormatter';
-
-export type CanceledOrder = {
-    _id: string;
-    createdAt: string;
-    productName: string;
-    productDesc: string;
-    quantity: number;
-    totalPrice: number;
-    image: string;
-    canceledDate: string;
-};
-
-const formatDateTime = (isoString: string) => {
-    const date = new Date(isoString);
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')
-        }/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')
-        }`;
-};
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { formatDateTimeVN } from 'app/utils/time';
 
 export interface CanceledItemProps {
-    order: CanceledOrder;
-    onBuyAgain?: (order: CanceledOrder) => void;
+    order: OrderRespondDto;
+    onBuyAgain?: (order: OrderRespondDto) => void;
+    onPress?: () => void;
 }
 
-const CanceledItem: React.FC<CanceledItemProps> = ({ order, onBuyAgain }) => {
+const CanceledItem: React.FC<CanceledItemProps> = ({ order, onBuyAgain, onPress }) => {
+    const firstItem = order.orderDetailItems[0];
+    const name = firstItem?.productName || '';
+    const image = firstItem?.image || '';
+    const productCount = order.orderDetailItems.length;
+    const attributes = firstItem?.variantName || '';
+    const createdAt = order.createdAt;
+
+    const Wrapper = onPress ? TouchableOpacity : View;
+
     return (
-        <View style={styles.card}>
+        <Wrapper style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.85 : undefined}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <View style={styles.dot} />
                     <Typography variant="caption" color="textSecondary" style={styles.orderId}>
-                        ORDER #{order._id}
+                        ĐẶT HÀNG #{order.sku}
                     </Typography>
                 </View>
                 <Text style={styles.date}>
-                    {order.createdAt ? formatDateTime(order.createdAt) : ''}
+                    {formatDateTimeVN(createdAt)}
                 </Text>
             </View>
 
             {/* Content */}
             <View style={styles.content}>
-                <Image source={{ uri: order.image }} style={styles.image} />
+                <Image source={{ uri: image }} style={styles.image} />
                 <View style={styles.details}>
                     <Typography variant="body1" bold numberOfLines={1} style={styles.productName}>
-                        {order.productName}
+                        {name}
                     </Typography>
                     <Typography variant="caption" color="error" style={styles.canceledText}>
+                        {/* TODO: Xác định ai hủy đơn hàng (người bán/khách hàng) dựa vào dữ liệu từ API */}
                         Đã hủy bởi người bán
                     </Typography>
                 </View>
             </View>
             <View style={styles.secondaryContainer}>
                 <Typography variant="caption" color="textSecondary" numberOfLines={1} style={styles.productDesc}>
-                    {order.quantity} × Mặt hàng
+                    {productCount} × Mặt hàng
                 </Typography>
                 <View style={styles.priceBlock}>
                     <Typography variant="h6" bold style={styles.price}>
@@ -67,12 +62,14 @@ const CanceledItem: React.FC<CanceledItemProps> = ({ order, onBuyAgain }) => {
             </View>
 
             {/* Footer */}
-            <View style={styles.footer}>
-                <TouchableOpacity onPress={() => onBuyAgain?.(order)}>
-                    <Typography variant="body2" color="primary">Mua lại</Typography>
-                </TouchableOpacity>
-            </View>
-        </View>
+            {onBuyAgain && (
+                <View style={styles.footer}>
+                    <TouchableOpacity style={styles.buyAgainBtn} onPress={() => onBuyAgain(order)}>
+                        <Text style={styles.buyAgainText}>Mua lại</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+        </Wrapper>
     );
 };
 
@@ -106,7 +103,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: colors.error,
+        backgroundColor: colors.red.main,
         marginRight: 6,
     },
     orderId: {
@@ -139,7 +136,7 @@ const styles = StyleSheet.create({
     },
     canceledText: {
         marginTop: 2,
-        color: colors.error,
+        color: colors.red.main,
     },
     priceBlock: {
         alignItems: 'flex-end',
@@ -151,12 +148,23 @@ const styles = StyleSheet.create({
     },
     footer: {
         flexDirection: 'row',
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         alignItems: 'center',
         borderTopWidth: 1,
         borderTopColor: colors.grey[200],
         marginTop: 10,
         paddingTop: 8,
+    },
+    buyAgainBtn: {
+        backgroundColor: colors.app.primary.main,
+        borderRadius: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+    },
+    buyAgainText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 15,
     },
     secondaryContainer: {
         paddingTop: 10,

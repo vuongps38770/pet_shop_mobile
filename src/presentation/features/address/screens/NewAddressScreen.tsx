@@ -224,7 +224,7 @@ export const NewAddressScreen = () => {
       {(fetchAddressSuggestionStatus === 'success' && addressSuggestionList.length > 0) ?(
         <FlatList
           data={addressSuggestionList}
-          keyExtractor={(item,index) => item.place_id+""+index}
+          keyExtractor={(item) => item.place_id}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.suggestionItem}

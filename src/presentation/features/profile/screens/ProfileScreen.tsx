@@ -109,11 +109,14 @@ const ProfileScreen = () => {
               if(item.id=="7"){
                 handleLogout()
               }
-              if(item.id=="4"){
+              else if(item.id=="4"){
                 navigator.navigate("FavouriteScreen")
               }
-              if (item.id == "2") {
+              else if (item.id == "2") {
                 navigator.navigate("AllAddressesScreen");
+              }
+              else if (item.id == "1") {
+                navigator.navigate("ProfileDetail");
               }
             }}>
               <View

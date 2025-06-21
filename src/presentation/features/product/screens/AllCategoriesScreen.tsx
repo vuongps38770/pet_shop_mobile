@@ -121,7 +121,7 @@ export const AllCategoriesScreen = () => {
 
 
 
-          {item._id == currentCategoryId && (
+          {item._id === currentCategoryId && (
             <View style={{ marginTop: 20 }}>
               {/*todo: lam cai flastlist con*/}
               {item.children.length > 0 ?

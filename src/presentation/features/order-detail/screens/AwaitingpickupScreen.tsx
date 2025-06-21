@@ -1,80 +1,114 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { FlatList, StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Image } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { spacing } from 'theme/spacing';
-import { FlashList } from '@shopify/flash-list';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from 'src/presentation/store/store';
+import { fetchAwaitingPickupOrders, updateOrderStatus } from '../slices/awaitingPickup.slice';
 import AwaitingpickupItem from '../components/AwaitingpickupItem';
-
-const awaitingpickupproduct = [
-    {
-        _id: "1",
-        status: "Chờ lấy hàng",
-        product: {
-            name: "Hill's Prescription Diet Canine Gastrointestinal Health",
-            variant: "Pink,38",
-            quantity: 1,
-            price: 11000,
-            image: "https://ampet.vn/wp-content/uploads/2022/11/Thuc-an-cho-cho-13.jpg"
-        },
-        totalItems: 1,
-        totalPrice: 11000,
-        deliveryDeadline: "2020-03-15",
-        orderCode: "200311H5RD78NR",
-        button: "Vận chuyển"
-    },
-    {
-        _id: "2",
-        status: "Đang giao",
-        product: {
-            name: "Royal Canin Size Health Nutrition Maxi Adult Dog Food",
-            variant: "Black,L",
-            quantity: 55,
-            price: 14900,
-            image: "https://ampet.vn/wp-content/uploads/2022/11/Thuc-an-cho-cho-13.jpg"
-        },
-        totalItems: 44,
-        totalPrice: 298800,
-        deliveryDeadline: "2020-03-16",
-        orderCode: "200312H5RD79AB",
-        button: "Theo dõi"
-    },
-    {
-        _id: "3",
-        status: "Chờ xác nhận",
-        product: {
-            name: "Purina Pro Plan Savor Adult Shredded Blend Chicken & Rice Formula",
-            variant: "Beige,Free size",
-            quantity: 1,
-            price: 89000,
-            image: "https://ampet.vn/wp-content/uploads/2022/11/Thuc-an-cho-cho-13.jpg"
-        },
-        totalItems: 1,
-        totalPrice: 89000,
-        deliveryDeadline: "2020-03-17",
-        orderCode: "200313H5RD80CD",
-        button: "Xác nhận"
-    }
-];
-
-
-
+import { OrderStatus } from 'app/types/OrderStatus';
+import OrderDetailModal from '../components/OrderDetailModal';
+import { PriceFormatter } from 'app/utils/priceFormatter';
+import { LoadingView } from 'shared/components/LoadingView';
 
 const AwaitingpickupScreen = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { data, fetchStatus, fetchError } = useSelector((state: RootState) => state.orderDetail.awaitingPickup);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+  useEffect(() => {
+    dispatch(fetchAwaitingPickupOrders({}));
+  }, [dispatch]);
+
+  if (fetchStatus === 'loading') {
     return (
-        <View style={styles.container}>
-            <FlatList
-                data={awaitingpickupproduct}
-                renderItem={({ item }) => <AwaitingpickupItem orderPickup={item} />}
-                keyExtractor={(item) => item._id}
-                showsVerticalScrollIndicator={false} />
-        </View>
-    )
+      <LoadingView/>
+    );
+  }
+
+  if (fetchStatus === 'failed') {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: 'red' }}>{fetchError}</Text>
+      </View>
+    );
+  }
+
+  if (!data || !data.data || data.data.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ fontSize: 50, width: 70, height: 70 }}>📦</Text>
+        <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đang xử lý</Text>
+      </View>
+    );
+  }
+
+  const handleContactSeller = (order: any) => {
+    // Xử lý khi nhấn liên hệ người bán
+    console.log('Contact seller for order:', order._id);
+  };
+
+  const handleItemPress = (item: any) => {
+    setSelectedOrder(item);
+    setModalVisible(true);
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'PROCESSING':
+        return 'Đang xử lý';
+      case 'SHIPPED':
+        return 'Đã giao cho vận chuyển';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PROCESSING':
+        return 'yellow';
+      case 'SHIPPED':
+        return 'blue';
+      default:
+        return 'yellow';
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={data.data}
+        renderItem={({ item }) => (
+          <AwaitingpickupItem
+            order={item}
+            onPress={() => handleItemPress(item)}
+            onContactSeller={() => handleContactSeller(item)}
+          />
+        )}
+        keyExtractor={(item) => item._id}
+        showsVerticalScrollIndicator={false}
+      />
+      <OrderDetailModal
+        visible={modalVisible}
+        order={selectedOrder}
+        onClose={() => setModalVisible(false)}
+        statusColorMode={'blue'}
+      />
+    </View>
+  )
 }
 
 export default AwaitingpickupScreen
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: spacing.md,
-    }
+  container: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 })
