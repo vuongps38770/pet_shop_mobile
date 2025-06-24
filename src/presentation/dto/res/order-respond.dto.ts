@@ -64,3 +64,15 @@ export type CalculateOrderPriceResDto = {
     shippingFee:number,
     finalTotal:number,
 }
+
+export type OrderCheckoutResDto={
+    orderId: string,
+    paymentMethod:string, 
+    payment?: PaymentResDto
+}
+
+export type PaymentResDto = {
+    zp_trans_token: string
+    app_trans_id: string,
+    // "redirectUrl": "zalopayapp://..."
+}
