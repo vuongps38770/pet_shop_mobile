@@ -1,27 +1,29 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axiosInstance from 'app/config/axios';
+import { NativeModules } from 'react-native';
 import { CalculateOrderPriceReqDto, OrderCreateReqDto, OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
-import { CalculateOrderPriceResDto, OrderRespondDto, PaymentType } from 'src/presentation/dto/res/order-respond.dto';
-
+import { CalculateOrderPriceResDto, OrderCheckoutResDto, OrderRespondDto, PaymentType } from 'src/presentation/dto/res/order-respond.dto';
+const { PayZaloBridge } = NativeModules;
 type StateProps = {
   order: CalculateOrderPriceResDto | null,
   caculateOrderReq: CalculateOrderPriceReqDto | null,
 
 
 
-  shippingAddressId?: string;
+  shippingAddressId?: string; 
   orderItems?: OrderReqItem[];
   voucherCode?: string;
   totalClientPrice?: number;
   paymentType?: PaymentType;
 
-
-  createOrderStatus: 'pending'|'failed'|'success'|'idle'
+  orderCheckoutData: OrderCheckoutResDto | null
+  createOrderStatus: 'pending' | 'failed' | 'success' | 'idle'
 }
 const initialState: StateProps = {
   order: null,
   caculateOrderReq: null,
-  createOrderStatus:'idle'
+  createOrderStatus: 'idle',
+  orderCheckoutData: null
 }
 
 export const caculateOrder = createAsyncThunk<
@@ -41,7 +43,7 @@ export const caculateOrder = createAsyncThunk<
 
 
 export const createOrder = createAsyncThunk<
-  OrderRespondDto,
+  OrderCheckoutResDto,
   OrderCreateReqDto,
   { rejectValue: string }>(
     'order/create-order',
@@ -49,13 +51,21 @@ export const createOrder = createAsyncThunk<
       try {
         const res = await axiosInstance.post(`order/create-order`, orderItemReqDto);
         console.log(res.data);
-        
-        return res.data.data as OrderRespondDto;
+
+        return res.data.data as OrderCheckoutResDto;
       } catch (error: any) {
         return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
       }
     }
   )
+
+  
+
+
+export const payOrderWithZalopay = (trans_token:string)=>{
+  PayZaloBridge.payOrder(trans_token)
+}
+
 
 const orderSlice = createSlice({
   name: 'order',
@@ -88,15 +98,16 @@ const orderSlice = createSlice({
     })
 
     builder.addCase(createOrder.rejected, (state, action) => {
-      state.createOrderStatus='failed'
+      state.createOrderStatus = 'failed'
     })
     builder.addCase(createOrder.pending, (state, action) => {
-      state.createOrderStatus='pending'
+      state.createOrderStatus = 'pending'
     })
     builder.addCase(createOrder.fulfilled, (state, action) => {
-      state.createOrderStatus='success'
+      state.createOrderStatus = 'success'
+      state.orderCheckoutData = action.payload
     })
-    
+
   }
 });
 

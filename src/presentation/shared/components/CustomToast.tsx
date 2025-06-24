@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors } from '../theme/colors';
+import Toast from 'react-native-toast-message';
 
 interface CustomToastProps {
   text1?: string;
@@ -96,4 +97,24 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomToast; 
+export default CustomToast;
+type ToastType = 'success' | 'error' | 'info';
+
+interface ToastOptions {
+  text1?: string;
+  text2?: string;
+  type?: ToastType;
+}
+
+export const useToast = () => {
+  return {
+    show: (type: 'success' | 'error' | 'info', text1?: string, text2?: string) => {
+      Toast.show({
+        type,
+        text1,
+        text2,
+      });
+    }
+  };
+};
+

@@ -14,3 +14,10 @@ local.properties
 
 # Bundle artifacts
 *.jsbundle
+
+#logs
+*.log
+
+
+#libs
+app/libs/zpdk-release.aar
