@@ -9,7 +9,7 @@ interface PaymentCardProps {
   selected: boolean;
   onSelect: () => void;
   icon: any;
-  key:string
+  value:string
 }
 
 export const PaymentCard: React.FC<PaymentCardProps> = ({
@@ -17,7 +17,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
   selected,
   onSelect,
   icon,
-  key
+  value
 }) => {
 
 
@@ -39,7 +39,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
           <Text style={styles.cardNumberWhite}>1501 **** **** 0001</Text>
         </View>
         <RadioButton
-          value={key}
+          value={value}
           status={selected ? "checked" : "unchecked"}
           onPress={onSelect}
           color={colors.app.primary.main}
