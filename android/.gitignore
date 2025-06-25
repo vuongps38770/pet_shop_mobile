@@ -20,4 +20,5 @@ local.properties
 
 
 #libs
-app/libs/zpdk-release.aar
+app/src/libs/zpdk-release.aar
+app/libs/*.aar
