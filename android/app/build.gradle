@@ -87,12 +87,12 @@ android {
     buildToolsVersion = rootProject.ext.buildToolsVersion
     compileSdk = rootProject.ext.compileSdkVersion
 
-    namespace = 'com.qvdz.myapp'
+    namespace 'com.qvdz.myapp'
     defaultConfig {
-        applicationId = 'com.qvdz.myapp'
+        applicationId 'com.qvdz.myapp'
         minSdkVersion = rootProject.ext.minSdkVersion
         targetSdkVersion = rootProject.ext.targetSdkVersion
-        versionCode = 1
+        versionCode 1
         versionName = "1.0.0"
     }
     signingConfigs {
