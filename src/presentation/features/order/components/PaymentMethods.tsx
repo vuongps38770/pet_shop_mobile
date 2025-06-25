@@ -56,7 +56,7 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
         <View>
           {PAYMENT_METHODS.map(({ key, title, icon }) => (
             <PaymentCard
-              key={key}
+              value={key}
               title={title}
               selected={paymentType === key}
               onSelect={() => onSelectMethod(key)}
