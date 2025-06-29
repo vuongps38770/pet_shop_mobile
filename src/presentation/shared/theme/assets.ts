@@ -61,7 +61,18 @@ export const assets = {
     orderScreen: {
       momo: require("../../../../assets/icons/LogoMoMo.png"),
       vnpay: require("../../../../assets/icons/vnpaylogo.png"),
-     
+    },
+    voucher: {
+      bookmark: require("../../../../assets/icons/bookmark.png"),
+      confirmation: require("../../../../assets/icons/confirmation.png"),
+      contact: require("../../../../assets/icons/contact.png"),
+      dangerous: require("../../../../assets/icons/dangerous.png"),
+      hourglass: require("../../../../assets/icons/hourglass.png"),
+      redeem: require("../../../../assets/icons/redeem.png"),
+      schedule: require("../../../../assets/icons/schedule.png"),
+      shopping: require("../../../../assets/icons/shopping.png"),
+      calender: require("../../../../assets/icons/calendar.png"),
+      path: require("../../../../assets/icons/Path.png"),
     }
   },
 

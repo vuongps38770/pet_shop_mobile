@@ -11,6 +11,7 @@ import newAddressReducer from '../features/address/address.slice'
 import orderSlice from '../features/order/order.slice'
 import profileReducer from '../features/profile/profile.slice'; 
 import orderDetailReducer from '../features/order-detail/slices';
+import voucherReducer from '../features/voucher/voucher.slice';
 
 
 
@@ -24,7 +25,8 @@ export const store = configureStore({
     newAddress: newAddressReducer,
     order:orderSlice,
     profile: profileReducer,
-    orderDetail:orderDetailReducer
+    orderDetail: orderDetailReducer,
+    voucher: voucherReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
