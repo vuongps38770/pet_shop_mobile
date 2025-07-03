@@ -23,4 +23,7 @@ export type MainStackParamList = {
   OrderScreen: undefined;
   PendingScreen: undefined;
   OrderDetail: undefined;
+  VoucherScreen: undefined;
+  MyVoucherScreen: undefined;
+
 };
