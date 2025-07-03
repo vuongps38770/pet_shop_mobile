@@ -9,13 +9,15 @@ import {
   setShippingAddressId, 
   createOrder, 
   setOrderItems,
-  payOrderWithZalopay 
+  payOrderWithZalopay,
+  checkOrder
 } from '../order.slice';
 import { getMyAddresses } from '../../address/address.slice';
 import { removeFromCart } from '../../cart/cart.slice';
 import { useToast } from 'src/presentation/shared/components/CustomToast';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import { OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
+import showToast from 'shared/utils/toast';
 
 
 export const useOrder = () => {
@@ -33,7 +35,9 @@ export const useOrder = () => {
     paymentType, 
     shippingAddressId, 
     totalClientPrice, 
-    createOrderStatus 
+    createOrderStatus,
+    paymentStatus,
+
   } = useSelector((state: RootState) => state.order);
 
   // Sắp xếp địa chỉ: mặc định lên đầu, sau đó là mới nhất
@@ -82,11 +86,8 @@ export const useOrder = () => {
   useEffect(() => {
     if (createOrderStatus === 'success') {
       if (paymentType === PaymentType.ZALOPAY) {
-        if (!orderCheckoutData?.payment) {
-          console.log("lỗi ko có data payment");
-          return;
-        }
-        payOrderWithZalopay(orderCheckoutData.payment.zp_trans_token);
+        payOrderWithZalopay(orderCheckoutData!.payment!.gateway_code);
+        navigation.navigate('PendingScreen');
       }
       else if (paymentType === PaymentType.COD) {
         navigation.reset({
@@ -100,9 +101,9 @@ export const useOrder = () => {
         );
       }
 
-      // selectedIds.forEach(id => {
-      //   dispatch(removeFromCart(id));
-      // });
+      selectedIds.forEach(id => {
+        dispatch(removeFromCart(id));
+      });
     }
   }, [createOrderStatus, totalClientPrice]);
 
@@ -118,6 +119,7 @@ export const useOrder = () => {
 
   const handlePay = () => {
     if (paymentType === PaymentType.MOMO || paymentType === PaymentType.VNPAY) {
+      showToast.info("Chức năng chưa được phát triển")
       return;
     }
     
@@ -128,8 +130,15 @@ export const useOrder = () => {
       paymentType: paymentType,
       shippingAddressId: shippingAddressId,
       totalClientPrice: order?.productTotal,
+      cartIds:selectedIds
     }));
   };
+  
+  const checkPaymentStatus=()=>{
+    if(!orderCheckoutData||!orderCheckoutData.payment) return
+    dispatch(checkOrder(orderCheckoutData?.payment?._id))
+  }
+  
 
   return {
     order,
@@ -143,5 +152,8 @@ export const useOrder = () => {
     handleSelectAddress,
     handleSelectMethod,
     handlePay,
+    checkPaymentStatus,
+    paymentStatus,
+    resetOrder
   };
 }; 

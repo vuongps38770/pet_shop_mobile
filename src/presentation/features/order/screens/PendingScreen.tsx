@@ -1,15 +1,64 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, NativeModules, NativeEventEmitter } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useOrder } from "../hooks/useOrder";
+import { storageHelper } from "app/config/storage";
+import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
+import { useToast } from "shared/components/CustomToast";
+const { PayZaloBridge } = NativeModules;
+const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
+
+
 
 const PendingScreen = () => {
-  const navigation = useNavigation();
+  const {
+    checkPaymentStatus,
+    paymentStatus,
+  } = useOrder();
+  const navigation = useMainNavigation();
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const toast = useToast();
+  React.useEffect(() => {
+    const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
+      console.log('ZaloPay Event:', event);
+      checkPaymentStatus()
+      switch (event.returnCode) {
+        case '1':
+          console.log('Thanh toán thành công');
+          break;
+        case '-1':
+          console.log('Thanh toán thất bại');
+          break;
+        case '4':
+          console.log('Thanh toán bị huỷ');
+          break;
+        default:
+          console.log('Không xác định:', event);
+      }
+      setCheckingPayment(true);
+      checkPaymentStatus();
+    });
+    return () => subscription.remove();
+  }, []);
+  React.useEffect(() => {
+    if (checkingPayment && paymentStatus) {
+      console.log(paymentStatus);
 
+      if (paymentStatus.return_code == 1) {
+        storageHelper.clearPaymentQueue();
+        navigation.navigate('MainScreen');
+        toast.show('success', 'Bạn đã đặt hàng thành công');
+      } else if (paymentStatus.return_code == 2) {
+        toast.show('error', 'Thanh toán thất bại, thanh toán lại ở lịch sử mua hàng');
+      }
+      setCheckingPayment(false);
+    }
+  }, [paymentStatus, checkingPayment]);
   return (
     <View style={styles.container}>
       <Text style={styles.status}>Đang chờ thanh toán</Text>
       <Text style={styles.warning}>
-        Cùng Shop bảo vệ quyền lợi của bạn -{" "}
+        Cùng Shop bảo vệ quyền lợi của bạn - {" "}
         <Text style={styles.bold}>KHÔNG CHUYỂN TIỀN TRƯỚC</Text> cho Shipper khi
         đơn hàng chưa được giao tới với bất kỳ lý do gì
       </Text>
@@ -17,14 +66,13 @@ const PendingScreen = () => {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate("MainScreen" as never)} 
+          onPress={() => navigation.navigate("MainScreen" as never)}
         >
           <Text style={styles.backText}>Trở về</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.orderButton}
-          
         >
           <Text style={styles.orderText}>Đơn mua</Text>
         </TouchableOpacity>
