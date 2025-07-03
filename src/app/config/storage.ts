@@ -9,7 +9,9 @@ export const STORAGE_KEYS = {
   SETTINGS: 'settings',
   CART: 'cart',
   FAVORITES: 'favorites',
-  USER_AGENT: 'user_agent'
+  USER_AGENT: 'user_agent',
+  PAYMENT_QUEUE: 'payment_queue',
+  FCM_TOKEN:'fcm_token'
 } as const;
 
 const isWeb = Platform.OS === 'web';
@@ -70,7 +72,7 @@ export const storageHelper = {
       ]);
     }
   },
-   getOrCreateWebDeviceId() {
+  getOrCreateWebDeviceId() {
     let deviceId = localStorage.getItem(STORAGE_KEYS.USER_AGENT);
     if (!deviceId) {
       deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -88,10 +90,28 @@ export const storageHelper = {
     }
     return deviceId;
   },
+
+  async getFcmToken(){
+    return storage.getString(STORAGE_KEYS.FCM_TOKEN)
+  },
+  async setFcmToken(token:string){
+    await storage.set(STORAGE_KEYS.FCM_TOKEN,token)
+  },
+
+
+  async addToPaymentQueue(paymentId: string) {
+    await storage.set(STORAGE_KEYS.PAYMENT_QUEUE, paymentId);
+  },
+  async getPaymentQueue() {
+    return await storage.getString(STORAGE_KEYS.PAYMENT_QUEUE)
+  },
+  async clearPaymentQueue(){
+    await storage.delete(STORAGE_KEYS.PAYMENT_QUEUE)
+  }
 };
 
 
-  
+
 export const storage = {
   set: async (key: string, value: string) => {
     await SecureStore.setItemAsync(key, value);
