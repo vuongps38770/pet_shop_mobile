@@ -1,3 +1,4 @@
 {
-    "postman.settings.dotenv-detection-notification-visibility": false
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "cmake.sourceDirectory": "D:/Du_an_tot_nghiep_pet_shop/API/pet-shop-mobile/node_modules/react-native/ReactCommon/reactperflogger"
 }

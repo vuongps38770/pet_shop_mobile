@@ -13,9 +13,9 @@ import { APIErrorCode, ErrorHandler, mapErr } from './types/error';
 
 // Base URL configuration
 // export const BASE_URL = Platform.select({
-//   ios: 'http://localhost:3000/api',
-//   android: 'http://10.0.2.2:3000/api',
-//   default: 'http://localhost:3000/api',
+//   ios: 'http://192.168.1.2:3000',
+//   android: 'http://192.168.1.7:3000',
+//   default: 'http://192.168.1.2:3000',
 // });
 
 export const BASE_URL = Platform.select({
