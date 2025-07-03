@@ -22,3 +22,6 @@ local.properties
 #libs
 app/src/libs/zpdk-release.aar
 app/libs/*.aar
+
+#fcmkeys
+app/google-services.json

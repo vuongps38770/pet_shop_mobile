@@ -1,7 +1,8 @@
 import { FilterOptions } from "src/presentation/dto/req/filter-option.req.dto";
+import { MainBottomTabParamList } from "./bottom-tabs-navigators/types";
 
 export type MainStackParamList = {
-  MainScreen: undefined
+  MainScreen: undefined|{route:keyof MainBottomTabParamList}
   Check: undefined;
   Setting: undefined;
   Profile: undefined;
@@ -16,7 +17,7 @@ export type MainStackParamList = {
   AllCategoriesScreen:undefined,
   ProductShow: { filter: FilterOptions, title: string },
   NewAddressScreen: undefined,
-  ScreenReviews: undefined;
+  ScreenReviews: {productId:string};
   AddressPickScreen:undefined
   AllAddressesScreen: undefined
   OrderScreen: undefined;

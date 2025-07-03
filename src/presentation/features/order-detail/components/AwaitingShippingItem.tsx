@@ -3,16 +3,9 @@ import React from 'react';
 import { colors } from 'shared/theme/colors';
 import { Typography } from 'shared/components/Typography';
 import { PriceFormatter } from 'app/utils/priceFormatter';
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 
-export type AwaitingShippingOrder = {
-    _id: string;
-    createdAt: string;
-    productName: string;
-    quantity: number;
-    totalPrice: number;
-    status: string;
-    image: string;
-};
+
 
 const formatDateTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -22,9 +15,9 @@ const formatDateTime = (isoString: string) => {
 };
 
 export interface AwaitingShippingItemProps {
-    order: AwaitingShippingOrder;
-    onContactSeller?: (order: AwaitingShippingOrder) => void;
-    onPress?: (order: AwaitingShippingOrder) => void;
+    order: OrderRespondDto;
+    onContactSeller?: (order: OrderRespondDto) => void;
+    onPress?: (order: OrderRespondDto) => void;
 }
 
 
@@ -36,7 +29,7 @@ const AwaitingShippingItem: React.FC<AwaitingShippingItemProps> = ({ order, onCo
                 <View style={styles.headerLeft}>
                     <View style={styles.dot} />
                     <Typography variant="caption" color="textSecondary" style={styles.orderId}>
-                        ORDER #{order._id}
+                        DH: {order.sku}
                     </Typography>
                 </View>
                 {/* <Typography variant="caption" color="textSecondary">{order.date}</Typography> */}
@@ -47,10 +40,10 @@ const AwaitingShippingItem: React.FC<AwaitingShippingItemProps> = ({ order, onCo
 
             {/* Content */}
             <TouchableOpacity style={styles.content} activeOpacity={0.8} onPress={() => onPress?.(order)}>
-                <Image source={{ uri: order.image }} style={styles.image} />
+                <Image source={{ uri: order.orderDetailItems[0].image }} style={styles.image} />
                 <View style={styles.details}>
                     <Typography variant="body1" bold numberOfLines={1} style={styles.productName}>
-                        {order.productName}
+                        {order.orderDetailItems[0].productName}
                     </Typography>
 
 
@@ -60,16 +53,9 @@ const AwaitingShippingItem: React.FC<AwaitingShippingItemProps> = ({ order, onCo
                 </View>
             </TouchableOpacity>
             <View style={styles.secondaryContainer}>
-                <Text style={styles.description}>x{order.quantity} sản phẩm</Text>
+                <Text style={styles.description}>x{order.orderDetailItems.length} sản phẩm</Text>
                 <Text style={styles.price}>{PriceFormatter.formatPrice(order.totalPrice)}</Text>
             </View>
-
-            {/* Contact Seller Button */}
-            {/* <TouchableOpacity onPress={() => onContactSeller?.(order)}>
-        <Typography variant="caption" color="primary" style={styles.contact}>
-          Liên hệ với người bán
-        </Typography>
-      </TouchableOpacity> */}
 
         </View>
     );

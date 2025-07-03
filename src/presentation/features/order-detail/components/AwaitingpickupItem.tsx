@@ -47,7 +47,7 @@ const AwaitingpickupItem: React.FC<AwaitingPickupItemProps> = ({ order, onPress,
         <Wrapper style={styles.container} onPress={onPress} activeOpacity={onPress ? 0.85 : undefined}>
             <View style={styles.headerRow}>
                 <View style={styles.dot} />
-                <Text style={styles.orderType}>ĐẶT HÀNG</Text>
+                <Text style={styles.orderType}>DH:</Text>
                 <Text style={styles.orderId}>#{order.sku}</Text>
                 <View style={{ flex: 1 }} />
                 <Text style={styles.date}>
@@ -69,11 +69,6 @@ const AwaitingpickupItem: React.FC<AwaitingPickupItemProps> = ({ order, onPress,
                 </Text>
                 <Text style={styles.price}>{PriceFormatter.formatPrice(order.totalPrice)}</Text>
             </View>
-            {onContactSeller && (
-                <TouchableOpacity style={styles.contactBtn} onPress={onContactSeller}>
-                    <Text style={styles.contactBtnText}>Liên hệ người bán</Text>
-                </TouchableOpacity>
-            )}
         </Wrapper>
     )
 }

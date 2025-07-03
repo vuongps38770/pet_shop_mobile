@@ -1,4 +1,3 @@
-
 export const assets = {
   icons: {
     // demo_icon: require("../../../../assets/icons/demo-icon.png"),
@@ -73,7 +72,9 @@ export const assets = {
       shopping: require("../../../../assets/icons/shopping.png"),
       calender: require("../../../../assets/icons/calendar.png"),
       path: require("../../../../assets/icons/Path.png"),
-    }
+     
+    },
+    close: require("../../../../assets/icons/Close.png"),
   },
 
   images: {

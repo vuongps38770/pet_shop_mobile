@@ -34,7 +34,6 @@ const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel,
     onCancel?: () => void,
     statusColorMode?: 'yellow' | 'green' | 'red' | 'blue',
 }) => {
-    console.log(order?.createdAt);
 
     const [confirmModal, setConfirmModal] = useState(false);
     if (!order) return null;

@@ -76,7 +76,9 @@ const cartSlice = createSlice({
       state.selectedIds = action.payload;
     },
     selectAll(state) {
-      state.selectedIds = state.items.map(item => item._id);
+      state.selectedIds = state.items
+        .filter(item => !item.isActivate && item.quantity>item.availableStock)
+        .map(item => item._id);
     },
     deselectAll(state) {
       state.selectedIds = [];

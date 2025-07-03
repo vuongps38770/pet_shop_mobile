@@ -1,21 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, FlatList, Text } from 'react-native';
+import { StyleSheet, View, FlatList, Text, TouchableOpacity } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
-import { fetchCanceledOrders } from '../slices/canceled.slice';
+import { fetchCanceledOrders, fetchCanceledOrdersLoadMore } from '../slices/canceled.slice';
 import CanceledItem from '../components/CanceledItem';
 import OrderDetailModal from '../components/OrderDetailModal';
 import { LoadingView } from 'shared/components/LoadingView';
 
 const CanceledScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data, fetchStatus, fetchError } = useSelector((state: RootState) => state.orderDetail.canceled);
+  const { data, fetchStatus, fetchError, loadMoreStatus } = useSelector((state: RootState) => state.orderDetail.canceled);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [page, setPage] = useState(1);
+  const [allOrders, setAllOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    dispatch(fetchCanceledOrders({}));
+    setPage(1);
+    dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
+      setAllOrders(res.payload?.data || []);
+    });
   }, [dispatch]);
+
+  useEffect(() => {
+    if (data && data.data && page === 1) {
+      setAllOrders(data.data);
+    }
+  }, [data, page]);
 
   if (fetchStatus === 'loading') {
     return <LoadingView />;
@@ -48,10 +59,18 @@ const CanceledScreen = () => {
     setModalVisible(true);
   };
 
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    (dispatch as any)(fetchCanceledOrdersLoadMore({ page: nextPage })).then((res: any) => {
+      setAllOrders(prev => [...prev, ...(res.payload?.data?.data || [])]);
+      setPage(nextPage);
+    });
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
-        data={data.data}
+        data={allOrders}
         keyExtractor={item => item._id}
         renderItem={({ item }) => (
           <CanceledItem
@@ -61,6 +80,13 @@ const CanceledScreen = () => {
           />
         )}
         contentContainerStyle={{ padding: 16 }}
+        ListFooterComponent={
+          data?.hasNext ? (
+            <TouchableOpacity style={{ marginVertical: 16, alignSelf: 'center', padding: 12, backgroundColor: '#eee', borderRadius: 8 }} onPress={handleLoadMore} disabled={loadMoreStatus === 'loading'}>
+              <Text style={{ color: '#333', fontWeight: 'bold' }}>{loadMoreStatus === 'loading' ? 'Đang tải...' : 'Tải thêm'}</Text>
+            </TouchableOpacity>
+          ) : null
+        }
       />
       <OrderDetailModal
         visible={modalVisible}
