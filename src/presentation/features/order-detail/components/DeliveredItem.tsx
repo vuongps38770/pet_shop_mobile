@@ -39,7 +39,7 @@ const DeliveredItem: React.FC<DeliveredItemProps> = ({
             <View style={styles.header}>
                 <View style={styles.orderInfo}>
                     <Typography variant="body2" color="textPrimary">
-                        Đơn hàng #{order._id?.slice(-8)}
+                        DH: {order.sku}
                     </Typography>
                     <Typography variant="caption" color="textSecondary">
                         {formatDateTimeVN(createdAt)}

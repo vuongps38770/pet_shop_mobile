@@ -34,9 +34,9 @@ const OrderDetailScreen = () => {
                 },
             }}
         >
-            <Tab.Screen name="WaitForPayment"
+            {/* <Tab.Screen name="WaitForPayment"
                 options={{ tabBarLabel: 'Chờ thanh toán' }}
-                component={WaitForPaymentScreen} />
+                component={WaitForPaymentScreen} /> */}
 
             <Tab.Screen name="AwaitingConfirm"
                 options={{ tabBarLabel: 'Chờ xác nhận' }}

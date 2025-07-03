@@ -1,17 +1,19 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { blue } from 'react-native-reanimated/lib/typescript/Colors'
-import { Typography } from 'shared/components/Typography';
+import React, { useEffect, useMemo, useState } from 'react'
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { colors } from 'theme/colors';
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 import { formatDateTimeVN } from 'app/utils/time';
+import { useDispatch } from 'react-redux';
+import { handlePayment, checkOrder } from '../slices/waitForPayment.slice';
+import { useToast } from 'shared/components/CustomToast';
+import { AppDispatch } from 'src/presentation/store/store';
 
 interface WaitForPaymentItemProps {
     order: OrderRespondDto;
     onItemPress?: () => void;
-    onItemButtonPress?: () => void;
     onCancelPress?: () => void;
+    onSetPaymentId?: (paymentId: string) => void;
 }
 
 const formatCountdown = (expiredAt?: Date) => {
@@ -34,8 +36,9 @@ const formatDateTime = (isoString?: Date) => {
         }`;
 };
 
-
-const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onItemPress, onItemButtonPress, onCancelPress }) => {
+const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onItemPress, onCancelPress, onSetPaymentId }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const toast = useToast();
     const firstItem = order.orderDetailItems[0];
     const name = firstItem?.productName || '';
     const image = firstItem?.image || '';
@@ -43,7 +46,6 @@ const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onItemPr
     const attributes = firstItem?.variantName || '';
     const expiredAt = order.expiredDate;
     const createdAt = order.createdAt;
-
     const [countdown, setCountdown] = useState(formatCountdown(expiredAt));
 
     useEffect(() => {
@@ -53,11 +55,31 @@ const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onItemPr
         return () => clearInterval(timer);
     }, [expiredAt]);
 
+    // Logic thanh toán cho từng item
+    const handlePay = async () => {
+        if (order.expiredDate && new Date(order.expiredDate).getTime() < Date.now()) {
+            toast.show('error', 'Đơn hàng đã hết hạn thanh toán, vui lòng đặt lại đơn mới.');
+            if ((order as any).paymentId) {
+                await (dispatch as any)(checkOrder((order as any).paymentId));
+            }
+            return;
+        }
+        const res: any = await (dispatch as any)(handlePayment({ orderId: order._id, paymentType: order.paymentType }));
+        if (res.meta.requestStatus === 'fulfilled' && res.payload.success) {
+            toast.show('info', 'Đang mở ZaloPay...');
+            if (res.payload.paymentId && onSetPaymentId) onSetPaymentId(res.payload.paymentId);
+        } else {
+            toast.show('error', res.payload?.message || 'Có lỗi xảy ra khi thanh toán');
+        }
+    };
+    const isExpired = useMemo(() => {
+        return order?.expiredDate ? new Date(order.expiredDate).getTime() <= Date.now() : false;
+    }, [order?.expiredDate]);
     return (
         <TouchableOpacity style={styles.container} onPress={onItemPress} activeOpacity={0.85}>
             <View style={styles.headerRow}>
                 <View style={styles.dot} />
-                <Text style={styles.orderId}>ORDER #{order.sku}</Text>
+                <Text style={styles.orderId}>DH: {order.sku}</Text>
                 <View style={{ flex: 1 }} />
                 <Text style={styles.date}>
                     {formatDateTimeVN(order.createdAt)}
@@ -79,7 +101,7 @@ const WaitForPaymentItem: React.FC<WaitForPaymentItemProps> = ({ order, onItemPr
                 <TouchableOpacity onPress={onCancelPress}>
                     <Text style={styles.cancelText}>Cancel Order</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.payNowBtn} onPress={onItemButtonPress}>
+                <TouchableOpacity style={styles.payNowBtn} onPress={handlePay} disabled={isExpired}>
                     <Text style={styles.payNowText}>Thanh Toán Ngay</Text>
                 </TouchableOpacity>
             </View>

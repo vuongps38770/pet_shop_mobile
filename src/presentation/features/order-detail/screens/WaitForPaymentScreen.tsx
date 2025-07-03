@@ -1,22 +1,29 @@
-import { StyleSheet, Text, View, ActivityIndicator, Modal, TouchableOpacity, ScrollView, Linking, Image } from 'react-native'
+import { StyleSheet, Text, View, ActivityIndicator, Modal, TouchableOpacity, ScrollView, Linking, Image, NativeModules, NativeEventEmitter } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import WaitForPaymentItem from '../components/WaitForPaymentItem'
 import { FlatList } from 'react-native'
 import { spacing } from 'theme/spacing';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchWaitForPaymentOrders, fetchZaloPayUrl, updateOrderStatus, resetStatus } from '../slices/waitForPayment.slice';
+import { fetchWaitForPaymentOrders, updateOrderStatus, resetStatus, handlePayment, checkOrder } from '../slices/waitForPayment.slice';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
 import { OrderStatus } from 'app/types/OrderStatus';
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { useFocusEffect } from '@react-navigation/native';
 import { LoadingView } from 'shared/components/LoadingView';
+import { useToast } from 'shared/components/CustomToast';
+
+const { PayZaloBridge } = NativeModules;
+const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
 
 const WaitForPaymentScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const toast = useToast();
   const { loading, error, data } = useSelector((state: RootState) => state.orderDetail.waitForPayment)
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderRespondDto | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [currentPaymentId, setCurrentPaymentId] = useState<string | null>(null);
 
   const { payUrl, getUrlStatus, updateStatus, updateStatusError } = useSelector((state: RootState) => state.orderDetail.waitForPayment)
 
@@ -26,6 +33,36 @@ const WaitForPaymentScreen = () => {
     }, [dispatch])
   );
 
+  // Lắng nghe sự kiện từ ZaloPay
+  useEffect(() => {
+    const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
+      console.log('ZaloPay Event:', event);
+      setCheckingPayment(true);
+      if (event.returnCode === '1' && currentPaymentId) {
+        dispatch(checkOrder(currentPaymentId));
+      }
+      switch (event.returnCode) {
+        case '1':
+          console.log('Thanh toán thành công');
+          toast.show('success', 'Thanh toán thành công!');
+          dispatch(fetchWaitForPaymentOrders({ statuses: [OrderStatus.WAIT_FOR_PAYMENT] }));
+          break;
+        case '-1':
+          console.log('Thanh toán thất bại');
+          toast.show('error', 'Thanh toán thất bại');
+          break;
+        case '4':
+          console.log('Thanh toán bị huỷ');
+          toast.show('info', 'Thanh toán đã bị huỷ');
+          break;
+        default:
+          console.log('Không xác định:', event);
+      }
+      setCheckingPayment(false);
+    });
+
+    return () => subscription.remove();
+  }, [currentPaymentId]);
 
   useEffect(() => {
     if (getUrlStatus === 'success' && payUrl) {
@@ -33,31 +70,58 @@ const WaitForPaymentScreen = () => {
       Linking.openURL(payUrl);
     }
   }, [getUrlStatus, payUrl]);
-  const handleItemButtonPress = (orderId: string) => {
-    dispatch(fetchZaloPayUrl({ orderId, paymentUrl: "null" }))
+
+  const handleItemButtonPress = (order: OrderRespondDto, paymentType: string) => {
+    // Kiểm tra hết hạn thanh toán
+    if (order.expiredDate && new Date(order.expiredDate).getTime() < Date.now()) {
+      toast.show('error', 'Đơn hàng đã hết hạn thanh toán, vui lòng đặt lại đơn mới.');
+      return;
+    }
+    dispatch(handlePayment({ orderId: order._id, paymentType }))
+      .then((res: any) => {
+        if (res.meta.requestStatus === "fulfilled") {
+          if (res.payload.success) {
+            if (res.payload.paymentType === 'ZALOPAY') {
+              setCurrentPaymentId(res.payload.paymentId);
+              toast.show('info', 'Đang mở ZaloPay...');
+            }
+          } else {
+            toast.show('info', res.payload.message || 'Phương thức thanh toán chưa được hỗ trợ');
+          }
+        } else {
+          toast.show('error', res.payload || 'Có lỗi xảy ra khi thanh toán');
+        }
+      });
   };
+
   const handleItemPress = (item: OrderRespondDto) => {
     setSelectedOrder(item)
     setModalVisible(true)
   };
 
-
-
   const handleCancelOrder = () => {
     if (selectedOrder) {
-
-
       dispatch(updateOrderStatus({ orderId: selectedOrder._id, nextStatus: OrderStatus.CANCELLED }))
         .then((res: any) => {
           if (res.meta.requestStatus === "fulfilled") {
             setTimeout(() => {
               setModalVisible(false);
               dispatch(resetStatus());
+              // Refresh danh sách sau khi huỷ
+              dispatch(fetchWaitForPaymentOrders({ statuses: [OrderStatus.WAIT_FOR_PAYMENT] }));
             }, 1200);
           }
         });
     }
   };
+
+  const handlePayInModal = () => {
+    if (selectedOrder) {
+      handleItemButtonPress(selectedOrder, selectedOrder.paymentType);
+      setModalVisible(false);
+    }
+  };
+
   if (loading) {
     return (
       <LoadingView />
@@ -84,7 +148,6 @@ const WaitForPaymentScreen = () => {
       <FlatList
         data={data?.data || []}
         renderItem={({ item }) => <WaitForPaymentItem order={item}
-          onItemButtonPress={() => handleItemButtonPress(item._id)}
           onItemPress={() => handleItemPress(item)} />}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false} />
@@ -102,7 +165,7 @@ const WaitForPaymentScreen = () => {
             <ScrollView>
               <Text style={styles.modalTitleNew}>Order Details</Text>
               <View style={styles.orderInfoRow}>
-                <Text style={styles.orderId}>ORDER #{selectedOrder?.sku || ''}</Text>
+                <Text style={styles.orderId}>DH: {selectedOrder?.sku || ''}</Text>
                 <View style={styles.statusBadge}><Text style={styles.statusBadgeText}>Pending Payment</Text></View>
               </View>
               <Text style={styles.orderDate}>Placed on {selectedOrder ? new Date(selectedOrder.createdAt).toLocaleDateString() : ''}</Text>
@@ -140,10 +203,9 @@ const WaitForPaymentScreen = () => {
                   <Text style={styles.cancelBtnText}>{updateStatus === "loading" ? "Đang huỷ..." : "Huỷ đơn hàng"}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.payBtn}
-                  onPress={() => {
-                    if (selectedOrder) dispatch(fetchZaloPayUrl({ orderId: selectedOrder._id, paymentUrl: "null" }));
-                  }}
+                  style={[styles.payBtn, { opacity: updateStatus === "loading" ? 0.6 : 1 }]}
+                  onPress={handlePayInModal}
+                  disabled={updateStatus === "loading"}
                 >
                   <Text style={styles.payBtnText}>Thanh toán</Text>
                 </TouchableOpacity>

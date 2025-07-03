@@ -1,26 +1,77 @@
-import { FlatList, StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Image } from 'react-native'
+import { FlatList, StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Image, NativeModules, NativeEventEmitter } from 'react-native'
 import React from 'react'
 import { spacing } from 'theme/spacing';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
-import { fetchAwaitingConfirmOrders, updateOrderStatus } from '../slices/awaitingConfirmation.slice';
-import { useEffect } from 'react';
+import { fetchAwaitingConfirmOrders, updateOrderStatus, fetchAwaitingConfirmOrdersLoadMore } from '../slices/awaitingConfirmation.slice';
+import { useEffect, useRef } from 'react';
 import AwaitingConfirmationItem from '../components/AwaitingConfirmationItem';
 import { OrderStatus } from 'app/types/OrderStatus';
 import OrderDetailModal from '../components/OrderDetailModal';
+import WaitForPaymentItem from '../components/WaitForPaymentItem';
+import { useToast } from 'shared/components/CustomToast';
+import { checkOrder } from '../slices/waitForPayment.slice';
+
+const { PayZaloBridge } = NativeModules;
+const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
 
 const AwaitingConfirmationScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data, fetchStatus, fetchError } = useSelector((state: RootState) => state.orderDetail.awaitingConfirmation);
+  const { data, fetchStatus, fetchError, loadMoreStatus } = useSelector((state: RootState) => state.orderDetail.awaitingConfirmation);
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
+  const toast = useToast();
+  const currentPaymentId = useRef<string | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [allOrders, setAllOrders] = React.useState<any[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  useEffect(() => {
-    dispatch(fetchAwaitingConfirmOrders({}));
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    dispatch(fetchAwaitingConfirmOrders({ page: 1 })).then((res: any) => {
+      setAllOrders(res.payload?.data || []);
+      setRefreshing(false);
+    });
+  };
+
+  
+
+  React.useEffect(() => {
+    setPage(1);
+    dispatch(fetchAwaitingConfirmOrders({ page: 1 })).then((res: any) => {
+      setAllOrders(res.payload?.data || []);
+    });
   }, [dispatch]);
-  useEffect(() => {
+
+  React.useEffect(() => {
+    if (data && data.data && page === 1) {
+      setAllOrders(data.data);
+    }
+  }, [data, page]);
+
+  React.useEffect(() => {
     console.log(selectedOrder);
   }, [selectedOrder])
+
+  // Lắng nghe sự kiện thanh toán ZaloPay
+  React.useEffect(() => {
+    const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
+      if (event.returnCode === '1' && currentPaymentId.current) {
+        console.log("cur",currentPaymentId.current);
+        
+        dispatch(checkOrder(currentPaymentId.current)).then(() => {
+          dispatch(fetchAwaitingConfirmOrders({}));
+        });
+        toast.show('success', 'Thanh toán thành công!');
+      } else if (event.returnCode === '-1') {
+        toast.show('error', 'Thanh toán thất bại');
+      } else if (event.returnCode === '4') {
+        toast.show('info', 'Thanh toán đã bị huỷ');
+      }
+    });
+    return () => subscription.remove();
+  }, [dispatch, toast]);
 
   if (fetchStatus === 'loading') {
     return (
@@ -62,27 +113,62 @@ const AwaitingConfirmationScreen = () => {
     setModalVisible(true);
   };
 
+  // Callback để WaitForPaymentItem set paymentId khi gọi thanh toán
+  const handleSetPaymentId = (paymentId: string) => {
+    currentPaymentId.current = paymentId;
+  };
+
+  // Hàm tải thêm
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    (dispatch as any)(fetchAwaitingConfirmOrdersLoadMore({ page: nextPage })).then((res: any) => {
+      setAllOrders(prev => [...prev, ...(res.payload?.data?.data || [])]);
+      setPage(nextPage);
+    });
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
-        data={data.data}
-        renderItem={({ item }) => (
-          <AwaitingConfirmationItem
-            orderss={{
-              sku: item.sku,
-              name: item.orderDetailItems[0]?.productName || '',
-              productCount: item.orderDetailItems.length,
-              totalPrice: item.totalPrice,
-              image: item.orderDetailItems[0]?.image || '',
-              attributes: item.orderDetailItems[0]?.variantName,
-              createdAt: item.createdAt
-            }}
-            statusLabel={item.status === OrderStatus.PAYMENT_SUCCESSFUL ? 'Đã thanh toán, chờ xác nhận' : undefined}
-            onPress={() => handleItemPress(item)}
-          />
-        )}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        data={allOrders}
+        renderItem={({ item }) => {
+          if (item.status === 'WAIT_FOR_PAYMENT') {
+            return (
+              <WaitForPaymentItem
+                order={item}
+                onItemPress={() => handleItemPress(item)}
+                onSetPaymentId={handleSetPaymentId}
+              />
+            );
+          }
+          return (
+            <AwaitingConfirmationItem
+              orderss={{
+                sku: item.sku,
+                name: item.orderDetailItems[0]?.productName || '',
+                productCount: item.orderDetailItems.length,
+                totalPrice: item.totalPrice,
+                image: item.orderDetailItems[0]?.image || '',
+                attributes: item.orderDetailItems[0]?.variantName,
+                createdAt: item.createdAt
+              }}
+              statusLabel={item.status === OrderStatus.PAYMENT_SUCCESSFUL ? 'Đã thanh toán, chờ xác nhận' : undefined}
+              onPress={() => handleItemPress(item)}
+            />
+          );
+        }}
         keyExtractor={(item) => item._id}
-        showsVerticalScrollIndicator={false} />
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          data?.hasNext ? (
+            <TouchableOpacity style={{ marginVertical: 16, alignSelf: 'center', padding: 12, backgroundColor: '#eee', borderRadius: 8 }} onPress={handleLoadMore} disabled={loadMoreStatus === 'loading'}>
+              <Text style={{ color: '#333', fontWeight: 'bold' }}>{loadMoreStatus === 'loading' ? 'Đang tải...' : 'Tải thêm'}</Text>
+            </TouchableOpacity>
+          ) : null
+        }
+      />
       <OrderDetailModal
         visible={modalVisible}
         order={selectedOrder}

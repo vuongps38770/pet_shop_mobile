@@ -8,6 +8,7 @@ import OrderDetailModal from '../components/OrderDetailModal';
 import { LoadingView } from 'shared/components/LoadingView';
 import { OrderStatus } from 'app/types/OrderStatus';
 import AppModal from 'shared/components/modals/AppModal';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 
 const DeliveredScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,7 +17,7 @@ const DeliveredScreen = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [actionOrderId, setActionOrderId] = useState<string>('');
-
+  const navigation = useMainNavigation()
   useEffect(() => {
     dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }));
   }, [dispatch]);
@@ -49,8 +50,7 @@ const DeliveredScreen = () => {
   };
 
   const handleReview = (orderId: string) => {
-    // TODO: Navigate to review screen
-    Alert.alert('Thông báo', 'Chức năng đánh giá sẽ được phát triển sau');
+    navigation.navigate('ScreenReviews',{productId:""})
   };
 
   const handleCloseModal = () => {

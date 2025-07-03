@@ -36,11 +36,14 @@ export const fetchAwaitingConfirmOrders = createAsyncThunk<
       // Gộp status NEWORDER và PAYMENT_SUCCESSFUL
       params.append('statuses', OrderStatus.NEWORDER);
       params.append('statuses', OrderStatus.PAYMENT_SUCCESSFUL);
+      params.append('statuses', OrderStatus.WAIT_FOR_PAYMENT);
       if (query.page) params.append('page', String(query.page));
       if (query.limit) params.append('limit', String(query.limit));
       if (query.sortBy) params.append('sortBy', query.sortBy);
       if (query.sortOrder) params.append('sortOrder', query.sortOrder);
       const res = await axiosInstance.get(`/order/my?${params.toString()}`);
+      console.log(res.data.data);
+      
       return res.data.data as OrderListResDto;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
@@ -55,8 +58,12 @@ export const updateOrderStatus = createAsyncThunk<
 >(
   'awaitingConfirmation/updateOrderStatus',
   async ({ orderId, nextStatus }, { rejectWithValue }) => {
+    console.log(nextStatus);
+    
     try {
       const res = await axiosInstance.post(`/order/${orderId}/status`, { nextStatus });
+      console.log(res.data.data);
+      
       return res.data.data;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
