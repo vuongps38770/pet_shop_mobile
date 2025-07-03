@@ -9,14 +9,15 @@ import { AuthNavigator } from './auth-navigation/Auth.navigator';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store/store';
 
-import {checkAuthStatus} from '../features/auth/auth.slice'
+import { checkAuthStatus } from '../features/auth/auth.slice'
+import { BadgeProvider } from 'shared/context/BadgeContext';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export const AppNavigator = () => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const {appLoading,isAuthenticated} = useSelector((state:RootState)=> state.auth)
+  const { appLoading, isAuthenticated } = useSelector((state: RootState) => state.auth)
 
   // const isAuthenticated = false
 
@@ -25,7 +26,7 @@ export const AppNavigator = () => {
       dispatch(checkAuthStatus())
     };
     init();
-  }, [dispatch,isAuthenticated]);
+  }, [dispatch, isAuthenticated]);
 
   if (appLoading) {
     return (
@@ -37,13 +38,16 @@ export const AppNavigator = () => {
 
   return (
     <NavigationContainer >
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : (
-          <Stack.Screen name="Main" component={MainNavigator} />
-        )}
-      </Stack.Navigator>
+      <BadgeProvider>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {!isAuthenticated ? (
+            <Stack.Screen name="Auth" component={AuthNavigator} />
+          ) : (
+            <Stack.Screen name="Main" component={MainNavigator} />
+          )}
+        </Stack.Navigator>
+      </BadgeProvider>
+
     </NavigationContainer>
   );
 };

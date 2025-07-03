@@ -20,12 +20,12 @@ import { FilterOptions } from '../../../dto/req/filter-option.req.dto';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { FormatProduct } from 'shared/components/format-price';
-import {  useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { MainStackParamList } from 'src/presentation/navigation/main-navigation/types';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
-import {fetchPages,addToPages} from '../product.slice'
+import { fetchPages, addToPages } from '../product.slice'
 import { ProductRespondSimplizeDto } from 'src/presentation/dto/res/product-respond.dto';
 import ProductCard from 'shared/components/flat-list-items/ProductCard';
 
@@ -34,16 +34,16 @@ import ProductCard from 'shared/components/flat-list-items/ProductCard';
 
 export const ProductShow = () => {
     const navigation = useMainNavigation()
-    
 
-    const route = useRoute<RouteProp<MainStackParamList,'ProductShow'>>()
+
+    const route = useRoute<RouteProp<MainStackParamList, 'ProductShow'>>()
 
 
     const [filter, setFilter] = useState<FilterOptions>({ ...route.params.filter, limit: 10 })
     const [searchParam, setSearchParam] = useState("")
     const [showDropdown, setShowDropdown] = useState(false);
     const [selectedSort, setSelectedSort] = useState('Mới nhất');
-
+    const [title, setTitle] = useState("")
     const sortOptions = [
         'Mới nhất',
         'Cũ nhất',
@@ -54,7 +54,7 @@ export const ProductShow = () => {
 
     ];
 
-    const pages = useSelector((state:RootState)=>state.product.pages)
+    const pages = useSelector((state: RootState) => state.product.pages)
 
 
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -63,8 +63,24 @@ export const ProductShow = () => {
     useEffect(() => {
         const getData = async () => {
             dispatch(fetchPages(filter))
+
             setIsLoadingMore(false);
+            let title = "";
+
+            if (filter.search) {
+                if (filter.categoryId || filter.rootCategoryId) {
+                    title = `Kết quả của: ${route.params.title}/"${filter.search}"`;
+                } else {
+                    title = `Kết quả của: "${filter.search}"`;
+                }
+            } else if (filter.categoryId || filter.rootCategoryId) {
+                title = `Kết quả của: ${route.params.title}`;
+            }
+
+            setTitle(title);
         };
+        console.log(filter);
+
         getData();
     }, [filter]);
 
@@ -81,13 +97,12 @@ export const ProductShow = () => {
     const renderItem = ({ item }: { item: ProductRespondSimplizeDto }) => {
         return (
             <ProductCard
-              item={item}
-              onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
+                item={item}
+                onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
 
             />
         );
     };
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -95,7 +110,7 @@ export const ProductShow = () => {
                     <Image source={assets.icons.back as ImageSourcePropType} />
                 </TouchableOpacity>
                 <Typography variant="h5" style={styles.headerTitle}>
-                    {route.params.title}
+                    {title}
                 </Typography>
             </View>
 
@@ -114,7 +129,7 @@ export const ProductShow = () => {
                     returnKeyType='search'
                     onSubmitEditing={() => {
                         if (searchParam.trim() !== "") {
-                            setFilter((prev) => ({ limit: 10, search: searchParam.trim() }))
+                            setFilter((prev) => ({ ...prev, search: searchParam.trim() }))
                         }
                     }}
                 />
@@ -178,7 +193,7 @@ export const ProductShow = () => {
             <FlatList<ProductRespondSimplizeDto>
                 data={pages?.data}
                 numColumns={2}
-                keyExtractor={(item: ProductRespondSimplizeDto) => item._id}
+                keyExtractor={(item: ProductRespondSimplizeDto, index) => item._id + index}
                 renderItem={renderItem}
                 contentContainerStyle={styles.list}
                 onEndReached={handleLoadMore}

@@ -1,4 +1,4 @@
-import { Animated, Image, Text } from "react-native";
+import { Animated, Image, Text, View } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { assets } from "../../../shared/theme/assets";
@@ -8,42 +8,73 @@ import ProfileScreen from "../../../features/profile/screens/ProfileScreen";
 import { MainBottomTabParamList, MainBottomTabRouteName } from "./types";
 import CartScreen from "src/presentation/features/cart/screens/CartScreen";
 
-import HomeIcon from 'assets/icons/home.svg'
-import UserIcon from 'assets/icons/user.svg'
-import CartIcon from 'assets/icons/cart.svg'
-import SearchIcon from 'assets/icons/Search.svg'
+import HomeIcon from 'assets/icons/bottomTab/home-active.svg'
+import UserIcon from 'assets/icons/bottomTab/user-active.svg'
+import CartIcon from 'assets/icons/bottomTab/cart-active.svg'
+import OrderIcon from "assets/icons/bottomTab/order-active.svg"
+import HomeIconUnactive from 'assets/icons/bottomTab/home-unactive.svg'
+import UserIconUnactive from 'assets/icons/bottomTab/user-unactive.svg'
+import CartIconUnactive from 'assets/icons/bottomTab/cart-unactive.svg'
+import OrderIconUnactive from "assets/icons/bottomTab/order-unactive.svg"
 import OrderDetailScreen from "src/presentation/features/order-detail/screens/OrderDetailScreen";
+import { useBadgeContext } from "shared/context/BadgeContext";
+import { useRoute } from "@react-navigation/native";
 
 
 
 const TabNavigator = () => {
+  const route = useRoute();
   const labels: Record<MainBottomTabRouteName, string> = {
-    HomeTab: "Trang Chủ",
-    SearchTab: "Loại",
-    CartTab: "Giỏ hàng",
-    ProfileTab: "Cá nhân",
+    HomeTab: "Trang Chủ",
+    SearchTab: "Đơn hàng",
+    CartTab: "Giỏ hàng",
+    ProfileTab: "Cá nhân",
   };
 
   const Tab = createBottomTabNavigator<MainBottomTabParamList>();
   const animationRef = useRef(new Animated.Value(0)).current;
 
+  // Lấy route từ params để focus vào tab cụ thể
+  const getInitialRouteName = (): MainBottomTabRouteName => {
+    const params = route.params as { route?: MainBottomTabRouteName };
+    if (params?.route) {
+      return params.route;
+    }
+    return 'HomeTab';
+  };
+
   const getTabIcon = (routeName: MainBottomTabRouteName, focused: boolean) => {
+    const { badgeTabs } = useBadgeContext();
+    const showBadge = badgeTabs.includes(routeName);
     return (
       <Animated.View
         style={focused ? { transform: [{ translateY: animationRef }] } : {}}
       >
         {routeName === "HomeTab" && (
-          <HomeIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
+          (focused ? <HomeIcon width={20} height={20} /> : <HomeIconUnactive width={20} height={20} />)
         )}
         {routeName === "SearchTab" && (
-          <SearchIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
+          (focused ? <OrderIcon width={20} height={20} /> : <OrderIconUnactive width={20} height={20} />)
         )}
         {routeName === "CartTab" &&
-          <CartIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
+          (focused ? <CartIcon width={30} height={30} /> : <CartIconUnactive width={30} height={30} />)
         }
         {routeName === "ProfileTab" &&
-          <UserIcon width={28} height={28} fill={focused ? colors.white : colors.grey['500']} />
+          (focused ? <UserIcon width={28} height={28} fill={colors.white} /> : <UserIconUnactive width={28} height={28} fill={colors.black} />)
         }
+        {showBadge && (
+          <View
+            style={{
+              position: "absolute",
+              top: -1,
+              right: 2,
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: "red",
+            }}
+          />
+        )}
       </Animated.View>
     );
   };
@@ -63,6 +94,7 @@ const TabNavigator = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName={getInitialRouteName()}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
@@ -112,9 +144,6 @@ const TabNavigator = () => {
       <Tab.Screen name="SearchTab" component={OrderDetailScreen} />
       <Tab.Screen name="CartTab" component={CartScreen} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} />
-      
-
-
     </Tab.Navigator>
   );
 };

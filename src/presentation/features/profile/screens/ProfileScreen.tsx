@@ -12,9 +12,10 @@ import { Typography } from 'shared/components/Typography';
 import { AppDispatch } from "src/presentation/store/store";
 import { assets } from 'shared/theme/assets';
 import { colors } from 'shared/theme/colors';
-import { logOut,checkPhone } from '../../auth/auth.slice'
+import { logOut, checkPhone } from '../../auth/auth.slice'
 import AppModal from "shared/components/modals/AppModal";
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
+import { useUserInfo } from "shared/hooks/useUserInfo";
 
 const ProfileScreen = () => {
   const groupedMenuItems = [
@@ -24,7 +25,7 @@ const ProfileScreen = () => {
         title: "Personal Info",
         icon: assets.icons.profileScreen.user,
         color: colors.white,
-       
+
       },
       {
         id: "2",
@@ -68,21 +69,22 @@ const ProfileScreen = () => {
       },
     ],
   ];
-  const [isModalVisible,setIsModalVisible] = useState(false)
+  const [isModalVisible, setIsModalVisible] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
   const navigator = useMainNavigation();
+  const { user, isLoading, error } = useUserInfo();
   const handleLogout = () => {
     setIsModalVisible(true);
   };
 
   return (
     <ScrollView style={styles.container}>
-      <AppModal 
+      <AppModal
         visible={isModalVisible}
         content="Bạn có chắc muốn đăng xuất?"
         title="Đăng xuất tài khoản"
         onNegativePress={() => { setIsModalVisible(!isModalVisible) }}
-        onPositivePress={()=>{ dispatch(logOut());}}
+        onPositivePress={() => { dispatch(logOut()); }}
         onClose={() => { setIsModalVisible(!isModalVisible) }}
       />
       <View style={styles.header}>
@@ -93,11 +95,11 @@ const ProfileScreen = () => {
 
       <View style={styles.userInfo}>
         <Image
-          source={require("../../../../../assets/icons/image 1.png")}
+          source={{ uri: user?.avatar }}
           style={styles.avatar}
         />
         <Typography variant="h5" style={styles.userName}>
-          Vishal Khadok
+          {user?.name}
         </Typography>
       </View>
 
@@ -105,20 +107,20 @@ const ProfileScreen = () => {
         <View key={index} style={styles.menuGroup}>
           {group.map((item) => (
             <TouchableOpacity key={item.id} style={styles.menuItem}
-            onPress={()=>{
-              if(item.id=="7"){
-                handleLogout()
-              }
-              else if(item.id=="4"){
-                navigator.navigate("FavouriteScreen")
-              }
-              else if (item.id == "2") {
-                navigator.navigate("AllAddressesScreen");
-              }
-              else if (item.id == "1") {
-                navigator.navigate("ProfileDetail");
-              }
-            }}>
+              onPress={() => {
+                if (item.id == "7") {
+                  handleLogout()
+                }
+                else if (item.id == "4") {
+                  navigator.navigate("FavouriteScreen")
+                }
+                else if (item.id == "2") {
+                  navigator.navigate("AllAddressesScreen");
+                }
+                else if (item.id == "1") {
+                  navigator.navigate("ProfileDetail");
+                }
+              }}>
               <View
                 style={[styles.iconContainer, { backgroundColor: item.color }]}
               >

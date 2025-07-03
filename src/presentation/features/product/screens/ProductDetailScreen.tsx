@@ -37,6 +37,8 @@ import { addToCart, resetStatus } from 'src/presentation/features/cart/cart.slic
 import { addToFavorite, removeFromFavorite } from '../../favorite/favorite.slice';
 import { HeartAnimatedIcon } from 'shared/components/HeartAnimatedIcon';
 import { debounce } from 'lodash';
+import ProductReviewSection from '../../review/components/ProductReviewSection';
+import VariantSelectionBottomSheet from '../components/VariantSelectionBottomSheet';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -48,98 +50,16 @@ const ProductDetailScreen = () => {
   const dispatch = useDispatch<AppDispatch>()
 
   const mainNav = useMainNavigation()
-  const [quantity, setQuantity] = useState(1);
   const product = useSelector((state: RootState) => state.product.currentProductDetail)
   const isFetching = useSelector((state: RootState) => state.product.status === 'loading')
-  const { items, addToCartStatus } = useSelector((state: RootState) => state.cart)
-  const [isExistedInCart, setIsExistedInCart] = useState(false);
+  const { addToCartStatus } = useSelector((state: RootState) => state.cart)
 
   const { addToFavoriteStatus } = useSelector((state: RootState) => state.favorite)
+  const { favoriteIds } = useSelector((state: RootState) => state.favorite)
   // Ref để kiểm soát việc hiển thị toast chỉ sau lần render đầu tiên
   const isFirstRenderForAddToCartStatus = useRef(true);
 
-  const [selectedUnitIds, setSelectedUnitIds] = useState<string[]>([])
-  const [localFavorite, setLocalFavorite] = useState<boolean | null>(null);
-  // Thêm hàm renderAddToCartButton
-  const renderAddToCartButton = () => {
-    // Nếu không có group, chỉ có 1 variant thì lấy luôn variant đầu tiên
-    const noGroup = !product?.variantGroups || product?.variantGroups.length === 0;
-    const autoVariant = noGroup && product?.variants && product.variants.length > 0 ? product.variants[0] : undefined;
-    const needSelectVariant = !matchedVariant && !autoVariant;
-    const isProductUnactivated = !product?.isActivate
-    /**todo: sau này thêm check ngừng kinh doanh */
-    // if(isProductUnactivated){
-    //   return (
-    //     <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.grey[400] }]} disabled>
-    //       <Text style={styles.cartText}>Sản phẩm ngừng kinh doanh</Text>
-    //     </TouchableOpacity>
-    //   );
-    // }
-
-    if (addToCartStatus === 'loading') {
-      return (
-        <TouchableOpacity style={styles.cartButton} disabled>
-          <Text style={styles.cartText}>Đang thêm ...</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    if (isExistedInCart) {
-      return (
-        <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.green.main }]} disabled>
-          <Text style={styles.cartText}>Đã có trong giỏ</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    if (needSelectVariant) {
-      return (
-        <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.grey[400] }]} disabled>
-          <Text style={styles.cartText}>Vui lòng chọn biến thể</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    // Nếu không có group, tự động lấy variant đầu tiên
-    if (autoVariant) {
-      return (
-        <TouchableOpacity style={styles.cartButton} onPress={() => handleAddToCart(autoVariant._id, quantity)}>
-          <Text style={styles.cartText}>Thêm vào giỏ</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    // Có group, đã chọn đủ variant
-    if (matchedVariant) {
-      return (
-        <TouchableOpacity style={styles.cartButton} onPress={() => handleAddToCart(matchedVariant._id, quantity)}>
-          <Text style={styles.cartText}>Thêm vào giỏ</Text>
-        </TouchableOpacity>
-      );
-    }
-
-
-
-  };
-  const { favoriteIds } = useSelector((state: RootState) => state.favorite)
-
-
-  const matchedVariant = product?.variants.find(variant => {
-    if (variant.unitValues.length !== selectedUnitIds.length) return false;
-    return selectedUnitIds.every(id => variant.unitValues.map(u => u._id).includes(id));
-  });
-
-
-  useEffect(() => {
-    if (!matchedVariant) {
-      setIsExistedInCart(false);
-      return;
-    }
-    setIsExistedInCart(
-      items.some(item => item.productVariantId === matchedVariant._id)
-    );
-  }, [items, matchedVariant]);
-
+  const [showVariantBottomSheet, setShowVariantBottomSheet] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -190,19 +110,14 @@ const ProductDetailScreen = () => {
       return;
     }
     dispatch(addToCart({ productVariantId: variantId, quantity }));
+    setShowVariantBottomSheet(false);
   };
 
+  const handleOpenVariantSelection = () => {
+    setShowVariantBottomSheet(true);
+  };
 
-
-
-
-  useEffect(() => {
-    console.log("addToFavoriteStatus", addToFavoriteStatus);
-    console.log("favoriteIds", favoriteIds);
-
-  }, [addToFavoriteStatus]);
   const handleFavorite = debounce((isFavorite, productId) => {
-    setLocalFavorite(!isFavorite);
     console.log("handleFavorite", isFavorite, productId);
 
     if (!isFavorite) {
@@ -212,19 +127,22 @@ const ProductDetailScreen = () => {
     }
   }, 300);
 
-
-
-
-  useEffect(() => {
-    if (product) {
-      setLocalFavorite(favoriteIds.includes(product._id));
+  // Thêm hàm renderAddToCartButton
+  const renderAddToCartButton = () => {
+    if (addToCartStatus === 'loading') {
+      return (
+        <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.grey[400] }]} disabled>
+          <Text style={styles.cartText}>Đang thêm ...</Text>
+        </TouchableOpacity>
+      );
     }
-  }, [favoriteIds, product?._id]);
 
-
-
-
-
+    return (
+      <TouchableOpacity style={styles.cartButton} onPress={handleOpenVariantSelection}>
+        <Text style={styles.cartText}>Chọn phân loại</Text>
+      </TouchableOpacity>
+    );
+  };
 
   if (!product || isFetching) {
     if (Platform.OS === 'web') {
@@ -276,52 +194,6 @@ const ProductDetailScreen = () => {
 
           </View>
 
-          {product.variantGroups && (
-            <View style={{}}>
-              <GroupFlatList
-                onSelectedUnitsChange={(selectedUnits) => {
-                  console.log('Selected units:', Object.values(selectedUnits));
-                  setSelectedUnitIds(Object.values(selectedUnits))
-                }}
-                groups={product.variantGroups}
-              />
-
-            </View>
-          )}
-
-
-          <Text style={styles.sectionTitle}>Số lượng</Text>
-          <View style={{ flexDirection: 'row' }}>
-            <View style={styles.quantityRow}>
-              <TouchableOpacity
-                onPress={() => setQuantity(prev => Math.max(1, prev - 1))}
-              >
-                <Image source={assets.icons.details.linear} />
-              </TouchableOpacity>
-              <Text style={styles.quantity}>{quantity}</Text>
-              <TouchableOpacity
-                onPress={() => setQuantity(prev => prev + 1)}
-              >
-                <Image source={assets.icons.details.Stylelinearplusss} />
-              </TouchableOpacity>
-            </View>
-            <View style={{ marginLeft: 'auto', justifyContent: 'center' }}>
-              {matchedVariant && (
-                <Text style={styles.stockText}>
-                  {`Tồn kho: ${matchedVariant?.stock}`}
-                </Text>
-              )}
-              <Text style={[styles.price, { justifyContent: 'center', textAlign: 'right', alignSelf: 'center' }]}>
-                {matchedVariant ? `${PriceFormatter.formatPrice(matchedVariant.promotionalPrice * quantity)} ` : 'Chọn phân loại để xem giá'}
-              </Text>
-
-            </View>
-
-          </View>
-
-
-
-
           <Text style={styles.sectionTitle}>PRODUCT DESCRIPTION</Text>
           {/*todo*/}
 
@@ -359,67 +231,21 @@ const ProductDetailScreen = () => {
             showsHorizontalScrollIndicator={false}
           />
         </View>
+        <ProductReviewSection showProductInfo={false} productId={productId}/>
       </ScrollView>
       {renderAddToCartButton()}
+      
+      <VariantSelectionBottomSheet
+        visible={showVariantBottomSheet}
+        onClose={() => setShowVariantBottomSheet(false)}
+        onConfirm={handleAddToCart}
+        product={product}
+        addToCartStatus={addToCartStatus}
+      />
     </View>
   );
 };
 
-
-const GroupFlatList = ({ groups, onSelectedUnitsChange }:
-  { groups: VariantGroupDTO[], onSelectedUnitsChange: (selectedUnits: { [groupId: string]: string }) => void }) => {
-  const [selectedUnits, setSelectedUnits] = useState<{ [groupId: string]: string }>({});
-  const handleUnitSelect = (groupId: string, unitId: string) => {
-    const newSelectedUnits = { ...selectedUnits, [groupId]: unitId };
-    setSelectedUnits(newSelectedUnits);
-    onSelectedUnitsChange(newSelectedUnits);
-  };
-  return (
-    <FlatList<VariantGroupDTO>
-      data={groups}
-      renderItem={({ item }) => (
-        <View>
-          <Text style={styles.sectionTitle}>{item.groupName}</Text>
-          <UnitFlatList
-            units={item.units}
-            selectedUnitId={selectedUnits[item._id]}
-            onUnitSelect={(unitId) => handleUnitSelect(item._id, unitId)}
-          />
-        </View>
-      )}
-      keyExtractor={(item, index) => item._id}
-      scrollEnabled={false}
-    >
-    </FlatList>
-  );
-};
-
-const UnitFlatList = ({ units, selectedUnitId, onUnitSelect }:
-  { units: UnitDTO[], selectedUnitId?: string, onUnitSelect: (unitId: string) => void }) => {
-  return (
-    <FlatList<UnitDTO>
-      data={units}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-
-          style={[
-            styles.optionButton,
-            item._id === selectedUnitId && styles.selectedOption
-          ]}
-          onPress={() => onUnitSelect(item._id)}
-        >
-          <Text>{item.unitName}</Text>
-        </TouchableOpacity>
-
-      )}
-      keyExtractor={(item, index) => item._id}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-    >
-
-    </FlatList>
-  );
-}
 
 // Thêm cấu hình cho RenderHTML
 const tagsStyles: Record<string, MixedStyleDeclaration> = {
@@ -537,31 +363,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10
   },
-  optionRow: {
-    flexDirection: 'row',
-    marginTop: 10,
-    gap: 10
-  },
-  optionButton: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    marginRight: 10
-  },
-  selectedOption: {
-    borderColor: colors.app.primary.main,
-    backgroundColor: colors.app.primary.lightest
-  },
-  quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    gap: 20
-  },
-  quantity: {
-    fontSize: 16
-  },
   description: {
     marginTop: 10,
     color: colors.grey[700]
@@ -597,10 +398,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontWeight: 'bold',
     fontSize: 16
-  },
-  stockText: {
-    color: colors.text.primary,
-    fontSize: 14,
   },
 });
 
