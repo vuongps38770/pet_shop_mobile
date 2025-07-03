@@ -1,8 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axiosInstance from 'app/config/axios';
+import { NativeModules } from 'react-native';
 import { OrderListReqDto } from 'src/presentation/dto/req/order.req.dto';
-import { OrderListResDto } from 'src/presentation/dto/res/order-respond.dto';
-
+import { OrderListResDto, PaymentAllResDto, PaymentResDto, PaymentStatusResDto } from 'src/presentation/dto/res/order-respond.dto';
+const { PayZaloBridge } = NativeModules;
 export type WaitForPaymentState = {
   loading: boolean;
   error: string | null;
@@ -47,6 +48,8 @@ export const fetchWaitForPaymentOrders = createAsyncThunk<
       if (query.sortOrder) params.append('sortOrder', query.sortOrder);
 
       const res = await axiosInstance.get(`/order/my?${params.toString()}`);
+      console.log("wait for pay: ", res.data.data);
+
       return res.data.data as OrderListResDto;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
@@ -63,6 +66,8 @@ export const updateOrderStatus = createAsyncThunk<
   async ({ orderId, nextStatus }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(`/order/${orderId}/status`, { nextStatus });
+      console.log(res.data.data);
+
       return res.data.data;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
@@ -70,24 +75,71 @@ export const updateOrderStatus = createAsyncThunk<
   }
 );
 
-export const fetchZaloPayUrl = createAsyncThunk<
+
+export const checkOrder = createAsyncThunk<
+  PaymentStatusResDto,
   string,
-  { orderId: string; paymentUrl: string },
+  { rejectValue: string }>(
+    'order/check-order',
+    async (paymentId, { rejectWithValue }) => {
+      try {
+        const res = await axiosInstance.get(`payment/payment-status?paymentId=${paymentId}`,);
+        console.log(res.data.data);
+        return res.data.data as PaymentStatusResDto;
+      } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+      }
+    }
+  )
+
+export const getPayment = createAsyncThunk<
+  PaymentAllResDto,
+  string,
+  { rejectValue: string }>(
+    'payment/get-available',
+    async (orderId, { rejectWithValue }) => {
+      try {
+        const res = await axiosInstance.get(`payment/get-available-payment/by-order/${orderId}`);
+        console.log(res.data);
+        return res.data.data as PaymentAllResDto;
+      } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+      }
+    }
+  )
+
+
+
+export const payOrderWithZalopay = (trans_token: string) => {
+  console.log(trans_token);
+
+  PayZaloBridge.payOrder(trans_token)
+}
+
+// Thêm action để xử lý payment
+export const handlePayment = createAsyncThunk<
+  any,
+  { orderId: string; paymentType: string },
   { rejectValue: string }
 >(
-  'paymentUrl/fetchZaloPayUrl',
-  async (body, { rejectWithValue }) => {
+  'waitForPayment/handlePayment',
+  async ({ orderId, paymentType }, { dispatch, rejectWithValue }) => {
     try {
-      const res = await axiosInstance.post('/payment/zalopay-get-payment-url', body);
-      console.log(res.data.data);
+      // Lấy thông tin payment
+      const paymentRes = await dispatch(getPayment(orderId)).unwrap();
 
-      return res.data.data as string;
+      if (paymentType === 'ZALOPAY') {
+        payOrderWithZalopay(paymentRes.payment.gateway_code);
+        return { success: true, paymentType: 'ZALOPAY', paymentId: paymentRes.payment._id };
+      } else {
+        // TODO: Xử lý các payment type khác
+        return { success: false, message: 'Payment method not implemented yet' };
+      }
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
     }
   }
 );
-
 
 const waitForPaymentSlice = createSlice({
   name: 'waitForPayment',
@@ -116,29 +168,6 @@ const waitForPaymentSlice = createSlice({
         state.error = action.payload || 'Lỗi không xác định';
       })
 
-
-
-
-      .addCase(fetchZaloPayUrl.pending, (state) => {
-        state.getUrlStatus = "loading";
-        state.error = null;
-      })
-      .addCase(fetchZaloPayUrl.fulfilled, (state, action) => {
-        state.getUrlStatus = "success";
-        state.payUrl = action.payload;
-      })
-      .addCase(fetchZaloPayUrl.rejected, (state, action) => {
-        state.getUrlStatus = "failed";
-        state.error = action.payload || 'Lỗi không xác định';
-      })
-
-
-
-
-
-
-
-
       .addCase(updateOrderStatus.pending, (state) => {
         state.updateStatus = "loading";
         state.updateStatusError = null;
@@ -150,6 +179,32 @@ const waitForPaymentSlice = createSlice({
         state.updateStatus = "failed";
         state.updateStatusError = action.payload || 'Lỗi không xác định';
       })
+
+      // Thêm xử lý cho getPAyment
+      .addCase(getPayment.pending, (state) => {
+        state.getUrlStatus = "loading";
+      })
+      .addCase(getPayment.fulfilled, (state, action) => {
+        state.getUrlStatus = "success";
+        state.payUrl = action.payload.payment.gateway_code;
+      })
+      .addCase(getPayment.rejected, (state, action) => {
+        state.getUrlStatus = "failed";
+        state.error = action.payload || 'Lỗi không xác định';
+      })
+
+      // Thêm xử lý cho handlePayment
+      .addCase(handlePayment.pending, (state) => {
+        state.updateStatus = "loading";
+        state.updateStatusError = null;
+      })
+      .addCase(handlePayment.fulfilled, (state, action) => {
+        state.updateStatus = "success";
+      })
+      .addCase(handlePayment.rejected, (state, action) => {
+        state.updateStatus = "failed";
+        state.updateStatusError = action.payload || 'Lỗi không xác định';
+      });
   },
 });
 

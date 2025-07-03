@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView, ToastAndroid, Pressable, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
-import { getCart, addToCart, removeFromCart, setSelectedIds, selectAll, deselectAll } from '../cart.slice';
+import { getCart, addToCart, removeFromCart, setSelectedIds, selectAll, deselectAll, clearCart } from '../cart.slice';
 import CartItem from '../components/CartItem';
 import { colors } from '../../../shared/theme/colors';
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
+import { useFocusEffect } from '@react-navigation/native';
 const screenWidth = Dimensions.get('window').width
 const CartScreen = () => {
   const navigation = useMainNavigation();
@@ -21,9 +22,19 @@ const CartScreen = () => {
     navigation.navigate('OrderScreen');
   }
 
-  useEffect(() => {
-    dispatch(getCart());
-  }, [dispatch]);
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(clearCart());
+      dispatch(getCart());
+      debounceTimers.current = {}; 
+      return () => {
+        Object.values(debounceTimers.current).forEach(timeout => {
+          clearTimeout(timeout);
+        });
+        debounceTimers.current = {};
+      };
+    }, [dispatch])
+  );
 
   useEffect(() => {
     // Khi items thay đổi, cập nhật số lượng tạm thời
@@ -46,6 +57,11 @@ const CartScreen = () => {
 
   const productIds = Object.keys(groupedItems);
 
+  // Tính số lượng item có thể chọn được (không hết hàng và được kích hoạt)
+  //todo thêm is active
+  const selectableItems = items.filter(item => !item.isActivate && item.quantity > item.availableStock);
+  const selectableItemIds = selectableItems.map(item => item._id);
+
   // Tính tổng tiền chỉ các item được chọn
   const subtotal = (items || []).reduce((sum, item) =>
     selectedIds.includes(item._id) ? sum + item.promotionalPrice * (quantities[item._id] ?? item.quantity) : sum, 0
@@ -65,7 +81,7 @@ const CartScreen = () => {
 
   // Chọn tất cả / bỏ chọn tất cả
   const handleSelectAll = () => {
-    if (selectedIds.length === items.length) {
+    if (selectedIds.length === selectableItemIds.length) {
       dispatch(deselectAll());
     } else {
       dispatch(selectAll());
@@ -115,7 +131,7 @@ const CartScreen = () => {
         {items.length > 0 && (
           <TouchableOpacity style={styles.selectAllBtn} onPress={handleSelectAll}>
             <Text style={{ color: colors.app.primary.main, fontWeight: 'bold' }}>
-              {selectedIds.length === items.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+              {selectedIds.length === selectableItemIds.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
             </Text>
           </TouchableOpacity>
         )}
@@ -149,7 +165,7 @@ const CartScreen = () => {
         )}
 
         {/* Promo code */}
-        {items.length > 0 && (
+        {/*items.length > 0 && (
           <View style={styles.promoContainer}>
             <TextInput
               placeholder="Promo code"
@@ -160,7 +176,7 @@ const CartScreen = () => {
               <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 20 }}>+</Text>
             </TouchableOpacity>
           </View>
-        )}
+        )*/}
 
 
       </ScrollView>

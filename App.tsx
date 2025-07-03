@@ -36,7 +36,6 @@ const toastConfig = {
 
 const AppContent = () => {
     const isReady = useSplashScreen(2500);
-
     if (!isReady) {
         return <SplashScreen />;
     }

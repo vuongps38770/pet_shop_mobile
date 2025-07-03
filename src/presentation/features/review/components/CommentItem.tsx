@@ -6,52 +6,73 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
+import StarRating from './StarRating';
 
 export interface CommentItemProps {
   id: string;
-  userAvatar: string;
   name: string;
+  userAvatar?: string;
   date: string;
   rating: number;
   comment: string;
-  onOptionsPress?: (id: string) => void; // callback cho nút 3 chấm
+  isLiked?: boolean;
+  isDisliked?: boolean;
+  likeCount?: number;
+  dislikeCount?: number;
+  onOptionsPress?: (id: string) => void;
+  onLike?: (id: string) => void;
+  onDislike?: (id: string) => void;
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({
   id,
-  userAvatar,
   name,
+  userAvatar,
   date,
   rating,
   comment,
+  isLiked,
+  isDisliked,
+  likeCount = 0,
+  dislikeCount = 0,
   onOptionsPress,
+  onLike,
+  onDislike,
 }) => {
   return (
     <View style={styles.container}>
-      {/* Avatar + Name + Date + Menu */}
+      {/* Header: Avatar, Name, Date, Options */}
       <View style={styles.header}>
-        <Image source={{ uri: userAvatar }} style={styles.avatar} />
-
+        <Image
+          source={userAvatar ? { uri: userAvatar } : require('assets/icons/user.png')}
+          style={styles.avatar}
+        />
         <View style={styles.userInfo}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.date}>{date}</Text>
         </View>
-
-        <TouchableOpacity onPress={() => onOptionsPress?.(id)} style={styles.optionsBtn}>
-          <Ionicons name="ellipsis-vertical" size={18} color="#ccc" />
-        </TouchableOpacity>
+        {onOptionsPress && (
+          <TouchableOpacity onPress={() => onOptionsPress(id)} style={styles.optionsBtn}>
+            <Ionicons name="ellipsis-vertical" size={18} color="#ccc" />
+          </TouchableOpacity>
+        )}
       </View>
-
       {/* Rating */}
-      <View style={styles.ratingRow}>
-        <FontAwesome name="star" size={14} color="#f5a623" />
-        <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
-      </View>
-
+      <StarRating rating={rating} size={16} style={{ marginTop: 2, marginBottom: 2 }} />
       {/* Comment */}
       <Text style={styles.comment}>{comment}</Text>
+      {/* Helpful/Not helpful */}
+      <View style={styles.helpfulRow}>
+        <TouchableOpacity style={styles.helpfulBtn} onPress={() => onLike?.(id)}>
+          <Ionicons name="thumbs-up-outline" size={18} color={isLiked ? '#1976D2' : '#888'} />
+          <Text style={[styles.helpfulText, isLiked && { color: '#1976D2' }]}>Hữu ích ({likeCount})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.helpfulBtn} onPress={() => onDislike?.(id)}>
+          <Ionicons name="thumbs-down-outline" size={18} color={isDisliked ? '#E53935' : '#888'} />
+          <Text style={[styles.helpfulText, isDisliked && { color: '#E53935' }]}>Không hữu ích ({dislikeCount})</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -75,14 +96,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#eee',
+    marginRight: 10,
   },
   userInfo: {
     flex: 1,
-    marginLeft: 10,
   },
   name: {
     fontWeight: 'bold',
@@ -97,21 +118,25 @@ const styles = StyleSheet.create({
   optionsBtn: {
     padding: 4,
   },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  ratingText: {
-    fontWeight: 'bold',
-    marginLeft: 4,
-    fontSize: 13,
-    color: '#000',
-  },
   comment: {
     marginTop: 8,
     fontSize: 14,
     color: '#333',
     lineHeight: 20,
+  },
+  helpfulRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 16,
+  },
+  helpfulBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  helpfulText: {
+    color: '#888',
+    fontSize: 13,
+    marginLeft: 2,
   },
 });

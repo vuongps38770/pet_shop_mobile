@@ -31,7 +31,7 @@ const AwaitingConfirmationItem: React.FC<AwaitingConfirmationItemProps> = ({ ord
         <Wrapper style={styles.container} onPress={onPress} activeOpacity={onPress ? 0.85 : undefined}>
             <View style={styles.headerRow}>
                 <View style={styles.dot} />
-                <Text style={styles.orderType}>ĐẶT HÀNG</Text>
+                <Text style={styles.orderType}>DH:</Text>
                 <Text style={styles.orderId}>#{orderss.sku}</Text>
                 <View style={{ flex: 1 }} />
                 <Text style={styles.date}>

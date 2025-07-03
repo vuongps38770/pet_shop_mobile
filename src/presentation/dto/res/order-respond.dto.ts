@@ -1,5 +1,5 @@
 
-export type OrderRespondDto ={
+export type OrderRespondDto = {
     _id: string;
     userID: string;
     voucherID?: string;
@@ -13,7 +13,7 @@ export type OrderRespondDto ={
         lng?: number;
         receiverFullname: string;
     };
-    
+
 
 
     paymentType: string;
@@ -23,9 +23,9 @@ export type OrderRespondDto ={
     shippingFree: number
     productPrice: number
     totalPrice: number;
-    createdAt:string;
-    updatedAt:string;
-    sku:string
+    createdAt: string;
+    updatedAt: string;
+    sku: string
 }
 
 
@@ -59,20 +59,41 @@ export enum PaymentType {
 
 
 export type CalculateOrderPriceResDto = {
-    productTotal:number,
-    discount:number,
-    shippingFee:number,
-    finalTotal:number,
+    productTotal: number,
+    discount: number,
+    shippingFee: number,
+    finalTotal: number,
 }
 
-export type OrderCheckoutResDto={
+export type OrderCheckoutResDto = {
     orderId: string,
-    paymentMethod:string, 
+    paymentMethod: string,
     payment?: PaymentResDto
 }
 
 export type PaymentResDto = {
-    zp_trans_token: string
-    app_trans_id: string,
-    // "redirectUrl": "zalopayapp://..."
+    gateway_code: string
+    transactionId: string,
+    _id: string
+}
+export type PaymentAllResDto = {
+    code: number,
+    payment: {
+        _id: string;
+        orderId: string;
+        paymentPurpose: 'PAY' | 'REFUND';
+        provider: 'ZALOPAY';
+        gateway_code: string;
+        transactionId: string;
+        amount: number;
+        status: 'PENDING' | 'SUCCESS' | 'FAILED';
+        expiredAt: string;
+        createdAt: string;
+        updatedAt: string;
+    }
+}
+
+export type PaymentStatusResDto = {
+    return_code: number,
+
 }

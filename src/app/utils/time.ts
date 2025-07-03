@@ -254,8 +254,7 @@ export const subtractTime = (
  * Format ISO date string or Date to 'dd/MM/yyyy HH:mm' (giờ phút, không giây, không timezone)
  */
 export function formatDateTimeVN(isoStr: string): string {
-  console.log(isoStr);
-  
+
   try {
     const date = new Date(isoStr);
     const day = String(date.getDate()).padStart(2, '0');

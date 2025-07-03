@@ -19,7 +19,13 @@ import OrderScreen from "src/presentation/features/order/screens/OrderScreen";
 import PendingScreen from "src/presentation/features/order/screens/PendingScreen";
 import ProfileDetail from "src/presentation/features/profile/screens/ProfileDetail";
 import OrderDetailScreen from "src/presentation/features/order-detail/screens/OrderDetailScreen";
-     
+import ReviewScreen from "src/presentation/features/review/screens/ReviewScreen";
+import { usePushNotification } from "shared/hooks/useNotification";
+import { useFCMListener } from "shared/hooks/useNotificationListener";
+import { BadgeProvider } from "shared/context/BadgeContext";
+import { useCheckPaymentQueue } from "shared/hooks/useCheckPaymentQueue";
+import { useUserInfo } from "shared/hooks/useUserInfo";
+
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -30,77 +36,88 @@ const MainNavigator = () => {
     dispatch(getCart());
     dispatch(getFavoriteListIds());
   }, []);
+  usePushNotification();
+  useFCMListener()
+  useCheckPaymentQueue()
+  useUserInfo()
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <Stack.Navigator screenOptions={{ animation: "fade" }}>
-        <Stack.Screen
-          name="MainScreen"
-          component={TabNavigator}
-          options={{ headerShown: false }}
-        />
+    
+      <SafeAreaView style={{ flex: 1 }}>
+        <Stack.Navigator screenOptions={{ animation: "fade" }}>
+          <Stack.Screen
+            name="MainScreen"
+            component={TabNavigator}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="ProductDetail"
-          component={ProductDetailScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ProfileDetail"
-          component={ProfileDetail}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="ProductShow"
-          component={ProductShow}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AllCategoriesScreen"
-          component={AllCategoriesScreen}
-          options={{ headerShown: false }}
-        />
+          <Stack.Screen
+            name="ProductDetail"
+            component={ProductDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProfileDetail"
+            component={ProfileDetail}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProductShow"
+            component={ProductShow}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AllCategoriesScreen"
+            component={AllCategoriesScreen}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="FavouriteScreen"
-          component={FavoriteScreen}
-          options={{ headerShown: false }}
-        />
+          <Stack.Screen
+            name="FavouriteScreen"
+            component={FavoriteScreen}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="NewAddressScreen"
-          component={NewAddressScreen}
-          options={{ headerShown: false }}
-        />
+          <Stack.Screen
+            name="NewAddressScreen"
+            component={NewAddressScreen}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="AddressPickScreen"
-          component={AddressPickScreen}
-          options={{ headerShown: false }}
-        />
+          <Stack.Screen
+            name="AddressPickScreen"
+            component={AddressPickScreen}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="AllAddressesScreen"
-          component={AllAddressesScreen}
-          options={{ headerShown: false }}
-        />
+          <Stack.Screen
+            name="AllAddressesScreen"
+            component={AllAddressesScreen}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="OrderScreen"
-          component={OrderScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="PendingScreen"
-          component={PendingScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="OrderDetail"
-          component={OrderDetailScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </SafeAreaView>
+          <Stack.Screen
+            name="OrderScreen"
+            component={OrderScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PendingScreen"
+            component={PendingScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="OrderDetail"
+            component={OrderDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ScreenReviews"
+            component={ReviewScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </SafeAreaView>
+
   );
 }
 

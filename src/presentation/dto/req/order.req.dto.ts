@@ -7,6 +7,7 @@ export type OrderCreateReqDto = {
     voucherCode?: string;
     totalClientPrice?: number;
     paymentType: PaymentType;
+    cartIds?:string[]
 }
 
 export type OrderReqItem = {

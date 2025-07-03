@@ -29,7 +29,7 @@ const CanceledItem: React.FC<CanceledItemProps> = ({ order, onBuyAgain, onPress 
                 <View style={styles.headerLeft}>
                     <View style={styles.dot} />
                     <Typography variant="caption" color="textSecondary" style={styles.orderId}>
-                        ĐẶT HÀNG #{order.sku}
+                        DH: {order.sku}
                     </Typography>
                 </View>
                 <Text style={styles.date}>

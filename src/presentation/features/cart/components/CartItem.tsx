@@ -25,7 +25,9 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
         .map(g => `${g.name}: ${g.unit?.name || ''}`)
         .join(' - ');
     const quantity = quantities?.[item._id] ?? item.quantity;
-    const isOutOfStock = item.isOutOfStock;
+    //todo: thay sau này thêm is active
+    // const isDisabled = item.isOutOfStock || !item.isActivate;
+    const isOutOfStock = item.availableStock == 0;
 
     const handleRemove = () => {
         Animated.parallel([

@@ -57,12 +57,6 @@ const HomeScreen = () => {
   };
 
 
-  
-  useEffect(() => {
-
-    console.log(popularProductList);
-
-  }, [popularProductList])
 
 
 

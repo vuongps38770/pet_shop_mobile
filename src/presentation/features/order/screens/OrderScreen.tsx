@@ -20,6 +20,8 @@ import { PaymentMethods } from "../components/PaymentMethods";
 import { AddressModal } from "../components/AddressModal";
 import { LoadingView } from "shared/components/LoadingView";
 import { useOrder } from "../hooks/useOrder";
+import { useToast } from "shared/components/CustomToast";
+import { storageHelper } from "app/config/storage";
 
 
 const { PayZaloBridge } = NativeModules;
@@ -44,28 +46,6 @@ const OrderScreen = () => {
     handleSelectMethod,
     handlePay,
   } = useOrder();
-
-  React.useEffect(() => {
-    const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
-      console.log('ZaloPay Event:', event);
-
-      switch (event.returnCode) {
-        case '1':
-          console.log('Thanh toán thành công');
-          break;
-        case '-1':
-          console.log('Thanh toán thất bại');
-          break;
-        case '4':
-          console.log('Thanh toán bị huỷ');
-          break;
-        default:
-          console.log('Không xác định:', event);
-      }
-    });
-
-    return () => subscription.remove(); 
-  }, []);
 
   const openModal = () => {
     setAddressModalOpen(true);
@@ -102,28 +82,31 @@ const OrderScreen = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <OrderSummary
-        subtotal={order.productTotal}
-        delivery={order.shippingFee}
-        total={order.finalTotal}
-        
-      />
-
       <ShippingAddress
         selectedAddress={selectedAddress}
         onPress={openModal}
       />
+
+
+      <OrderSummary
+        subtotal={order.productTotal}
+        delivery={order.shippingFee}
+        total={order.finalTotal}
+
+      />
+
+      
 
       <PaymentMethods
         paymentGroup={paymentGroup}
         setPaymentGroup={setPaymentGroup}
         paymentType={paymentType}
         onSelectMethod={handleSelectMethod}
-            />
+      />
 
-      <TouchableOpacity 
-        style={styles.button} 
-        onPress={handlePay} 
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handlePay}
         disabled={createOrderStatus === 'pending'}
       >
         {createOrderStatus === 'pending' ? (

@@ -1,8 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axiosInstance from 'app/config/axios';
+import { storageHelper } from 'app/config/storage';
 import { NativeModules } from 'react-native';
 import { CalculateOrderPriceReqDto, OrderCreateReqDto, OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
-import { CalculateOrderPriceResDto, OrderCheckoutResDto, OrderRespondDto, PaymentType } from 'src/presentation/dto/res/order-respond.dto';
+import { CalculateOrderPriceResDto, OrderCheckoutResDto, OrderRespondDto, PaymentStatusResDto, PaymentType } from 'src/presentation/dto/res/order-respond.dto';
 const { PayZaloBridge } = NativeModules;
 type StateProps = {
   order: CalculateOrderPriceResDto | null,
@@ -10,7 +11,7 @@ type StateProps = {
 
 
 
-  shippingAddressId?: string; 
+  shippingAddressId?: string;
   orderItems?: OrderReqItem[];
   voucherCode?: string;
   totalClientPrice?: number;
@@ -18,12 +19,14 @@ type StateProps = {
 
   orderCheckoutData: OrderCheckoutResDto | null
   createOrderStatus: 'pending' | 'failed' | 'success' | 'idle'
+  paymentStatus: PaymentStatusResDto | null
 }
 const initialState: StateProps = {
   order: null,
   caculateOrderReq: null,
   createOrderStatus: 'idle',
-  orderCheckoutData: null
+  orderCheckoutData: null,
+  paymentStatus: null
 }
 
 export const caculateOrder = createAsyncThunk<
@@ -50,19 +53,38 @@ export const createOrder = createAsyncThunk<
     async (orderItemReqDto, { rejectWithValue }) => {
       try {
         const res = await axiosInstance.post(`order/create-order`, orderItemReqDto);
+        const data = res.data.data as OrderCheckoutResDto;
+        
+        
+        if(data.payment?._id){
+          await storageHelper.addToPaymentQueue(data.payment._id)
+          console.log("debug", data.payment._id);
+        }
+        return data
+      } catch (error: any) {
+        return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+      }
+    }
+  )
+export const checkOrder = createAsyncThunk<
+  PaymentStatusResDto,
+  string,
+  { rejectValue: string }>(
+    'order/check-order',
+    async (paymentId, { rejectWithValue }) => {
+      try {
+        const res = await axiosInstance.get(`payment/payment-status/${paymentId}`,);
         console.log(res.data);
-
-        return res.data.data as OrderCheckoutResDto;
+        return res.data.data as PaymentStatusResDto;
       } catch (error: any) {
         return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
       }
     }
   )
 
-  
 
 
-export const payOrderWithZalopay = (trans_token:string)=>{
+export const payOrderWithZalopay = (trans_token: string) => {
   PayZaloBridge.payOrder(trans_token)
 }
 
@@ -106,6 +128,12 @@ const orderSlice = createSlice({
     builder.addCase(createOrder.fulfilled, (state, action) => {
       state.createOrderStatus = 'success'
       state.orderCheckoutData = action.payload
+      if (action.payload.payment?._id) {
+        storageHelper.addToPaymentQueue(action.payload.payment?._id)
+      }
+    })
+    builder.addCase(checkOrder.fulfilled, (state, action) => {
+      state.paymentStatus = action.payload
     })
 
   }
