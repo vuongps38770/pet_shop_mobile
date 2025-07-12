@@ -59,6 +59,8 @@ const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = 
         }
     }, [onClose]);
 
+
+
     const handleClosePress = useCallback(() => {
         bottomSheetRef.current?.close();
     }, []);
@@ -69,10 +71,20 @@ const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = 
         return selectedUnitIds.every(id => variant.unitValues.map(u => u._id).includes(id));
     });
 
+
+
     // Kiểm tra xem có cần chọn variant không
     const noGroup = !product?.variantGroups || product?.variantGroups.length === 0;
     const autoVariant = noGroup && product?.variants && product.variants.length > 0 ? product.variants[0] : undefined;
     const needSelectVariant = !matchedVariant && !autoVariant;
+
+    useEffect(() => {
+        const maxStock = matchedVariant?.stock || autoVariant?.stock || 1;
+        if (quantity > maxStock) {
+            setQuantity(1);
+            setQuantityInput('1');
+        }
+    }, [matchedVariant, autoVariant]);
 
     // Kiểm tra sản phẩm đã có trong giỏ hàng
     useEffect(() => {
@@ -177,6 +189,17 @@ const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = 
         []
     );
 
+    const maxStock = useMemo(() => {
+        return matchedVariant?.stock || autoVariant?.stock || 1;
+    }, [matchedVariant, autoVariant]);
+
+    useEffect(() => {
+        if (quantity > maxStock) {
+            setQuantity(maxStock);
+            setQuantityInput(maxStock.toString());
+        }
+    }, [quantity, maxStock]);
+
     const renderAddToCartButton = () => {
         if (addToCartStatus === 'loading') {
             return (
@@ -189,7 +212,7 @@ const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = 
         if (isExistedInCart) {
             return (
                 <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.green.main }]}
-                    onPress={()=>navigation.navigate('MainScreen', { route: 'CartTab' })}
+                    onPress={() => navigation.navigate('MainScreen', { route: 'CartTab' })}
                 >
                     <Text style={styles.cartText}>Đã có trong giỏ</Text>
                 </TouchableOpacity>
@@ -199,7 +222,7 @@ const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = 
         if (needSelectVariant) {
             return (
                 <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.grey[400] }]} disabled>
-                    <Text style={styles.cartText}>Vui lòng chọn biến thể</Text>
+                    <Text style={styles.cartText}>Vui lòng chọn mặt hàng</Text>
                 </TouchableOpacity>
             );
         }

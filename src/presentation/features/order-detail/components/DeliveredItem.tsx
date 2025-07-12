@@ -104,17 +104,6 @@ const DeliveredItem: React.FC<DeliveredItemProps> = ({
                             </Text>
                         </TouchableOpacity>
                     )}
-                    
-                    {isReceived && (
-                        <TouchableOpacity
-                            style={[styles.button, styles.reviewButton]}
-                            onPress={() => onReview?.(order._id)}
-                        >
-                            <Text style={{ color: colors.white, fontSize: 14, fontWeight: '500' }}>
-                                Đánh giá
-                            </Text>
-                        </TouchableOpacity>
-                    )}
                 </View>
             </View>
         </TouchableOpacity>

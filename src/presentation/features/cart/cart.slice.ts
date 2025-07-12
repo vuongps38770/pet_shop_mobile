@@ -30,7 +30,7 @@ export const getCart = createAsyncThunk<CartRespondDto[], void, { rejectValue: s
       const res = await axiosInstance.get('cart/get-cart');
       return res.data.data as CartRespondDto[];
     } catch (error: any) {
-      return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+      return rejectWithValue(error?.response?.data?.Amessage || error.message || 'Lỗi không xác định');
     }
   }
 );
@@ -51,7 +51,7 @@ export const removeFromCart = createAsyncThunk<CartRespondDto[], string, { rejec
   'cart/remove',
   async (cartId, { rejectWithValue }) => {
     try {
-      const res = await axiosInstance.delete(`cart/remove`, {data:{cartId: cartId}});
+      const res = await axiosInstance.delete(`cart/remove`, { data: { cartId: cartId } });
       return res.data.data as CartRespondDto[];
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
@@ -77,16 +77,16 @@ const cartSlice = createSlice({
     },
     selectAll(state) {
       state.selectedIds = state.items
-        .filter(item => !item.isActivate && item.quantity>item.availableStock)
+        .filter(item => item.availableStock > 0 && item.quantity <= item.availableStock)
         .map(item => item._id);
     },
     deselectAll(state) {
       state.selectedIds = [];
     },
-    resetStatus(state){
-        state.getCartStatus='idle';
-        state.addToCartStatus='idle';
-        state.removeFromCartStatus='idle';
+    resetStatus(state) {
+      state.getCartStatus = 'idle';
+      state.addToCartStatus = 'idle';
+      state.removeFromCartStatus = 'idle';
     }
   },
   extraReducers: (builder) => {

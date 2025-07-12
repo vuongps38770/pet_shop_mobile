@@ -20,7 +20,7 @@ import { OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
 import showToast from 'shared/utils/toast';
 
 
-export const useOrder = () => {
+export const useOrder = (reOrderItems?: OrderReqItem[]) => {
   const navigation = useMainNavigation();
   const dispatch = useDispatch<AppDispatch>();
   const toast = useToast();
@@ -37,7 +37,7 @@ export const useOrder = () => {
     totalClientPrice, 
     createOrderStatus,
     paymentStatus,
-
+    voucherCode,
   } = useSelector((state: RootState) => state.order);
 
   // Sắp xếp địa chỉ: mặc định lên đầu, sau đó là mới nhất
@@ -50,12 +50,14 @@ export const useOrder = () => {
   const selectedAddress = myAddresses.find(addr => addr._id === shippingAddressId) || sortedAddresses[0];
 
   const getSelectedProductsReq = (): OrderReqItem[] =>
-    items
-      .filter((item) => selectedIds.includes(item._id))
-      .map((item) => ({
-        variantId: item.productVariantId,
-        quantity: item.quantity
-      }));
+    reOrderItems && reOrderItems.length > 0
+      ? reOrderItems
+      : items
+          .filter((item) => selectedIds.includes(item._id))
+          .map((item) => ({
+            variantId: item.productVariantId,
+            quantity: item.quantity
+          }));
 
   useEffect(() => {
     dispatch(caculateOrder({ orderItems: getSelectedProductsReq() }));
@@ -130,7 +132,8 @@ export const useOrder = () => {
       paymentType: paymentType,
       shippingAddressId: shippingAddressId,
       totalClientPrice: order?.productTotal,
-      cartIds:selectedIds
+      cartIds: selectedIds,
+      voucherCode: voucherCode
     }));
   };
   
@@ -154,6 +157,7 @@ export const useOrder = () => {
     handlePay,
     checkPaymentStatus,
     paymentStatus,
-    resetOrder
+    resetOrder,
+    orderCheckoutData
   };
 }; 

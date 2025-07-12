@@ -21,7 +21,7 @@ export const ShippingAddress: React.FC<ShippingAddressProps> = ({
 }) => {
   return (
     <>
-      <Text style={styles.title}>Địa chỉ giao hàng</Text>
+      
       <TouchableOpacity style={styles.selectedAddressBox} onPress={onPress}>
         {selectedAddress ? (
           <>

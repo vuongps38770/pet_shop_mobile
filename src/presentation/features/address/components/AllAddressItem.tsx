@@ -5,6 +5,7 @@ import { colors } from 'theme/colors'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
+import { StatusBar } from 'react-native'
 
 interface AllAddressItemProps {
     address: AddressResDto;
@@ -15,61 +16,64 @@ interface AllAddressItemProps {
 
 const AllAddressItem = ({ address, onEdit, onDelete, onSetDefault }: AllAddressItemProps) => {
     return (
-        <View style={styles.addressItem}>
-            <View style={styles.addressHeader}>
-                <View style={styles.nameContainer}>
-                    <Text style={styles.name}>{address.receiverFullname}</Text>
-                    {address.isDefault && (
-                        <View style={styles.defaultBadge}>
-                            <Text style={styles.defaultText}>Mặc định</Text>
-                        </View>
-                    )}
+        <>
+            <StatusBar backgroundColor={colors.app.primary.main} barStyle="light-content" />
+            <View style={styles.addressItem}>
+                <View style={styles.addressHeader}>
+                    <View style={styles.nameContainer}>
+                        <Text style={styles.name}>{address.receiverFullname}</Text>
+                        {address.isDefault && (
+                            <View style={styles.defaultBadge}>
+                                <Text style={styles.defaultText}>Mặc định</Text>
+                            </View>
+                        )}
+                    </View>
+                    <Text style={styles.date}>
+                        {format(new Date(address.createdDate), 'dd/MM/yyyy', { locale: vi })}
+                    </Text>
                 </View>
-                <Text style={styles.date}>
-                    {format(new Date(address.createdDate), 'dd/MM/yyyy', { locale: vi })}
+
+                <Text style={styles.address}>
+                    {address.streetAndNumber}, {address.ward}, {address.district}, {address.province}
                 </Text>
-            </View>
 
-            <Text style={styles.address}>
-                {address.streetAndNumber}, {address.ward}, {address.district}, {address.province}
-            </Text>
+                <View style={styles.actionContainer}>
+                    {!address.isDefault ? (
+                        <TouchableOpacity
+                            style={styles.actionButton}
+                            onPress={() => onSetDefault?.(address._id)}
+                        >
+                            <Icon name="star" size={20} color={colors.app.primary.main} />
+                            <Text style={[styles.actionText, { color: colors.app.primary.main }]}>
+                                Đặt làm mặc định
+                            </Text>
+                        </TouchableOpacity>
+                    ):(<View style={{flex:1}}/>)}
 
-            <View style={styles.actionContainer}>
-                {!address.isDefault && (
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => onSetDefault?.(address._id)}
-                    >
-                        <Icon name="star" size={20} color={colors.app.primary.main} />
-                        <Text style={[styles.actionText, { color: colors.app.primary.main }]}>
-                            Đặt làm mặc định
-                        </Text>
-                    </TouchableOpacity>
-                )}
+                    <View style={styles.rightActions}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.editButton]}
+                            onPress={() => onEdit?.(address)}
+                        >
+                            <Icon name="edit" size={20} color={colors.text.secondary} />
+                            <Text style={[styles.actionText, { color: colors.text.secondary }]}>
+                                Sửa
+                            </Text>
+                        </TouchableOpacity>
 
-                <View style={styles.rightActions}>
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.editButton]}
-                        onPress={() => onEdit?.(address)}
-                    >
-                        <Icon name="edit" size={20} color={colors.text.secondary} />
-                        <Text style={[styles.actionText, { color: colors.text.secondary }]}>
-                            Sửa
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.deleteButton]}
-                        onPress={() => onDelete?.(address._id)}
-                    >
-                        <Icon name="delete" size={20} color={colors.error} />
-                        <Text style={[styles.actionText, { color: colors.error }]}>
-                            Xóa
-                        </Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.deleteButton]}
+                            onPress={() => onDelete?.(address._id)}
+                        >
+                            <Icon name="delete" size={20} color={colors.error} />
+                            <Text style={[styles.actionText, { color: colors.error }]}>
+                                Xóa
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
-        </View>
+        </>
     )
 }
 

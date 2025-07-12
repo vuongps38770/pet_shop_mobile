@@ -25,14 +25,18 @@ export type OrderRespondDto = {
     totalPrice: number;
     createdAt: string;
     updatedAt: string;
-    sku: string
+    sku: string;
+    latestLog?:{
+        action:OrderAction,
+        performed_by:'ADMIN' | 'USER' |'SYSTEM'
+    }
 }
 
 
 export type OrderDetailResDto = {
     _id: string;
     productId: string;
-    variantId?: string;
+    variantId: string;
     productName: string;
     variantName?: string;
     image: string;
@@ -40,7 +44,16 @@ export type OrderDetailResDto = {
     sellingPrice: number;
     promotionalPrice: number;
 }
-
+export enum OrderAction {
+  CANCEL_ORDER = "CANCEL_ORDER",
+  CREATE_ORDER = "CREATE_ORDER",
+  CONFIRM_ORDER = "CONFIRM_ORDER",
+  SHIPPING_ORDER = "SHIPPING_ORDER",
+  CONFIRM_PAYMENT ="CONFIRM_PAYMENT",
+  COMPLETE_ORDER = "COMPLETE_ORDER",
+  RETURN_ORDER = "RETURN_ORDER",
+  REFUND_ORDER = "REFUND_ORDER"
+}
 
 export type OrderListResDto = {
     total: number;
@@ -63,7 +76,24 @@ export type CalculateOrderPriceResDto = {
     discount: number,
     shippingFee: number,
     finalTotal: number,
+    items:GroupedProductSummary[]
 }
+
+export interface VariantSummary {
+  _id: string;
+  name: string;
+  promotionalPrice: number;
+  quantity: number;
+}
+
+export interface GroupedProductSummary {
+  _id: string;
+  productName: string;
+  images: string[];
+  variants: VariantSummary[];
+}
+
+
 
 export type OrderCheckoutResDto = {
     orderId: string,

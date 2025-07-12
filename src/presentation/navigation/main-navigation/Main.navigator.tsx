@@ -20,6 +20,7 @@ import ProfileDetail from "src/presentation/features/profile/screens/ProfileDeta
 import OrderDetailScreen from "src/presentation/features/order-detail/screens/OrderDetailScreen";
 import { VoucherScreen } from "src/presentation/features/voucher/screens/VoucherScreen";
 import { MyVoucherScreen } from "src/presentation/features/voucher/screens/MyVoucherScreen";
+import PickVoucherScreen from "src/presentation/features/order/screens/PickVoucherScreen";
 
 import ReviewScreen from "src/presentation/features/review/screens/ReviewScreen";
 import { usePushNotification } from "shared/hooks/useNotification";
@@ -27,6 +28,8 @@ import { useFCMListener } from "shared/hooks/useNotificationListener";
 import { BadgeProvider } from "shared/context/BadgeContext";
 import { useCheckPaymentQueue } from "shared/hooks/useCheckPaymentQueue";
 import { useUserInfo } from "shared/hooks/useUserInfo";
+import NotificationScreen from "src/presentation/features/notification/screens/NotificationScreen";
+import ExploreScreen from "src/presentation/features/home/screens/ExploreScreen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -113,6 +116,31 @@ const MainNavigator = () => {
           <Stack.Screen
             name="ScreenReviews"
             component={ReviewScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="VoucherScreen"
+            component={VoucherScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="MyVoucherScreen"
+            component={MyVoucherScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PickVoucherScreen"
+            component={PickVoucherScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Notification"
+            component={NotificationScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ExploreScreen"
+            component={ExploreScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

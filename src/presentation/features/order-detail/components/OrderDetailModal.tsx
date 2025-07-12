@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Modal, View, ScrollView, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import AppModal from 'shared/components/modals/AppModal';
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { OrderStatus } from 'app/types/OrderStatus';
 
 const ORDER_STATUS_VI: Record<string, string> = {
     NEWORDER: 'Chờ xác nhận',
@@ -26,18 +27,37 @@ const STATUS_COLOR_MAP = {
     blue: { bg: '#D6E8FF', text: '#2979FF' },
 };
 
-const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel, statusColorMode = 'yellow' }: {
+const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel, statusColorMode = 'yellow', onReview }: {
     visible: boolean,
     order: OrderRespondDto | null,
     onClose: () => void,
     showCancelButton?: boolean,
     onCancel?: () => void,
     statusColorMode?: 'yellow' | 'green' | 'red' | 'blue',
+    onReview?: (orderId: string) => void,
 }) => {
 
     const [confirmModal, setConfirmModal] = useState(false);
     if (!order) return null;
     const badgeColor = STATUS_COLOR_MAP[statusColorMode] || STATUS_COLOR_MAP.yellow;
+    
+    // Nhóm sản phẩm theo productId
+    const groupedProducts = order.orderDetailItems?.reduce((acc: any, item: any) => {
+        const productId = item.productId;
+        if (!acc[productId]) {
+            acc[productId] = {
+                productId,
+                productName: item.productName,
+                image: item.image,
+                variants: []
+            };
+        }
+        acc[productId].variants.push(item);
+        return acc;
+    }, {}) || {};
+    
+    const productGroups = Object.values(groupedProducts);
+    const isReceived = order.status === OrderStatus.RECEIVED;
     return (
         <Modal
             visible={visible}
@@ -50,7 +70,7 @@ const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel,
                     <ScrollView>
                         <Text style={styles.modalTitleNew}>Chi tiết đơn hàng</Text>
                         <View style={styles.orderInfoRow}>
-                            <Text style={styles.orderId}>ORDER #{order.sku || ''}</Text>
+                            <Text style={styles.orderId}>HD: {order.sku || ''}</Text>
                             <View style={[styles.statusBadge, { backgroundColor: badgeColor.bg }]}>
                                 <Text style={[styles.statusBadgeText, { color: badgeColor.text }]}>{ORDER_STATUS_VI[order.status] || order.status}</Text>
                             </View>
@@ -60,17 +80,33 @@ const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel,
                         }</Text>
                         <View style={styles.sectionDivider} />
                         <Text style={styles.sectionTitle}>Sản phẩm</Text>
-                        {order.orderDetailItems?.map((item: any) => (
-                            <View key={item._id} style={styles.productRow}>
-                                <View style={styles.productImageBox}>
-                                    <Image source={{ uri: item.image }} style={styles.productImage} />
+                        {productGroups.map((productGroup: any, groupIndex: number) => (
+                            <View key={productGroup.productId} style={styles.productGroup}>
+                                <View style={styles.productHeader}>
+                                    <View style={styles.productImageBox}>
+                                        <Image source={{ uri: productGroup.image }} style={styles.productImage} />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.productName}>{productGroup.productName}</Text>
+                                    </View>
                                 </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.productName}>{item.productName}</Text>
-                                    <Text style={styles.productDesc}>{item.variantName}</Text>
-                                    <Text style={styles.productQty}>sl: {item.quantity}</Text>
-                                </View>
-                                <Text style={styles.productPrice}>{item.promotionalPrice?.toLocaleString()}đ</Text>
+                                {productGroup.variants.map((variant: any, variantIndex: number) => (
+                                    <View key={variant._id} style={styles.variantRow}>
+                                        <View style={styles.variantInfo}>
+                                            <Text style={styles.variantName}>{variant.variantName}</Text>
+                                            <Text style={styles.variantQty}>sl: {variant.quantity}</Text>
+                                        </View>
+                                        <Text style={styles.variantPrice}>{variant.promotionalPrice?.toLocaleString()}đ</Text>
+                                    </View>
+                                ))}
+                                {order.status === OrderStatus.RECEIVED && onReview && (
+                                    <TouchableOpacity 
+                                        style={styles.reviewBtn} 
+                                        onPress={() => onReview(productGroup.productId)}
+                                    >
+                                        <Text style={styles.reviewBtnText}>Đánh giá</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
                         <View style={styles.sectionDivider} />
@@ -171,13 +207,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginBottom: 8,
     },
-    productRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    productGroup: {
         backgroundColor: '#F8F8F8',
         borderRadius: 10,
         padding: 10,
         marginBottom: 10,
+    },
+    productHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
     },
     productImageBox: {
         width: 48,
@@ -198,18 +237,27 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 15,
     },
-    productDesc: {
+    variantRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 4,
+        paddingLeft: 60,
+    },
+    variantInfo: {
+        flex: 1,
+    },
+    variantName: {
         color: '#888',
         fontSize: 13,
     },
-    productQty: {
+    variantQty: {
         color: '#888',
         fontSize: 13,
     },
-    productPrice: {
+    variantPrice: {
         fontWeight: 'bold',
         fontSize: 15,
-        marginLeft: 8,
     },
     paymentRow: {
         flexDirection: 'row',
@@ -238,6 +286,19 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
     },
     cancelBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 15,
+    },
+    reviewBtn: {
+        backgroundColor: '#4CAF50',
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        alignSelf: 'flex-end',
+        marginTop: 8,
+    },
+    reviewBtnText: {
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 15,

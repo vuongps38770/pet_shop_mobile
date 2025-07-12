@@ -8,7 +8,9 @@ import {
   ScrollView,
   Alert,
   Pressable,
-  Image
+  Image,
+  StatusBar,
+  Platform
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { getProvinces, getDistricts, getWards, getSuggestionPlace } from "../address.slice";
@@ -106,7 +108,45 @@ export const NewAddressScreen = () => {
     handleSearchLocation(houseNumber);
   }, [houseNumber, selectedWard, selectedDistrict, selectedProvince])
 
+  const [fullNameError, setFullNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  // Validate tên
+  const validateFullName = (name: string) => {
+    if (!name.trim()) return 'Vui lòng nhập họ và tên';
+    if (/[^a-zA-ZÀ-ỹà-ỹ\s]/.test(name)) return 'Tên không được chứa số hoặc ký tự đặc biệt';
+    if (name.trim().split(' ').length < 2) return 'Vui lòng nhập đầy đủ họ và tên';
+    return '';
+  };
+
+  // Validate số điện thoại
+  const validatePhone = (phone: string) => {
+    if (!phone.trim()) return 'Vui lòng nhập số điện thoại';
+    if (!/^0\d{9}$/.test(phone)) return 'Số điện thoại phải bắt đầu bằng 0 và đủ 10 số';
+    return '';
+  };
+
+  // Khi thay đổi tên
+  const handleFullNameChange = (text: string) => {
+    setFullName(text);
+    setFullNameError(validateFullName(text));
+  };
+
+  // Khi thay đổi sđt
+  const handlePhoneChange = (text: string) => {
+    setPhoneNumber(text);
+    setPhoneError(validatePhone(text));
+  };
+
   const handleSave = () => {
+    const nameErr = validateFullName(fullName);
+    const phoneErr = validatePhone(phoneNumber);
+    setFullNameError(nameErr);
+    setPhoneError(phoneErr);
+    if (nameErr || phoneErr) {
+      Alert.alert("Lỗi", nameErr || phoneErr);
+      return;
+    }
     if (
       !fullName.trim() ||
       !phoneNumber.trim() ||
@@ -146,71 +186,68 @@ export const NewAddressScreen = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={assets.icons.back} style={styles.backIcon} />
+          <Image source={assets.icons.back} style={[styles.backIcon, {tintColor: colors.black}]} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add new adress</Text>
+        <Text style={styles.headerTitle}>Thêm địa chỉ mới</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <FormInput
-        label="Full name"
+        label="Họ và tên"
         value={fullName}
-        onChangeText={setFullName}
-        placeholder="Enter full name"
+        onChangeText={handleFullNameChange}
+        placeholder="Nhập họ và tên"
         inputWrapperStyle={{
           borderColor: fullName.trim() !== "" ? colors.app.primary.main : "#ccc",
         }}
+        error={fullNameError}
       />
 
       <FormInput
-        label="Phone number"
+        label="Số điện thoại"
         value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        placeholder="Enter phone number"
+        onChangeText={handlePhoneChange}
+        placeholder="Nhập số điện thoại"
         inputWrapperStyle={{
           borderColor: phoneNumber.trim() !== "" ? colors.app.primary.main : "#ccc",
         }}
-        leftIcon={
-          <Text style={{ fontSize: 16, color: "#000", marginTop: -3 }}>
-
-          </Text>
-        }
+        error={phoneError}
       />
 
       <LocationPicker
-        label="City"
+        label="Tỉnh/Thành phố"
         selectedValue={selectedProvince?.code.toString() ?? ""}
         onValueChange={setSelectedProvince}
         items={provinces}
-        placeholder="Select city"
+        placeholder="Chọn tỉnh/thành phố"
       />
 
       <LocationPicker
-        label="District"
+        label="Quận/Huyện"
         selectedValue={selectedDistrict?.code.toString() ?? ""}
         onValueChange={setSelectedDistrict}
         items={districts}
-        placeholder="Select district"
+        placeholder="Chọn quận/huyện"
       />
 
       <LocationPicker
-        label="Ward"
+        label="Phường/Xã"
         selectedValue={selectedWard?.code.toString() ?? ""}
         onValueChange={setSelectedWard}
         items={wards}
-        placeholder="Select ward"
+        placeholder="Chọn phường/xã"
       />
 
       <FormInput
-        label="House number"
+        label="Số nhà, tên đường"
         value={houseNumber}
         onChangeText={(text) => {
           setHouseNumber(text);
           handleSearchLocation(text);
         }}
-        placeholder="Enter house number"
+        placeholder="Nhập số nhà, tên đường"
         inputWrapperStyle={{
-          borderColor: houseNumber.trim() !== "" ? "#FFA63D" : "#ccc",
+          borderColor: houseNumber.trim() !== "" ? colors.app.primary.main : "#ccc",
         }}
       />
 
@@ -241,7 +278,7 @@ export const NewAddressScreen = () => {
 
       <AvoidKeyboardDummyView />
       <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>SAVE</Text>
+        <Text style={styles.buttonText}>Tiếp tục</Text>
       </TouchableOpacity>
     </ScrollView>
 
@@ -258,15 +295,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 24,
+    paddingTop: Platform.OS === 'android' ? 0 : 24,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
+    color: colors.black,
   },
   backIcon: {
     width: 20,
     height: 20,
-    color: "#000",
+    tintColor: colors.white,
   },
   button: {
     backgroundColor: "#FFAF42",

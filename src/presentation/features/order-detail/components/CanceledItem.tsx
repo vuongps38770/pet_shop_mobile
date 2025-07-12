@@ -3,7 +3,7 @@ import { View, Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { colors } from 'shared/theme/colors';
 import { Typography } from 'shared/components/Typography';
 import { PriceFormatter } from 'app/utils/priceFormatter';
-import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { OrderAction, OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 import { formatDateTimeVN } from 'app/utils/time';
 
 export interface CanceledItemProps {
@@ -22,6 +22,21 @@ const CanceledItem: React.FC<CanceledItemProps> = ({ order, onBuyAgain, onPress 
 
     const Wrapper = onPress ? TouchableOpacity : View;
 
+
+    const getUserActionCancel = () =>{
+        if(order?.latestLog?.action==OrderAction.CANCEL_ORDER){
+            if(order.latestLog.performed_by == 'ADMIN'){
+                return 'Huỷ bởi người bán'
+            }
+            if(order.latestLog.performed_by == 'SYSTEM'){
+                return 'Đơn huỷ tự động'
+            }
+            if(order.latestLog.performed_by == 'USER'){
+                return 'Huỷ bởi người mua'
+            }
+        }
+        return 'Huỷ bởi người bán'
+    }
     return (
         <Wrapper style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.85 : undefined}>
             {/* Header */}
@@ -46,7 +61,7 @@ const CanceledItem: React.FC<CanceledItemProps> = ({ order, onBuyAgain, onPress 
                     </Typography>
                     <Typography variant="caption" color="error" style={styles.canceledText}>
                         {/* TODO: Xác định ai hủy đơn hàng (người bán/khách hàng) dựa vào dữ liệu từ API */}
-                        Đã hủy bởi người bán
+                        {getUserActionCancel()}
                     </Typography>
                 </View>
             </View>

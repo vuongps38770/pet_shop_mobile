@@ -6,6 +6,9 @@ import { fetchCanceledOrders, fetchCanceledOrdersLoadMore } from '../slices/canc
 import CanceledItem from '../components/CanceledItem';
 import OrderDetailModal from '../components/OrderDetailModal';
 import { LoadingView } from 'shared/components/LoadingView';
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import { OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
 
 const CanceledScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -13,8 +16,8 @@ const CanceledScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [page, setPage] = useState(1);
-  const [allOrders, setAllOrders] = useState<any[]>([]);
-
+  const [allOrders, setAllOrders] = useState<OrderRespondDto[]>([]);
+  const navigation = useMainNavigation()
   useEffect(() => {
     setPage(1);
     dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
@@ -49,9 +52,16 @@ const CanceledScreen = () => {
     );
   }
 
-  const handleBuyAgain = (order: any) => {
+  const handleBuyAgain = (order: OrderRespondDto) => {
+
     // Xử lý khi nhấn Mua lại
-    console.log('Buy again:', order._id);
+    console.log('Buy again:', order);
+    navigation.navigate('OrderScreen', {
+      reOrderItems: order.orderDetailItems.map((item ):OrderReqItem => ({
+        quantity:item.quantity,
+        variantId:item.variantId
+      }))
+    })
   };
 
   const handleItemPress = (item: any) => {

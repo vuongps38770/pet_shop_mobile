@@ -7,28 +7,35 @@ import cartSlice from '../features/cart/cart.slice'
 import favoriteReducer from '../features/favorite/favorite.slice'
 import newAddressReducer from '../features/address/address.slice'
 import orderSlice from '../features/order/order.slice'
-import profileReducer from '../features/profile/profile.slice'; 
+import profileReducer from '../features/profile/profile.slice';
 import orderDetailReducer from '../features/order-detail/slices';
 import voucherReducer from '../features/voucher/voucher.slice';
 import reviewReducer from '../features/review/review.slice';
+import pickVoucherReducer from '../features/order/pick-voucher.slice';
+import notificationReducer from '../features/notification/notification.slice';
+import exploreReducer from '../features/home/explore.slice';
 import appReducer from './slices';
 
 
 
 export const store = configureStore({
   reducer: {
-    global:appReducer,
-    auth:authReducer,
-    home:homeSlice,
-    product:productSlice,
-    cart:cartSlice,
+    global: appReducer,
+    auth: authReducer,
+    home: homeSlice,
+    product: productSlice,
+    cart: cartSlice,
     favorite: favoriteReducer,
     newAddress: newAddressReducer,
-    order:orderSlice,
+    order: orderSlice,
     profile: profileReducer,
     voucher: voucherReducer,
-    orderDetail:orderDetailReducer,
-    review: reviewReducer
+    orderDetail: orderDetailReducer,
+    review: reviewReducer,
+    pickVoucher: pickVoucherReducer,
+    notification: notificationReducer,
+    explore: exploreReducer,
+
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
