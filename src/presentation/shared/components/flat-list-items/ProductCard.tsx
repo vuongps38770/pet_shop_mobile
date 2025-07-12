@@ -4,7 +4,7 @@ import { assets } from 'shared/theme/assets';
 import { FormatProduct } from 'shared/components/format-price';
 import { ProductRespondSimplizeDto } from 'src/presentation/dto/res/product-respond.dto';
 import { colors } from 'shared/theme/colors';
-
+import { FontAwesome } from '@expo/vector-icons';
 interface ProductCardProps {
   item: ProductRespondSimplizeDto;
   onPress: () => void;
@@ -14,38 +14,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, onPress }) => (
   <TouchableOpacity style={styles.productCard} onPress={onPress}>
     <Image source={{ uri: item.images[0] }} resizeMode='contain' style={styles.productImage} />
     <View style={styles.starRow}>
-      {[...Array(5)].map((_, i) => (
-        <Image
-          key={i}
-          source={assets.icons.homeScreen.star}
-          style={styles.starIcon}
-        />
-      ))}
-      <Text> {5}</Text>
+      <FontAwesome name="star" size={15} color="#FFA726" />
+      <Text> {item.rating.average} ({item.rating.total} đánh giá)</Text>
     </View>
     <Text numberOfLines={1} ellipsizeMode='tail' style={styles.productName}>{item.name}</Text>
     <Text style={styles.productPrice}>
       <FormatProduct item={item} />
     </Text>
-    <TouchableOpacity style={styles.addButton}>
+    {/* <TouchableOpacity style={styles.addButton}>
       <Image
         source={assets.icons.homeScreen.cart}
         style={styles.plusIcon}
       />
-    </TouchableOpacity>
+    </TouchableOpacity> */}
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   productCard: {
     width: '46%',
-    backgroundColor: colors.grey[200],
+    backgroundColor: colors.white,
     height: 280,
-    borderRadius: 24,
+    borderRadius: 16,
     padding: 10,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: colors.grey['100'],
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 3,

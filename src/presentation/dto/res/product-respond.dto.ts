@@ -61,5 +61,20 @@ export interface ProductRespondSimplizeDto {
     maxPromotionalPrice: number
     minSellingPrice: number
     maxSellingPrice: number
+    rating: {
+        average:number,
+        total:number
+    }
 }
 
+
+export interface ProductSuggestionDto {
+    _id: string
+    name: string
+    images: string[]
+}
+
+export enum SuggestionType {
+    PERSONALIZED = 'personalized',
+    POPULAR = 'popular',
+}

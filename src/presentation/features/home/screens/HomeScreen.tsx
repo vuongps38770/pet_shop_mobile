@@ -2,10 +2,10 @@ import { useNavigation } from '@react-navigation/native'
 import { useMainNavigation } from '../../../shared/hooks/navigation-hooks/useMainNavigationHooks'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/presentation/store/store'
-import { getPoPularProduct } from '../homeSlice'
+import { getPoPularProduct, getPersonalizedSuggestions, getPopularSuggestions } from '../homeSlice'
 import React, { useEffect, useRef, useState } from 'react';
+import { NativeSyntheticEvent, NativeScrollEvent, ScrollView, Dimensions, Animated } from 'react-native';
 import {
-  Animated,
   View,
   StyleSheet,
   TextInput,
@@ -25,25 +25,54 @@ import HomeLogo from 'assets/images/logo.svg'
 import PawIcon from 'assets/icons/paw-icon.svg'
 import NotifiIcon from 'assets/icons/bell.svg'
 import CategoryIcon from 'assets/icons/category-svgrepo-com.svg'
+import HorizontalAutoScrollSlider from 'shared/components/flat-list-items/HorizontalAutoScrollSlider';
+import TypingBanner from '../components/TypingBanner';
 
 
 const HomeScreen = () => {
   const mainNav = useMainNavigation()
   const dispatch = useDispatch<AppDispatch>()
-  const { popularProductList, fetchPopularProductListStatus } = useSelector((state: RootState) => state.home)
+  const { popularProductList, fetchPopularProductListStatus, personalizedSuggestions, popularSuggestions } = useSelector((state: RootState) => state.home)
   const [searchParam, setSearchParam] = useState("");
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const headerIsHidden = useRef(false); // true: header đang ẩn, false: header đang hiện
+  const HEADER_HEIGHT = 100;
 
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [0, -100], 
-    extrapolate: 'clamp',
-  });
+  // Hiệu ứng header ẩn/hiện dựa vào hướng scroll, chỉ animate khi trạng thái đổi
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentY = event.nativeEvent.contentOffset.y;
+    if (currentY < 0) return;
+    if (currentY < lastScrollY.current) {
+      // Kéo lên
+      if (headerIsHidden.current) {
+        Animated.timing(headerAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+        headerIsHidden.current = false;
+      }
+    } else if (currentY > lastScrollY.current + 2) {
+      // Kéo xuống
+      if (!headerIsHidden.current) {
+        Animated.timing(headerAnim, {
+          toValue: -HEADER_HEIGHT,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+        headerIsHidden.current = true;
+      }
+    }
+    lastScrollY.current = currentY;
+  };
+
 
   useEffect(() => {
     dispatch(getPoPularProduct())
-
-
+    dispatch(getPersonalizedSuggestions())
+    dispatch(getPopularSuggestions())
   }, [])
 
 
@@ -61,44 +90,57 @@ const HomeScreen = () => {
 
 
   return (
-    <Animated.ScrollView
-      style={{ flex: 1 }}
-      scrollEventThrottle={16}
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: false }
-      )}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#2196F3"
-          title="Đang làm mới..."/>
-      }
-    >
-      <Animated.View style={[styles.header, { transform: [{ translateY: headerTranslateY }] }]}>
-        <View style={{ position: 'relative', width: 80, height: 80 }}>
-          <PawIcon
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              zIndex: 1,
-            }}
-            width={80}
-            height={80}
-          />
-          <HomeLogo
-            style={{
-              position: 'relative',
-              zIndex: 2,
-              alignSelf: 'center'
-            }}
-            width={70}
-            height={70}
-          />
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            transform: [{ translateY: headerAnim }],
+          },
+        ]}
+      >
+        <Pressable onPress={() => {
+          if (scrollViewRef.current) {
+            // Nếu đang ở đầu trang, ấn logo sẽ reload
+            if (lastScrollY.current < 10) {
+              setRefreshing(true);
+              onRefresh();
+            } else {
+              scrollViewRef.current.scrollTo({ y: 0, animated: true });
+            }
+          }
+        }}>
+          <View style={{ position: 'relative', width: 80, height: 80 }}>
+            <PawIcon
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                zIndex: 1,
+              }}
+              width={80}
+              height={80}
+            />
+            <HomeLogo
+              style={{
+                position: 'relative',
+                zIndex: 2,
+                alignSelf: 'center'
+              }}
+              width={70}
+              height={70}
+            />
+          </View>
+        </Pressable>
+        {/* Typing banner động */}
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <TypingBanner />
         </View>
-
         <View style={styles.headerIcons}>
           <Pressable onPress={() => mainNav.navigate('Notification')}>
             <View
@@ -114,14 +156,26 @@ const HomeScreen = () => {
           </Pressable>
         </View>
       </Animated.View>
-
+      <Animated.ScrollView
+        ref={scrollViewRef}
+        style={{ flex: 1, paddingTop: HEADER_HEIGHT }}
+        scrollEventThrottle={16}
+        onScroll={handleScroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#2196F3"
+            title="Đang làm mới..."/>
+        }
+      >
       <View style={styles.searchContainer}>
         <Image
           source={assets.icons.homeScreen.search}
           style={styles.searchIcon}
         />
         <TextInput
-          placeholder="Search for pet product..."
+          placeholder="Tìm kiếm sản phẩm..."
           style={styles.searchInput}
           value={searchParam}
           onChangeText={(text) =>
@@ -146,7 +200,7 @@ const HomeScreen = () => {
           <Text style={styles.bannerSubtitle}>
             Get 20% off on all pet food this week
           </Text>
-          <TouchableOpacity style={styles.shopNowButton}>
+          <TouchableOpacity style={styles.shopNowButton} onPress={()=>{mainNav.navigate('ExploreScreen')}}>
             <Text style={{ color: 'white' }}>Shop now</Text>
           </TouchableOpacity>
         </View>
@@ -156,13 +210,32 @@ const HomeScreen = () => {
         />
       </View>
 
+ 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Popular Products</Text>
-        <TouchableOpacity onPress={() => {
-          /**todo */
-        }
-        }>
-          <Text style={styles.sectionLink}>See All</Text>
+        <Text style={styles.sectionTitle}>Gợi ý cho bạn</Text>
+      </View>
+      <HorizontalAutoScrollSlider
+        data={personalizedSuggestions}
+        fps={90}
+        scrollSpeed={0.2}
+        onPressItem={(item) => mainNav.navigate('ProductDetail', { productId: item._id })}
+      />
+
+  
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Sản phẩm phổ biến</Text>
+      </View>
+      <HorizontalAutoScrollSlider
+      scrollSpeed={0.3}
+      fps={50}
+        data={popularSuggestions}
+        onPressItem={(item) => mainNav.navigate('ProductDetail', { productId: item._id })}
+      />
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Khám phá</Text>
+        <TouchableOpacity onPress={() => mainNav.navigate('ExploreScreen')}>
+          <Text style={styles.sectionLink}>Khám phá sản phẩm</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -170,20 +243,18 @@ const HomeScreen = () => {
         data={popularProductList}
         numColumns={2}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={{}}
+        contentContainerStyle={{ paddingBottom: 24 }}
         columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 6 }}
         scrollEnabled={false}
-
         renderItem={({ item }) => {
           return (
             <ProductCard
               item={item}
               onPress={() => mainNav.navigate('ProductDetail', { productId: item._id })}
-
+              // Thêm hiệu ứng nhấn nếu muốn
             />
           )
-        }
-        }
+        }}
       />
 
       <View style={styles.sectionHeader}>
@@ -196,31 +267,39 @@ const HomeScreen = () => {
         </TouchableOpacity>
 
       </View>
-      <View style={styles.services}>
-        <View style={styles.serviceCardPink}>
-          <Image
-            source={assets.icons.homeScreen.scissors}
-            style={styles.serviceIcon}
-          />
-          <Text style={styles.serviceTitle}>Pet Grooming</Text>
-          <Text style={styles.serviceDesc}>Professional care</Text>
-          <TouchableOpacity style={styles.bookNowButton}>
-            <Text style={styles.bookNowText}>Book now</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.serviceCardBlue}>
-          <Image
-            source={assets.icons.homeScreen.house}
-            style={styles.serviceIcon}
-          />
-          <Text style={styles.serviceTitle}>Pet Sitting</Text>
-          <Text style={styles.serviceDesc}>Care at your home</Text>
-          <TouchableOpacity style={styles.bookNowButton}>
-            <Text style={styles.bookNowText}>Book now</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Animated.ScrollView >
+      {/* Pet Services scroll ngang */}
+      <FlatList
+        data={[
+          {
+            id: 1,
+            title: 'Pet Grooming',
+            desc: 'Professional care',
+            icon: assets.icons.homeScreen.scissors,
+          },
+          {
+            id: 2,
+            title: 'Pet Sitting',
+            desc: 'Care at your home',
+            icon: assets.icons.homeScreen.house,
+          },
+        ]}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={{ paddingHorizontal: 12, marginBottom: 20 }}
+        renderItem={({ item, index }) => (
+          <View style={index % 2 === 0 ? styles.serviceCardPink : styles.serviceCardBlue}>
+            <Image source={item.icon} style={styles.serviceIcon} />
+            <Text style={styles.serviceTitle}>{item.title}</Text>
+            <Text style={styles.serviceDesc}>{item.desc}</Text>
+            <TouchableOpacity style={styles.bookNowButton}>
+              <Text style={styles.bookNowText}>Book now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+      </Animated.ScrollView>
+    </View>
   );
 }
 
@@ -237,6 +316,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 15,
     alignItems: 'center',
+    backgroundColor: colors.background.default,
+    height: 100,
   },
   logo: {
     width: 70,
@@ -261,11 +342,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.grey[300],
+    backgroundColor: colors.white,
     marginHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 14,
     padding: 10,
     marginBottom: 14,
+    marginTop:20,
     shadowColor: colors.black,
     shadowOpacity: 0.1,
     elevation: 4,
@@ -288,6 +370,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 16,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   bannerTitle: {
     fontSize: 18,
@@ -309,10 +396,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.app.primary.main,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 8,
     alignSelf: 'flex-start',
-    borderColor: colors.black,
-    borderWidth: 1,
+    borderWidth: 0,
 
   },
   sectionHeader: {
@@ -324,8 +410,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: 'bold',
-    fontSize: 20,
-    marginBottom: 10,
+    fontSize: 18,
+    marginBottom: 6,
   },
   sectionLink: {
     color: colors.app.primary.main,
@@ -348,7 +434,7 @@ const styles = StyleSheet.create({
     elevation: 2,
     position: 'relative',
     marginHorizontal: 6,
-
+    // Thêm hiệu ứng nhấn nếu muốn
   },
   productImage: {
 
@@ -401,21 +487,23 @@ const styles = StyleSheet.create({
 
   services: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     paddingHorizontal: 12,
     marginBottom: 20,
+    // scroll ngang sẽ dùng FlatList horizontal ở phần render
   },
   serviceCardPink: {
     backgroundColor: colors.pink.light,
     padding: 16,
     borderRadius: 10,
-    width: '48%',
+    width: 180,
+    marginRight: 16,
   },
   serviceCardBlue: {
     backgroundColor: colors.blue.light,
     padding: 16,
     borderRadius: 10,
-    width: '48%',
+    width: 180,
+    marginRight: 16,
   },
   serviceIcon: {
     width: 24,
@@ -432,15 +520,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bookNowButton: {
-    borderWidth: 1,
-    borderColor: colors.blue.main,
+    borderWidth: 0,
+    backgroundColor: colors.app.primary.main,
     borderRadius: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
     alignSelf: 'flex-start',
   },
   bookNowText: {
-    color: colors.blue.main,
+    color: colors.white,
     fontWeight: '600',
     fontSize: 14,
   },
