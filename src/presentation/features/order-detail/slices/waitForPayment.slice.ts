@@ -83,7 +83,7 @@ export const checkOrder = createAsyncThunk<
     'order/check-order',
     async (paymentId, { rejectWithValue }) => {
       try {
-        const res = await axiosInstance.get(`payment/payment-status?paymentId=${paymentId}`,);
+        const res = await axiosInstance.get(`payment/payment-status/${paymentId}`);
         console.log(res.data.data);
         return res.data.data as PaymentStatusResDto;
       } catch (error: any) {

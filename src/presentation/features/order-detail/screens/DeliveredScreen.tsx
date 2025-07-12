@@ -9,6 +9,7 @@ import { LoadingView } from 'shared/components/LoadingView';
 import { OrderStatus } from 'app/types/OrderStatus';
 import AppModal from 'shared/components/modals/AppModal';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import { useFocusEffect } from '@react-navigation/native';
 
 const DeliveredScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,9 +19,12 @@ const DeliveredScreen = () => {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [actionOrderId, setActionOrderId] = useState<string>('');
   const navigation = useMainNavigation()
-  useEffect(() => {
-    dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }));
-  }, [dispatch]);
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }));
+    }, [dispatch])
+  );
+
 
   useEffect(() => {
     if (updateStatus === 'success') {
@@ -43,14 +47,14 @@ const DeliveredScreen = () => {
   };
 
   const handleConfirmReceivedAction = () => {
-    dispatch(updateOrderStatus({ 
-      orderId: actionOrderId, 
-      nextStatus: OrderStatus.RECEIVED 
+    dispatch(updateOrderStatus({
+      orderId: actionOrderId,
+      nextStatus: OrderStatus.RECEIVED
     }));
   };
 
-  const handleReview = (orderId: string) => {
-    navigation.navigate('ScreenReviews',{productId:""})
+  const handleReview = (productId: string) => {
+    navigation.navigate('ScreenReviews', { productId: productId })
   };
 
   const handleCloseModal = () => {
@@ -66,7 +70,7 @@ const DeliveredScreen = () => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{fetchError}</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.retryButton}
           onPress={() => dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }))}
         >
@@ -81,7 +85,7 @@ const DeliveredScreen = () => {
       <FlatList
         data={data?.data || []}
         renderItem={({ item }) => (
-          <DeliveredItem 
+          <DeliveredItem
             order={item}
             onPress={() => handleItemPress(item)}
             onConfirmReceived={handleConfirmReceived}
@@ -98,6 +102,7 @@ const DeliveredScreen = () => {
         order={selectedOrder}
         onClose={handleCloseModal}
         statusColorMode="green"
+        onReview={handleReview}
       />
 
       <AppModal

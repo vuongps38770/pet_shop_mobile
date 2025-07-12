@@ -18,7 +18,7 @@ const AwaitingShippingScreen = () => {
       setAllOrders(res.payload?.data || []);
     });
   }, [dispatch]);
-
+  
   useEffect(() => {
     if (data && data.data && page === 1) {
       setAllOrders(data.data);

@@ -17,7 +17,7 @@ const AwaitingpickupScreen = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [page, setPage] = useState(1);
   const [allOrders, setAllOrders] = useState<any[]>([]);
-
+  const [refreshing, setRefreshing] = React.useState(false);
   useEffect(() => {
     setPage(1);
     dispatch(fetchAwaitingPickupOrders({ page: 1 })).then((res: any) => {
@@ -31,9 +31,17 @@ const AwaitingpickupScreen = () => {
     }
   }, [data, page]);
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    dispatch(fetchAwaitingPickupOrders({ page: 1 })).then((res: any) => {
+      setAllOrders(res.payload?.data || []);
+      setRefreshing(false);
+    });
+  };
   if (fetchStatus === 'loading') {
     return (
-      <LoadingView/>
+      <LoadingView />
     );
   }
 
@@ -45,14 +53,14 @@ const AwaitingpickupScreen = () => {
     );
   }
 
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ fontSize: 50, width: 70, height: 70 }}>📦</Text>
-        <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đang xử lý</Text>
-      </View>
-    );
-  }
+  // if (!data || !data.data || data.data.length === 0) {
+  //   return (
+  //     <View style={styles.center}>
+  //       <Text style={{ fontSize: 50, width: 70, height: 70 }}>📦</Text>
+  //       <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đang xử lý</Text>
+  //     </View>
+  //   );
+  // }
 
   const handleContactSeller = (order: any) => {
     // Xử lý khi nhấn liên hệ người bán
@@ -97,6 +105,11 @@ const AwaitingpickupScreen = () => {
   return (
     <View style={styles.container}>
       <FlatList
+        contentContainerStyle={[
+          allOrders.length === 0 && { flex: 1 }, 
+        ]}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
         data={allOrders}
         renderItem={({ item }) => (
           <AwaitingpickupItem
@@ -113,6 +126,14 @@ const AwaitingpickupScreen = () => {
               <Text style={{ color: '#333', fontWeight: 'bold' }}>{loadMoreStatus === 'loading' ? 'Đang tải...' : 'Tải thêm'}</Text>
             </TouchableOpacity>
           ) : null
+        }
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={{ fontSize: 50 }}>📦</Text>
+            <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>
+              Không có đơn hàng nào đang xử lý
+            </Text>
+          </View>
         }
       />
       <OrderDetailModal

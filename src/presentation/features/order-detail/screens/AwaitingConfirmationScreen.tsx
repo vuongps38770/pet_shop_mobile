@@ -35,7 +35,7 @@ const AwaitingConfirmationScreen = () => {
     });
   };
 
-  
+
 
   React.useEffect(() => {
     setPage(1);
@@ -58,8 +58,8 @@ const AwaitingConfirmationScreen = () => {
   React.useEffect(() => {
     const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
       if (event.returnCode === '1' && currentPaymentId.current) {
-        console.log("cur",currentPaymentId.current);
-        
+        console.log("cur", currentPaymentId.current);
+
         dispatch(checkOrder(currentPaymentId.current)).then(() => {
           dispatch(fetchAwaitingConfirmOrders({}));
         });
@@ -84,14 +84,6 @@ const AwaitingConfirmationScreen = () => {
     return (
       <View style={styles.center}>
         <Text style={{ color: 'red' }}>{fetchError}</Text>
-      </View>
-    );
-  }
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ fontSize: 50, width: 70, height: 70 }}>🛒</Text>
-        <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào chờ xác nhận</Text>
       </View>
     );
   }
@@ -130,6 +122,9 @@ const AwaitingConfirmationScreen = () => {
   return (
     <View style={styles.container}>
       <FlatList
+        contentContainerStyle={[
+          allOrders.length === 0 && { flex: 1 },
+        ]}
         refreshing={refreshing}
         onRefresh={handleRefresh}
         data={allOrders}
@@ -167,6 +162,14 @@ const AwaitingConfirmationScreen = () => {
               <Text style={{ color: '#333', fontWeight: 'bold' }}>{loadMoreStatus === 'loading' ? 'Đang tải...' : 'Tải thêm'}</Text>
             </TouchableOpacity>
           ) : null
+        }
+        ListEmptyComponent={
+
+          <View style={styles.center}>
+            <Text style={{ fontSize: 50, width: 70, height: 70 }}>🛒</Text>
+            <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào chờ xác nhận</Text>
+          </View>
+
         }
       />
       <OrderDetailModal
