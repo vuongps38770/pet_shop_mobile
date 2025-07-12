@@ -26,7 +26,7 @@ import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigati
 import PawStep from 'assets/images/paw-step.svg';
 import Bubbles from 'assets/images/bubbles.svg';
 import Decor from '../components/DecorView';
-
+import Icon from 'react-native-vector-icons/Ionicons';
 
 
 const LoginScreen = () => {
@@ -45,8 +45,8 @@ const LoginScreen = () => {
     setValues,
   } = useFormik({
     initialValues: {
-      phone: "0990090090",
-      password: "123",
+      phone: "0812053515",
+      password: "123123",
     },
     validationSchema: loginSchema,
     onSubmit: async (values) => {
@@ -91,13 +91,11 @@ const LoginScreen = () => {
           keyboardType="phone-pad"
           placeholder="Nhập số điện thoại của bạn"
           leftIcon={
-            <View style={styles.prefixContainer}>
-              <Text style={styles.prefixText}>+84</Text>
-              <Image
-                source={require("../../../../../assets/icons/tick.png")}
-                style={styles.arrowIcon}
-              />
-            </View>
+            <Icon
+              name="call-outline"
+              size={20}
+              color={colors.grey[600]}
+            />
           }
         />
         <FormInput
@@ -109,11 +107,19 @@ const LoginScreen = () => {
           touched={touched.password}
           secureTextEntry={secureText}
           placeholder="Nhập mật khẩu của bạn"
+          leftIcon={
+            <Icon
+              name="lock-closed-outline"
+              size={20}
+              color={colors.grey[600]}
+            />
+          }
           rightIcon={
             <TouchableOpacity onPress={() => setSecureText(!secureText)}>
-              <Image
-                source={require("../../../../../assets/icons/eye.png")}
-                style={styles.icon}
+              <Icon
+                name={secureText ? "eye-off" : "eye"}
+                size={20}
+                color={colors.black}
               />
             </TouchableOpacity>
           }
@@ -143,26 +149,21 @@ const LoginScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.orText}>hoặc</Text>
+        {/* <Text style={styles.orText}>hoặc</Text> */}
 
         <View style={{ flexDirection: 'row' }}>
           <TouchableOpacity style={styles.socialButton} onPress={() => { }}>
             <Image source={assets.images.Google} style={styles.socialIcon} />
             <Text style={styles.socialText}>Tiếp tục với Google</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <Image source={assets.images.Apple} style={styles.socialIcon} />
-            <Text style={styles.socialText}>Tiếp tục với Apple</Text>
-          </TouchableOpacity>
         </View>
 
 
-        <Text style={styles.orText}>hoặc</Text>
+        {/* <Text style={styles.orText}>hoặc</Text>
 
         <TouchableOpacity>
           <Text style={styles.guestText}>Tiếp tục với tư cách khách</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
 
@@ -256,6 +257,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.M,
     justifyContent: "center",
     marginVertical: SPACING.S,
+    flex:1
   },
   socialIcon: {
     width: 20,

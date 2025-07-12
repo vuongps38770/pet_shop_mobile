@@ -17,53 +17,53 @@ const messages = {
 
 export const loginSchema = Yup.object().shape({
   phone: Yup.string()
-    .required('Phone number is required')
-    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
+    .required('Số điện thoại là bắt buộc')
+    .matches(/^[0-9]{10}$/, 'Số điện thoại phải có 10 chữ số'),
   password: Yup.string()
-    .required('Password is required')
-    .min(3, 'Password must be at least 3 characters'),
+    .required('Mật khẩu là bắt buộc')
+    .min(3, 'Mật khẩu phải có ít nhất 3 ký tự'),
 });
 
 export const registerSchema = Yup.object().shape({
   surName: Yup.string()
-    .required('Surname is required')
-    .min(2, 'Surname must be at least 2 characters'),
+    .required('Họ là bắt buộc')
+    .min(2, 'Họ phải có ít nhất 2 ký tự'),
   name: Yup.string()
-    .required('Name is required')
-    .min(2, 'Name must be at least 2 characters'),
+    .required('Tên là bắt buộc')
+    .min(2, 'Tên phải có ít nhất 2 ký tự'),
   email: Yup.string()
-    .required('Email is required')
-    .email('Invalid email format'),
+    .required('Email là bắt buộc')
+    .email('Định dạng email không hợp lệ'),
   phone: Yup.string()
-    .required('Phone number is required')
-    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
+    .required('Số điện thoại là bắt buộc')
+    .matches(/^[0-9]{10}$/, 'Số điện thoại phải có 10 chữ số'),
   password: Yup.string()
-    .required('Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+    .required('Mật khẩu là bắt buộc')
+    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
   confirmPassword: Yup.string()
-    .required('Confirm password is required')
-    .oneOf([Yup.ref('password')], 'Passwords must match'),
+    .required('Xác nhận mật khẩu là bắt buộc')
+    .oneOf([Yup.ref('password')], 'Mật khẩu xác nhận không khớp'),
 });
 
 export const forgotPasswordSchema = Yup.object().shape({
   phone: Yup.string()
-    .required('Phone number is required')
-    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits'),
+    .required('Số điện thoại là bắt buộc')
+    .matches(/^[0-9]{10}$/, 'Số điện thoại phải có 10 chữ số'),
 });
 
 export const verifyOTPSchema = Yup.object().shape({
   otp: Yup.string()
-    .required('OTP is required')
-    .matches(/^[0-9]{6}$/, 'OTP must be 6 digits'),
+    .required('Mã OTP là bắt buộc')
+    .matches(/^[0-9]{6}$/, 'Mã OTP phải có 6 chữ số'),
 });
 
 export const resetPasswordSchema = Yup.object().shape({
   newPassword: Yup.string()
-    .required('New password is required')
-    .min(6, 'Password must be at least 6 characters'),
+    .required('Mật khẩu mới là bắt buộc')
+    .min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
   confirmPassword: Yup.string()
-    .required('Confirm password is required')
-    .oneOf([Yup.ref('newPassword')], 'Passwords must match'),
+    .required('Xác nhận mật khẩu là bắt buộc')
+    .oneOf([Yup.ref('newPassword')], 'Mật khẩu xác nhận không khớp'),
 });
 
 // Profile form validation

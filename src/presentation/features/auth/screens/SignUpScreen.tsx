@@ -17,6 +17,7 @@ import AvoidKeyboardDummyView from "shared/components/AvoidKeyboardDummyView";
 import PawStep from 'assets/images/paw-step.svg';
 import Bubbles from 'assets/images/bubbles.svg';
 import Decor from "../components/DecorView";
+import Icon from 'react-native-vector-icons/Ionicons';
 
 
 const SignUpScreen = () => {
@@ -34,10 +35,10 @@ const SignUpScreen = () => {
     else if (phoneStatus == 'sent') {
       navigation.navigate('Verify')
     } else if (phoneStatus == 'cannot_send') {
-      Alert.alert("lloi khong the gui")
+      Alert.alert("Lỗi không thể gửi mã xác thực")
     }
     else if (phoneStatus == 'pending') {
-      Alert.alert("dang load doi xiu")
+      Alert.alert("Đang tải, vui lòng đợi")
     }
     console.log(phoneStatus);
 
@@ -64,7 +65,7 @@ const SignUpScreen = () => {
       try {
         dispatch(setRegistrationInfo({ name: values.name, password: values.password, phone: values.phone, surName: values.surName }))
 
-        // dispatch(checkPhone(values.phone))
+        dispatch(checkPhone(values.phone))
         navigation.navigate('Verify')
 
 
@@ -72,8 +73,8 @@ const SignUpScreen = () => {
       } catch (error: any) {
         console.log("Register error dong 54: ", error.response || error.message || error);
         Alert.alert(
-          "Registration Failed",
-          error.response?.data?.message || "Please try again later"
+          "Đăng ký thất bại",
+          error.response?.data?.message || "Vui lòng thử lại sau"
         );
       }
     },
@@ -131,26 +132,40 @@ const SignUpScreen = () => {
 
 
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-              <Text style={styles.title}>Register</Text>
+              <Text style={styles.title}>Đăng ký</Text>
 
               <FormInput
-                label="Surname"
+                label="Họ"
                 value={values.surName}
                 onChangeText={(text: string) => handleChange("surName")(text)}
                 onBlur={() => handleBlur("surName")}
                 touched={touched.surName}
                 error={touched.surName ? errors.surName : undefined}
-                placeholder="Enter your surname"
+                placeholder="Nhập họ của bạn"
+                leftIcon={
+                  <Icon
+                    name="person-outline"
+                    size={20}
+                    color={colors.grey[600]}
+                  />
+                }
               />
 
               <FormInput
-                label="Name"
+                label="Tên"
                 value={values.name}
                 onChangeText={(text: string) => handleChange("name")(text)}
                 onBlur={() => handleBlur("name")}
                 touched={touched.name}
                 error={touched.name ? errors.name : undefined}
-                placeholder="Enter your full name"
+                placeholder="Nhập tên đầy đủ của bạn"
+                leftIcon={
+                  <Icon
+                    name="person-outline"
+                    size={20}
+                    color={colors.grey[600]}
+                  />
+                }
               />
 
               <FormInput
@@ -161,65 +176,86 @@ const SignUpScreen = () => {
                 error={touched.email ? errors.email : undefined}
                 touched={touched.email}
                 keyboardType="email-address"
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
                 autoCapitalize="none"
+                leftIcon={
+                  <Icon
+                    name="mail-outline"
+                    size={20}
+                    color={colors.grey[600]}
+                  />
+                }
               />
 
               <FormInput
-                label="Phone Number"
+                label="Số điện thoại"
                 value={values.phone}
                 onChangeText={(text: string) => handleChange("phone")(text)}
                 onBlur={() => handleBlur("phone")}
                 error={touched.phone ? errors.phone : undefined}
                 touched={touched.phone}
                 keyboardType="phone-pad"
-                placeholder="Enter your phone number"
+                placeholder="Nhập số điện thoại của bạn"
                 leftIcon={
-                  <View style={styles.prefixContainer}>
-                    <Text style={styles.prefixText}>+91</Text>
-                    <Image
-                      source={require("../../../../../assets/icons/tick.png")}
-                      style={styles.arrowIcon}
-                    />
-                  </View>
+                  <Icon
+                    name="call-outline"
+                    size={20}
+                    color={colors.grey[600]}
+                  />
                 }
               />
 
               <FormInput
-                label="Password"
+                label="Mật khẩu"
                 value={values.password}
                 onChangeText={(text: string) => handleChange("password")(text)}
                 onBlur={() => handleBlur("password")}
                 error={touched.password ? errors.password : undefined}
                 touched={touched.password}
                 secureTextEntry={secureText}
-                placeholder="Enter your password"
+                placeholder="Nhập mật khẩu của bạn"
+                leftIcon={
+                  <Icon
+                    name="lock-closed-outline"
+                    size={20}
+                    color={colors.grey[600]}
+                  />
+                }
                 rightIcon={
                   <TouchableOpacity onPress={() => setSecureText(!secureText)}>
-                    <Image
-                      source={require("../../../../../assets/icons/eye.png")}
-                      style={styles.icon}
+                    <Icon
+                      name={secureText ? "eye-off" : "eye"}
+                      size={20}
+                      color={colors.black}
                     />
                   </TouchableOpacity>
                 }
               />
 
               <FormInput
-                label="Confirm Password"
+                label="Xác nhận mật khẩu"
                 value={values.confirmPassword}
                 onChangeText={(text: string) => handleChange("confirmPassword")(text)}
                 onBlur={() => handleBlur("confirmPassword")}
                 error={touched.confirmPassword ? errors.confirmPassword : undefined}
                 touched={touched.confirmPassword}
                 secureTextEntry={secureConfirmText}
-                placeholder="Confirm your password"
+                placeholder="Xác nhận mật khẩu của bạn"
+                leftIcon={
+                  <Icon
+                    name="lock-closed-outline"
+                    size={20}
+                    color={colors.grey[600]}
+                  />
+                }
                 rightIcon={
                   <TouchableOpacity
                     onPress={() => setSecureConfirmText(!secureConfirmText)}
                   >
-                    <Image
-                      source={require("../../../../../assets/icons/eye.png")}
-                      style={styles.icon}
+                    <Icon
+                      name={secureConfirmText ? "eye-off" : "eye"}
+                      size={20}
+                      color={colors.black}
                     />
                   </TouchableOpacity>
                 }
@@ -231,14 +267,14 @@ const SignUpScreen = () => {
                 disabled={isSubmitting}
               >
                 <Text style={styles.registerText}>
-                  {isSubmitting ? "Registering..." : "Register"}
+                  {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
                 </Text>
               </TouchableOpacity>
 
               <View style={styles.loginContainer}>
-                <Text style={styles.loginText}>Already have an account? </Text>
+                <Text style={styles.loginText}>Bạn đã có tài khoản? </Text>
                 <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                  <Text style={styles.loginLink}>Login</Text>
+                  <Text style={styles.loginLink}>Đăng nhập</Text>
                 </TouchableOpacity>
               </View>
 
