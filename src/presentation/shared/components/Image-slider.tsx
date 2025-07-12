@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
     View,
     FlatList,
@@ -17,11 +17,19 @@ type ImageSliderProps = {
     showIndicator?: boolean;
     indicatorColor?: string;
     indicatorInactiveColor?: string;
+    showNavigationButtons?: boolean;
+    borderRadius?: number;
+    autoScroll?: boolean;
+    autoScrollInterval?: number;
 };
 
 const ImageSlider = ({ urls, height, width, showIndicator = true,
     indicatorColor = '#fff',
-    indicatorInactiveColor = '#888', }: ImageSliderProps) => {
+    indicatorInactiveColor = '#888',
+    showNavigationButtons = true,
+    borderRadius = 0,
+    autoScroll = false,
+    autoScrollInterval = 3000, }: ImageSliderProps) => {
     const flatListRef = useRef<FlatList>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -35,8 +43,20 @@ const ImageSlider = ({ urls, height, width, showIndicator = true,
     const handlePrev = () => scrollToIndex(currentIndex - 1);
     const handleNext = () => scrollToIndex(currentIndex + 1);
 
+    // Auto scroll effect
+    useEffect(() => {
+        if (autoScroll && urls.length > 1) {
+            const interval = setInterval(() => {
+                const nextIndex = (currentIndex + 1) % urls.length;
+                scrollToIndex(nextIndex);
+            }, autoScrollInterval);
+
+            return () => clearInterval(interval);
+        }
+    }, [currentIndex, autoScroll, autoScrollInterval, urls.length]);
+
     return (
-        <View style={[styles.container, { width, height }]}>
+        <View style={[styles.container, { width, height, borderRadius }]}>
             <FlatList
                 ref={flatListRef}
                 horizontal
@@ -44,7 +64,11 @@ const ImageSlider = ({ urls, height, width, showIndicator = true,
                 data={urls}
                 keyExtractor={(_, index) => index.toString()}
                 renderItem={({ item }) => (
-                    <Image source={{ uri: item }} resizeMode='cover' style={{ width, height }} />
+                    <Image 
+                        source={{ uri: item }} 
+                        resizeMode='cover' 
+                        style={{ width, height, borderRadius }} 
+                    />
                 )}
                 scrollEnabled={true}
                 getItemLayout={(_, index) => ({
@@ -75,12 +99,12 @@ const ImageSlider = ({ urls, height, width, showIndicator = true,
                     ))}
                 </View>
             )}
-            {currentIndex > 0 && (
+            {showNavigationButtons && currentIndex > 0 && (
                 <TouchableOpacity style={styles.leftButton} onPress={handlePrev}>
                     <Text style={styles.buttonText}>◀</Text>
                 </TouchableOpacity>
             )}
-            {currentIndex < urls.length - 1 && (
+            {showNavigationButtons && currentIndex < urls.length - 1 && (
                 <TouchableOpacity style={styles.rightButton} onPress={handleNext}>
                     <Text style={styles.buttonText}>▶</Text>
                 </TouchableOpacity>
@@ -93,6 +117,7 @@ const styles = StyleSheet.create({
     container: {
         position: 'relative',
         overflow: 'hidden',
+        borderRadius: 0, // Sẽ được override bởi prop
     },
     leftButton: {
         position: 'absolute',
