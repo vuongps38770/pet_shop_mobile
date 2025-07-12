@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { assets } from "../../../shared/theme/assets";
 
@@ -7,7 +7,9 @@ interface Props {
   title: string;
   subtitle?: string;
   onBack?: () => void;
+  onGotoMy?: () => void;
   avatarUrl?: string;
+  showLeft?: boolean
 }
 
 export const VoucherHeader: React.FC<Props> = ({
@@ -15,18 +17,27 @@ export const VoucherHeader: React.FC<Props> = ({
   subtitle,
   onBack,
   avatarUrl = "",
+  onGotoMy,
+  showLeft = true
 }) => {
   return (
     <>
       <View style={styles.headerWrapper}>
         <TouchableOpacity onPress={onBack}>
           <View style={styles.backButton}>
-                      <Image source={assets.icons.user.back} style={{ width: 16, height: 16, tintColor: "#000" }} />
-            
+            <Image source={assets.icons.user.back} style={{ width: 16, height: 16, tintColor: "#000" }} />
+
           </View>
         </TouchableOpacity>
         <Text style={styles.title}>{title}</Text>
-        <Image source={assets.images.logo} style={styles.avatar} />
+        {showLeft ?
+          <TouchableOpacity onPress={onGotoMy}>
+            <Text>lịch sử</Text>
+          </TouchableOpacity>
+          : <Text>        </Text>
+        }
+
+
       </View>
 
       <View style={styles.highlightBox}>

@@ -1,49 +1,115 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Voucher, VoucherStatus } from "../../dto/res/voucher-respond.dto";
-
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import axiosInstance from "app/config/axios";
+import { VoucherRespondDto, VoucherQueryDto } from "src/presentation/dto/res/voucher-respond";
 
 interface VoucherState {
-  allVouchers: Voucher[];
+  data: VoucherRespondDto[];
+  isLoading: boolean;
+  error: string | null;
+  page: number;
+  hasNext: boolean;
+  itemLoading: Record<string, boolean>;
 }
 
 const initialState: VoucherState = {
-  allVouchers: [
-    {
-      id: "v1",
-      title: "Giảm 50k cho đơn hàng từ 300k",
-      discount: "50.000đ",
-      condition: "Đơn từ 300.000đ",
-      expiry: "2025-12-31",
-      type: "discount",
-      status: "available",
-    },
-    {
-      id: "v2",
-      title: "Miễn phí vận chuyển",
-      discount: "Miễn phí ship",
-      condition: "Đơn từ 100.000đ",
-      expiry: "2025-12-31",
-      type: "freeship",
-      status: "available",
-    },
-  ],
+  data: [],
+  isLoading: false,
+  error: null,
+  page: 1,
+  hasNext: false,
+  itemLoading: {},
 };
+
+export const fetchUserVouchers = createAsyncThunk<
+  { data: VoucherRespondDto[]; hasNext: boolean },
+  VoucherQueryDto,
+  { rejectValue: string }
+>(
+  "voucher/fetchUserVouchers",
+  async (params, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get("/voucher", { params });
+      console.log(res.data.data);
+      const page = res.data.data as { data: any, total: number, page: number, limit: number }
+      return {
+        data: res.data.data.data,
+        hasNext: res.data.hasNext ?? false,
+      };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || "Lấy voucher thất bại");
+    }
+  }
+);
+
+export const saveUserVouchers = createAsyncThunk<
+  { id: string },
+  string,
+  { rejectValue: string }
+>(
+  "voucher/saveUserVouchers",
+  async (voucherId, { rejectWithValue }) => {
+    try {
+      await axiosInstance.post("/voucher/save", { voucherId });
+      return {
+        id: voucherId
+      };
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || "Lấy voucher thất bại");
+    }
+  }
+);
+
 
 const voucherSlice = createSlice({
   name: "voucher",
   initialState,
   reducers: {
-    updateVoucherStatus: (
-      state,
-      action: PayloadAction<{ id: string; status: VoucherStatus }>
-    ) => {
-      const voucher = state.allVouchers.find((v) => v.id === action.payload.id);
-      if (voucher) {
-        voucher.status = action.payload.status;
-      }
+    clearVouchers() {
+      return { ...initialState };
     },
+    incrementPage(state) {
+      state.page += 1;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUserVouchers.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserVouchers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (state.page === 1) {
+          state.data = action.payload.data;
+        } else {
+          state.data = [...state.data, ...action.payload.data];
+        }
+        state.hasNext = action.payload.hasNext;
+      })
+      .addCase(fetchUserVouchers.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || "Lỗi không xác định";
+      })
+
+      .addCase(saveUserVouchers.pending, (state, action) => {
+        const id = action.meta.arg;
+        state.itemLoading[id] = true;
+      })
+      .addCase(saveUserVouchers.fulfilled, (state, action) => {
+        const id = action.payload.id;
+        state.itemLoading[id] = false;
+        const index = state.data.findIndex(v => v._id === id);
+        if (index !== -1) {
+          state.data[index].is_collected = true;
+        }
+      })
+      .addCase(saveUserVouchers.rejected, (state, action) => {
+        const id = action.meta.arg;
+        state.itemLoading[id] = false;
+        state.error = action.payload || "Lỗi không xác định";
+      });
   },
 });
 
-export const { updateVoucherStatus } = voucherSlice.actions;
+export const { clearVouchers, incrementPage } = voucherSlice.actions;
 export default voucherSlice.reducer;

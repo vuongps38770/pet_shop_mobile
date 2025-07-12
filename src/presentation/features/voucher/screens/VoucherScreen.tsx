@@ -1,39 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ScrollView,
   View,
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "src/presentation/store/store";
-import { updateVoucherStatus } from "../voucher.slice";
-import { VoucherCard } from "../components/VoucherCard";
+import { fetchUserVouchers, saveUserVouchers, clearVouchers, incrementPage } from "../voucher.slice";
+import { ButtonType, VoucherCard } from "../components/VoucherCard";
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 import { VoucherHeader } from "../components/VoucherHeader";
 import { assets } from "../../../shared/theme/assets";
-import { StatGroup } from "../components/VoucherStatGroup";
+import { useFocusEffect } from "@react-navigation/native";
+import { FlatList } from "react-native";
 
 export const VoucherScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useMainNavigation();
   const [searchText, setSearchText] = useState("");
-  const allVouchers = useSelector(
-    (state: RootState) => state.voucher.allVouchers
+  const { data: allVouchers, isLoading, error, itemLoading, hasNext, page } = useSelector(
+    (state: RootState) => state.voucher
   );
-
-  const availableVouchers = allVouchers.filter(
-    (v) =>
-      v.status === "available" &&
-      v.title.toLowerCase().includes(searchText.toLowerCase())
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(clearVouchers());
+      dispatch(fetchUserVouchers({ status: 'not_collected' }));
+      return () => {
+        dispatch(clearVouchers());
+      };
+    }, [dispatch])
   );
+  const handleLoadMore = () => {
+    if (!isLoading && hasNext) {
+      dispatch(incrementPage());
+      dispatch(fetchUserVouchers({ status: 'not_collected', page: page + 1 }));
+    }
+  };
 
-  const freeshipCount = availableVouchers.filter(
-    (v) => v.type === "freeship"
-  ).length;
+
 
   return (
     <ScrollView style={styles.container}>
@@ -42,10 +50,11 @@ export const VoucherScreen = () => {
         title="Voucher"
         subtitle="Thu thập voucher ưu đãi hàng ngày"
         onBack={() => navigation.goBack()}
+        onGotoMy={() => navigation.navigate('MyVoucherScreen')}
       />
 
       {/* Search box */}
-      <View style={styles.searchBox}>
+      {/* <View style={styles.searchBox}>
         <Ionicons
           name="search"
           size={18}
@@ -59,10 +68,10 @@ export const VoucherScreen = () => {
           value={searchText}
           onChangeText={setSearchText}
         />
-      </View>
+      </View> */}
 
       {/* Summary boxes */}
-      <StatGroup
+      {/* <StatGroup
         items={[
           {
             label: "Voucher khả dụng",
@@ -74,33 +83,54 @@ export const VoucherScreen = () => {
             valueColor: "green",
           },
         ]}
-      />
+      /> */}
 
-      {/* Vouchers */}
-      {availableVouchers.map((voucher) => (
-        <VoucherCard
-          key={voucher.id}
-          title={voucher.title}
-          discount={voucher.discount}
-          condition={voucher.condition}
-          expiry={voucher.expiry}
-          type={voucher.type}
-          actionLabel="Thu thập"
-          actionIcon={assets.icons.voucher.bookmark}
-          onPress={() =>
-            dispatch(updateVoucherStatus({ id: voucher.id, status: "used" }))
-          }
-        />
-      ))}
+      {/* Loading & Error */}
+      <FlatList
+        scrollEnabled={false}
+        data={allVouchers}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => (
+          <VoucherCard
+            voucher={item}
+            actionLabel={item.is_collected ? "Đã lưu" : "Thu thập"}
+            onPress={() => {
+              if (!item.is_collected) {
+                dispatch(saveUserVouchers(item._id));
+              }
+            }}
+            isLoading={itemLoading[item._id]}
+            buttonType={item.quantity === item.used ?ButtonType.NONE:ButtonType.ADD_TO_CART}
+            
+          />
+        )}
+
+        ListEmptyComponent={
+          !isLoading ? (
+            <Text style={{ textAlign: "center", color: "#888", marginTop: 20 }}>
+              Không có voucher khả dụng
+            </Text>
+          ) : null
+        }
+        ListFooterComponent={
+          isLoading ? (
+            <View style={{ alignItems: "center", marginVertical: 20 }}>
+              <ActivityIndicator size="large" color="#FFA63D" />
+            </View>
+          ) : null
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.6}
+      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: "#fff"
-    },
+  container: {
+    padding: 16,
+    backgroundColor: "#fff"
+  },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
