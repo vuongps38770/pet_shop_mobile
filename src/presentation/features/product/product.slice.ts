@@ -69,13 +69,14 @@ export const fetchPages = createAsyncThunk<
 
 export const fetchCategorByType = createAsyncThunk<
     CategoryRespondDto[],
-    { type: string },
+    void,
     { rejectValue: string }
->('product/fetchCategory', async ({ type }, { rejectWithValue }) => {
+>('product/fetchCategory', async (_, { rejectWithValue }) => {
     try {
-        const respond = await axiosInstance.get('category/get-categories', {
-            params: { type }
-        });
+        const respond = await axiosInstance.get('category/get-categories');
+        console.log(respond.data.data);
+        console.log("kjbhb");
+        
         return respond.data.data as CategoryRespondDto[];
     } catch (error: any) {
         return rejectWithValue(

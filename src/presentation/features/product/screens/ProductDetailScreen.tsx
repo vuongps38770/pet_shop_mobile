@@ -139,7 +139,7 @@ const ProductDetailScreen = () => {
 
     return (
       <TouchableOpacity style={styles.cartButton} onPress={handleOpenVariantSelection}>
-        <Text style={styles.cartText}>Chọn phân loại</Text>
+        <Text style={styles.cartText}>Thêm vào giỏ</Text>
       </TouchableOpacity>
     );
   };
@@ -214,9 +214,9 @@ const ProductDetailScreen = () => {
               </View>
             </View>
           ))}
-          <Text style={styles.readMore}>Read more</Text>
+          {/* <Text style={styles.readMore}>Read more</Text> */}
 
-          <Text style={styles.sectionTitle}>RELATED PRODUCT</Text>
+          <Text style={styles.sectionTitle}>Sản phẩm liên quan</Text>
           <FlatList
             data={relatedProducts}
             horizontal
@@ -391,8 +391,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.app.primary.main
     , padding: 16,
     alignItems: 'center',
-    borderRadius: BORDER_RADIUS.S,
-    marginBottom: 10
+    borderRadius: BORDER_RADIUS.ROUND,
+    marginBottom: 10,
+    marginHorizontal:10
   },
   cartText: {
     color: colors.white,
