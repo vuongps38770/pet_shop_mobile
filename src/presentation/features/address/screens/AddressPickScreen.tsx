@@ -8,10 +8,11 @@ import * as Location from 'expo-location';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 
 const AddressPickScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigation = useNavigation();
+  const navigation = useMainNavigation();
   const webViewRef = useRef<WebView>(null);
   const { searchedLocation, userAddressData, createAddressStatus, createAddressError } = useSelector(
     (state: RootState) => state.newAddress
@@ -141,7 +142,7 @@ const AddressPickScreen = () => {
       Alert.alert('Thành công', 'Địa chỉ đã được tạo thành công', [
         {
           text: 'OK',
-          onPress: () => navigation.goBack()
+          onPress: () => navigation.navigate('AllAddressesScreen')
         }
       ]);
     } catch (error) {
