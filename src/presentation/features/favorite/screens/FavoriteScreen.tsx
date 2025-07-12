@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image, Platform, StatusBar } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
 import { getFavoriteList, removeFromFavorite, addToFavorite } from '../favorite.slice';
@@ -8,14 +8,18 @@ import { colors } from '../../../shared/theme/colors';
 import { assets } from '../../../shared/theme/assets';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import { debounce } from 'lodash';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const FavoriteScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
     const mainNav = useMainNavigation();
     const { items, getFavoriteStatus, removeFromFavoriteStatus, favoriteIds } = useSelector((state: RootState) => state.favorite);
-
     const [searchText, setSearchText] = useState('');
 
+    // Lọc danh sách sản phẩm theo tên
+    const filteredItems = items.filter(item =>
+        item.name?.toLowerCase().includes(searchText.trim().toLowerCase())
+    );
 
     useEffect(() => {
         const itemIds = items.map(i => i._id);
@@ -40,40 +44,46 @@ const FavoriteScreen = () => {
         }
     }, 300);
 
+    const renderHeader = () => (
+        <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={() => mainNav.goBack()} style={styles.backButton}>
+                <Icon name="arrow-back" size={24} color={colors.white} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Yêu thích</Text>
+        </View>
+    );
+
+    const renderSearchBar = () => (
+        <View style={styles.searchContainer}>
+            <Icon name="search" size={22} color={colors.grey[500]} style={styles.searchIcon} />
+            <TextInput
+                style={styles.searchInput}
+                placeholder="Tìm kiếm sản phẩm yêu thích..."
+                placeholderTextColor={colors.grey[500]}
+                value={searchText}
+                onChangeText={setSearchText}
+                underlineColorAndroid="transparent"
+            />
+        </View>
+    );
+
+    const renderEmpty = () => (
+        <View style={styles.emptyContainer}>
+            <Icon name="favorite-border" size={70} color={colors.grey[300]} style={styles.emptyIcon} />
+            <Text style={styles.emptyText}>Bạn chưa có sản phẩm yêu thích nào.</Text>
+        </View>
+    );
+
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-            {/* Header */}
-            <View style={styles.headerContainer}>
-                <TouchableOpacity onPress={() => mainNav.goBack()} style={styles.backButton}>
-                    <Image source={assets.icons.back} style={styles.backIcon} />
-                </TouchableOpacity>
-                
-            </View>
-
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <Image source={assets.icons.homeScreen.search} style={styles.searchIcon} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search"
-                    placeholderTextColor={colors.grey[500]}
-                    value={searchText}
-                    onChangeText={setSearchText}
-                />
-            </View>
-
-
-            {/* Danh sách sản phẩm yêu thích */}
+        <View style={styles.container}>
+            <StatusBar backgroundColor={colors.app.primary.main} barStyle="light-content" />
+            {renderHeader()}
+            {renderSearchBar()}
             {(getFavoriteStatus === 'loading') ? (
                 <Text style={styles.loadingText}>Đang tải danh sách yêu thích...</Text>
-            ) : items.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyIcon}>❤️</Text>
-                    <Text style={styles.emptyText}>Bạn chưa có sản phẩm yêu thích nào.</Text>
-                </View>
             ) : (
                 <FlatList
-                    data={items}
+                    data={filteredItems}
                     keyExtractor={item => item._id}
                     renderItem={({ item }) => (
                         <FavoriteCard
@@ -83,12 +93,13 @@ const FavoriteScreen = () => {
                             onHeartPress={handleHeartPress}
                         />
                     )}
-                    scrollEnabled={false}
-                    contentContainerStyle={styles.flatListContent}
+                    contentContainerStyle={filteredItems.length === 0 ? { flex: 1 } : styles.flatListContent}
+                    ListEmptyComponent={renderEmpty}
                     ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+                    showsVerticalScrollIndicator={false}
                 />
             )}
-        </ScrollView>
+        </View>
     );
 };
 
@@ -98,86 +109,60 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background.default,
-        paddingHorizontal: 16,
-    },
-    contentContainer: {
-        paddingBottom: 20,
+        paddingHorizontal: 0,
     },
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 15,
-        paddingHorizontal: 10,
-        marginTop:10
+        backgroundColor: colors.app.primary.main,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.app.primary.main,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 24,
+        paddingBottom: 12,
+        paddingHorizontal: 16,
     },
     backButton: {
-        padding: 5,
-    },
-    backIcon: {
-        width: 24,
-        height: 24,
-    },
-    deliveryContainer: {
-        flex: 1,
-        alignItems: 'flex-end',
-        flexDirection: 'row',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
     },
-    deliverToText: {
-        fontSize: 14,
-        color: colors.grey[600],
-    },
-    addressText: {
-        fontSize: 15,
+    headerTitle: {
+        flex: 1,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: colors.app.primary.main,
-        marginLeft: 5,
+        color: colors.white,
+        textAlign: 'center',
+        marginRight: 40, // Để căn giữa khi có icon back bên trái
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: colors.white,
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        marginVertical: 10,
+        borderRadius: 24,
+        paddingHorizontal: 16,
+        marginHorizontal: 16,
+        marginTop: 16,
+        marginBottom: 10,
         height: 48,
         elevation: 2,
         shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowOpacity: 0.10,
+        shadowRadius: 3,
     },
     searchIcon: {
-        width: 20,
-        height: 20,
-        marginRight: 10,
-        tintColor: colors.grey[500],
+        marginRight: 8,
     },
     searchInput: {
         flex: 1,
         fontSize: 16,
         color: colors.text.primary,
     },
-
-
-
-    filterButton: {
-        backgroundColor: colors.white,
-        borderRadius: 10,
-        padding: 8,
-        elevation: 2,
-        shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-    },
-    filterIcon: {
-        width: 20,
-        height: 20,
-        tintColor: colors.app.primary.main,
-    },
     flatListContent: {
+        paddingHorizontal: 16,
         paddingBottom: 20,
     },
     loadingText: {
@@ -187,13 +172,13 @@ const styles = StyleSheet.create({
         color: colors.text.secondary,
     },
     emptyContainer: {
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 50,
         padding: 20,
     },
     emptyIcon: {
-        fontSize: 60,
         marginBottom: 15,
     },
     emptyText: {
