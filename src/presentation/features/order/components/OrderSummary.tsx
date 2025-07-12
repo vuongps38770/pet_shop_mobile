@@ -3,34 +3,41 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { PriceFormatter } from "app/utils/priceFormatter";
 import { colors } from "shared/theme/colors";
+import { GroupedProductSummary } from "src/presentation/dto/res/order-respond.dto";
+import { OrderGroupSummaryItem } from "./OrderGroupSummaryItem";
 
 interface OrderSummaryProps {
   subtotal: number;
   tax?: number;
   delivery: number;
   total: number;
+  discount:number
 }
 
 export const OrderSummary: React.FC<OrderSummaryProps> = ({
   subtotal,
-
   delivery,
   total,
+  discount
 }) => (
   <>
-    <Text style={styles.title}>Order summary</Text>
-
+    <Text style={styles.title}>Chi tiết thanh toán</Text>
+    
     <View style={styles.row}>
-      <Text style={styles.label}>Subtotal</Text>
+      <Text style={styles.label}>Tạm tính</Text>
       <Text style={styles.value}>{PriceFormatter.formatPrice(subtotal)}</Text>
     </View>
     {/* <View style={styles.row}>
-      <Text style={styles.label}>Tax and Services</Text>
+      <Text style={styles.label}>Thuế và dịch vụ</Text>
       <Text style={styles.value}>{PriceFormatter.formatPrice(tax)}</Text>
     </View> */}
     <View style={styles.row}>
-      <Text style={styles.label}>Delivery</Text>
+      <Text style={styles.label}>Phí giao hàng</Text>
       <Text style={styles.value}>{PriceFormatter.formatPrice(delivery)}</Text>
+    </View>
+    <View style={styles.row}>
+      <Text style={styles.label}>Giảm giá:</Text>
+      <Text style={styles.value}>{PriceFormatter.formatPrice(discount)}</Text>
     </View>
     <View style={styles.row}>
       <Text
@@ -39,7 +46,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           { fontWeight: "bold", color: colors.text.primary },
         ]}
       >
-        Total :
+        Tổng cộng :
       </Text>
       <Text
         style={[
@@ -50,10 +57,10 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
         {PriceFormatter.formatPrice(total)}
       </Text>
     </View>
-    <View style={styles.row}>
-      <Text style={styles.deliveryEstimate}>Estimated delivery time</Text>
-      <Text style={styles.deliveryTime}>15 - 30 mins</Text>
-    </View>
+    {/* <View style={styles.row}>
+      <Text style={styles.deliveryEstimate}>Thời gian giao hàng dự kiến</Text>
+      <Text style={styles.deliveryTime}>15 - 30 phút</Text>
+    </View> */}
   </>
 );
 
@@ -89,5 +96,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
   },
- 
+
 });

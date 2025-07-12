@@ -21,7 +21,7 @@ export const PaymentMethods: React.FC<PaymentMethodsProps> = ({
 }) => {
   return (
     <>
-      <Text style={styles.title}>Phương thức thanh toán</Text>
+      
       <View style={styles.paymentGroupContainer}>
         <TouchableOpacity
           style={[styles.paymentGroupBtn, paymentGroup === 'cod' && styles.paymentGroupBtnActive]}
@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
     gap: 8,
+    
   },
   paymentGroupBtn: {
     flex: 1,
