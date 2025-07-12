@@ -14,7 +14,6 @@ const CartScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items, selectedIds } = useSelector((state: RootState) => state.cart || []);
 
-  // State lưu số lượng tạm thời để debounce
   const [quantities, setQuantities] = useState<{ [id: string]: number }>({});
   const debounceTimers = useRef<{ [id: string]: NodeJS.Timeout }>({});
 
@@ -26,7 +25,7 @@ const CartScreen = () => {
     React.useCallback(() => {
       dispatch(clearCart());
       dispatch(getCart());
-      debounceTimers.current = {}; 
+      debounceTimers.current = {};
       return () => {
         Object.values(debounceTimers.current).forEach(timeout => {
           clearTimeout(timeout);
@@ -37,17 +36,14 @@ const CartScreen = () => {
   );
 
   useEffect(() => {
-    // Khi items thay đổi, cập nhật số lượng tạm thời
     const newQuantities: { [id: string]: number } = {};
     items.forEach(item => {
       newQuantities[item._id] = item.quantity;
     });
     setQuantities(newQuantities);
-    // Khi getCart thành công, selectedIds mặc định là []
     dispatch(setSelectedIds([]));
   }, [items]);
 
-  // Group items theo product_id
   const groupedItems = items.reduce((acc, item) => {
     if (!acc[item.product_id]) acc[item.product_id] = [];
     acc[item.product_id].push(item);
@@ -57,12 +53,10 @@ const CartScreen = () => {
 
   const productIds = Object.keys(groupedItems);
 
-  // Tính số lượng item có thể chọn được (không hết hàng và được kích hoạt)
   //todo thêm is active
-  const selectableItems = items.filter(item => !item.isActivate && item.quantity > item.availableStock);
+  const selectableItems = items.filter(item => item.availableStock > 0 && item.quantity <= item.availableStock);
   const selectableItemIds = selectableItems.map(item => item._id);
 
-  // Tính tổng tiền chỉ các item được chọn
   const subtotal = (items || []).reduce((sum, item) =>
     selectedIds.includes(item._id) ? sum + item.promotionalPrice * (quantities[item._id] ?? item.quantity) : sum, 0
   ) || 0;
@@ -70,7 +64,6 @@ const CartScreen = () => {
   const delivery = 3;
   const total = subtotal + tax + delivery;
 
-  // Xử lý chọn/bỏ chọn item
   const handleCheck = (id: string) => {
     if (selectedIds.includes(id)) {
       dispatch(setSelectedIds(selectedIds.filter(i => i !== id)));
@@ -79,7 +72,6 @@ const CartScreen = () => {
     }
   };
 
-  // Chọn tất cả / bỏ chọn tất cả
   const handleSelectAll = () => {
     if (selectedIds.length === selectableItemIds.length) {
       dispatch(deselectAll());
@@ -88,13 +80,11 @@ const CartScreen = () => {
     }
   };
 
-  // Xử lý tăng số lượng (debounce, update UI ngay)
   const handleIncrease = (id: string) => {
     setQuantities(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
     debounceUpdateQuantity(id, (quantities[id] || items.find(i => i._id === id)?.quantity || 0) + 1);
   };
 
-  // Xử lý giảm số lượng (debounce, update UI ngay)
   const handleDecrease = (id: string) => {
     if ((quantities[id] || items.find(i => i._id === id)?.quantity || 0) > 1) {
       setQuantities(prev => ({ ...prev, [id]: (prev[id] || 0) - 1 }));
@@ -102,7 +92,11 @@ const CartScreen = () => {
     }
   };
 
-  // Debounce cập nhật số lượng
+  const handleChangeQuantity = (id: string, quantity: number) => {
+    setQuantities(prev => ({ ...prev, [id]: quantity }));
+    debounceUpdateQuantity(id, quantity);
+  };
+
   const debounceUpdateQuantity = (id: string, quantity: number) => {
     if (debounceTimers.current[id]) {
       clearTimeout(debounceTimers.current[id]);
@@ -115,7 +109,6 @@ const CartScreen = () => {
     }, 500);
   };
 
-  // Xoá item
   const handleRemove = (id: string) => {
     dispatch(removeFromCart(id));
     dispatch(setSelectedIds(selectedIds.filter(i => i !== id)));
@@ -125,7 +118,7 @@ const CartScreen = () => {
     <View style={styles.container}>
       <ScrollView style={styles.insideContainer} contentContainerStyle={{ paddingBottom: 60 }}>
         {/* Header */}
-        <Text style={styles.header}>Cart</Text>
+        <Text style={styles.header}>Giỏ hàng</Text>
 
         {/* Nút chọn tất cả */}
         {items.length > 0 && (
@@ -157,6 +150,7 @@ const CartScreen = () => {
                     onDecrease={handleDecrease}
                     onRemove={handleRemove}
                     quantities={quantities}
+                    onChangeQuantity={handleChangeQuantity} 
                   />
                 ))}
               </View>

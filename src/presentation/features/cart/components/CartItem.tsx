@@ -1,11 +1,11 @@
-import React, { useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Animated, TextInput } from 'react-native';
 import { CartRespondDto } from '../../../dto/res/cart-respond.dto';
 import { colors } from '../../../shared/theme/colors';
 import { Checkbox } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { PriceFormatter } from 'app/utils/priceFormatter';
-
+import { TextInput as RNTextInput } from 'react-native';
 interface CartItemProps {
     item: CartRespondDto;
     checked: boolean;
@@ -14,9 +14,10 @@ interface CartItemProps {
     onDecrease: (id: string) => void;
     onRemove: (id: string) => void;
     quantities?: { [id: string]: number };
+    onChangeQuantity?: (id: string, quantity: number) => void
 }
 
-const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease, onDecrease, onRemove, quantities }) => {
+const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease, onDecrease, onRemove, quantities, onChangeQuantity }) => {
     const swipeableRef = useRef<Swipeable>(null);
     const translateX = useRef(new Animated.Value(0)).current;
     const opacity = useRef(new Animated.Value(1)).current;
@@ -25,10 +26,9 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
         .map(g => `${g.name}: ${g.unit?.name || ''}`)
         .join(' - ');
     const quantity = quantities?.[item._id] ?? item.quantity;
-    //todo: thay sau này thêm is active
-    // const isDisabled = item.isOutOfStock || !item.isActivate;
-    const isOutOfStock = item.availableStock == 0;
-
+    const isOutOfStock = item.availableStock === 0;
+    const isOverStock = quantity > item.availableStock;
+    const [inputQuantity, setInputQuantity] = useState(quantity.toString());
     const handleRemove = () => {
         Animated.parallel([
             Animated.timing(translateX, {
@@ -47,21 +47,38 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
     };
 
     const handleCheck = () => {
-        if (!isOutOfStock) {
+        if (!isOutOfStock && !isOverStock) {
             onCheck(item._id);
         }
     };
 
     const handleIncrease = () => {
-        if (!isOutOfStock) {
+        if (!isOutOfStock && quantity < item.availableStock) {
             onIncrease(item._id);
+            setInputQuantity((quantity + 1).toString());
         }
     };
 
     const handleDecrease = () => {
         if (!isOutOfStock) {
             onDecrease(item._id);
+            setInputQuantity((quantity - 1).toString());
         }
+    };
+    const handleQuantitySubmit = () => {
+        const parsed = parseInt(inputQuantity, 10);
+        if (isNaN(parsed)) {
+            setInputQuantity(quantity.toString()); // reset lại nếu nhập bậy
+            return;
+        }
+
+        const clamped = Math.max(1, Math.min(parsed, item.availableStock));
+
+        if (!isOutOfStock && clamped !== quantity) {
+            onChangeQuantity?.(item._id, clamped); // dùng 1 hàm set thẳng luôn nếu có
+        }
+
+        setInputQuantity(clamped.toString());
     };
 
     const renderRightActions = () => (
@@ -94,8 +111,8 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
                             status={checked ? 'checked' : 'unchecked'}
                             onPress={handleCheck}
                             color={colors.app.primary.main}
-                            disabled={isOutOfStock}
-                            uncheckedColor={isOutOfStock ? colors.grey[400] : colors.app.primary.main}
+                            disabled={isOutOfStock || isOverStock}
+                            uncheckedColor={(isOutOfStock || isOverStock) ? colors.grey[400] : colors.app.primary.main}
                         />
                     </View>
                     <View style={styles.rightBlock}>
@@ -108,54 +125,44 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
                                         isOutOfStock && styles.outOfStockImage
                                     ]}
                                 />
-
                             </View>
                             <View style={styles.quantityContainer}>
                                 <TouchableOpacity
-                                    style={[
-                                        styles.button,
-                                        isOutOfStock && styles.disabledButton
-                                    ]}
+                                    style={[styles.button, isOutOfStock && styles.disabledButton]}
                                     onPress={handleDecrease}
                                     disabled={isOutOfStock}
                                 >
-                                    <Text style={[
-                                        styles.buttonText,
-                                        isOutOfStock && styles.disabledButtonText
-                                    ]}>-</Text>
+                                    <Text style={[styles.buttonText, isOutOfStock && styles.disabledButtonText]}>-</Text>
                                 </TouchableOpacity>
-                                <Text style={[
-                                    styles.quantityText,
-                                    isOutOfStock && styles.outOfStockText
-                                ]}>{quantity.toString().padStart(2, '0')}</Text>
+                                <TextInput
+                                    value={inputQuantity}
+                                    onChangeText={(text) => {
+                                        const filtered = text.replace(/[^0-9]/g, ''); 
+                                        setInputQuantity(filtered);
+                                    }}
+                                    onBlur={handleQuantitySubmit}
+                                    keyboardType="numeric"
+                                    editable={!isOutOfStock}
+                                    style={[styles.inputQuantity, isOutOfStock && styles.outOfStockText]}
+                                />
                                 <TouchableOpacity
-                                    style={[
-                                        styles.button,
-                                        isOutOfStock && styles.disabledButton
-                                    ]}
+                                    style={[styles.button, (isOutOfStock || isOverStock) && styles.disabledButton]}
                                     onPress={handleIncrease}
-                                    disabled={isOutOfStock}
+                                    disabled={isOutOfStock || isOverStock}
                                 >
-                                    <Text style={[
-                                        styles.buttonText,
-                                        isOutOfStock && styles.disabledButtonText
-                                    ]}>+</Text>
+                                    <Text style={[styles.buttonText, (isOutOfStock || isOverStock) && styles.disabledButtonText]}>+</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                         <View style={styles.infoContainer}>
-                            <Text style={[
-                                styles.productName,
-                                isOutOfStock && styles.outOfStockText
-                            ]} numberOfLines={2}>{item.productName}</Text>
-                            <Text style={[
-                                styles.unitText,
-                                isOutOfStock && styles.outOfStockSecondaryText
-                            ]}>{unitText}</Text>
-                            <Text style={[
-                                styles.price,
-                                isOutOfStock && styles.outOfStockText
-                            ]}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
+                            <Text style={[styles.productName, isOutOfStock && styles.outOfStockText]} numberOfLines={2}>{item.productName}</Text>
+                            <Text style={[styles.unitText, isOutOfStock && styles.outOfStockSecondaryText]}>{unitText}</Text>
+                            <Text style={[styles.price, isOutOfStock && styles.outOfStockText]}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
+                            {isOverStock && (
+                                <Text style={{ color: colors.error, fontSize: 12, marginTop: 4 }}>
+                                    Số lượng vượt quá tồn kho ({item.availableStock}). Vui lòng giảm lại.
+                                </Text>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -172,6 +179,20 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
 export default CartItem;
 
 const styles = StyleSheet.create({
+    inputQuantity: {
+        borderWidth: 1,
+        borderColor: colors.grey[400],
+        borderRadius: 6,
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        color: colors.text.primary,
+        backgroundColor: colors.white,
+        minWidth: 32,
+        height: 32,
+        padding: 0,
+        marginHorizontal: 5
+    },
     container: {
         marginVertical: 8,
         marginHorizontal: 2,
