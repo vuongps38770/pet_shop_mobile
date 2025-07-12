@@ -1,5 +1,6 @@
 import { FilterOptions } from "src/presentation/dto/req/filter-option.req.dto";
 import { MainBottomTabParamList } from "./bottom-tabs-navigators/types";
+import { OrderReqItem } from "src/presentation/dto/req/order.req.dto";
 
 export type MainStackParamList = {
   MainScreen: undefined|{route:keyof MainBottomTabParamList}
@@ -20,10 +21,11 @@ export type MainStackParamList = {
   ScreenReviews: {productId:string};
   AddressPickScreen:undefined
   AllAddressesScreen: undefined
-  OrderScreen: undefined;
+  OrderScreen: {reOrderItems: OrderReqItem[]} | undefined;
   PendingScreen: undefined;
   OrderDetail: undefined;
   VoucherScreen: undefined;
   MyVoucherScreen: undefined;
-
+  PickVoucherScreen: { total: number };
+  ExploreScreen:undefined
 };
