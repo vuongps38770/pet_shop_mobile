@@ -16,56 +16,62 @@ import { logOut, checkPhone } from '../../auth/auth.slice'
 import AppModal from "shared/components/modals/AppModal";
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 import { useUserInfo } from "shared/hooks/useUserInfo";
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const ProfileScreen = () => {
   const groupedMenuItems = [
     [
       {
         id: "1",
-        title: "Personal Info",
-        icon: assets.icons.profileScreen.user,
-        color: colors.white,
-
+        title: "Thông tin cá nhân",
+        icon: "person",
+        color: colors.app.primary.main,
       },
       {
         id: "2",
-        title: "Address",
-        icon: assets.icons.profileScreen.adderss,
-        color: colors.white,
+        title: "Địa chỉ",
+        icon: "location-on",
+        color: colors.app.primary.main,
       },
     ],
     [
       {
         id: "3",
-        title: "Cart",
-        icon: assets.icons.profileScreen.card,
-        color: colors.white,
+        title: "Giỏ hàng",
+        icon: "shopping-cart",
+        color: colors.app.primary.main,
       },
       {
         id: "4",
-        title: "Favourite",
-        icon: assets.icons.profileScreen.favourite,
-        color: colors.white,
+        title: "Yêu thích",
+        icon: "favorite",
+        color: colors.app.primary.main,
       },
       {
         id: "5",
-        title: "Notifications",
-        icon: assets.icons.profileScreen.notification,
-        color: colors.white,
+        title: "Voucher",
+        icon: "card-giftcard",
+        color: colors.app.primary.main,
+      },
+      {
+        id: "6",
+        title: "Thông báo",
+        icon: "notifications",
+        color: colors.app.primary.main,
       },
     ],
     [
       {
-        id: "6",
-        title: "FAQs",
-        icon: assets.icons.profileScreen.fa,
-        color: colors.white,
+        id: "7",
+        title: "Câu hỏi thường gặp",
+        icon: "help-outline",
+        color: colors.app.primary.main,
       },
       {
-        id: "7",
+        id: "8",
         title: "Đăng xuất",
-        icon: assets.icons.profileScreen.setting,
-        color: colors.white,
+        icon: "logout",
+        color: '#e53935',
       },
     ],
   ];
@@ -89,7 +95,7 @@ const ProfileScreen = () => {
       />
       <View style={styles.header}>
         <Typography variant="h5" style={styles.headerTitle}>
-          Profile
+          Hồ sơ
         </Typography>
       </View>
 
@@ -108,7 +114,7 @@ const ProfileScreen = () => {
           {group.map((item) => (
             <TouchableOpacity key={item.id} style={styles.menuItem}
               onPress={() => {
-                if (item.id == "7") {
+                if (item.id == "8") {
                   handleLogout()
                 }
                 else if (item.id == "4") {
@@ -119,20 +125,19 @@ const ProfileScreen = () => {
                 }
                 else if (item.id == "1") {
                   navigator.navigate("ProfileDetail");
+                } else if (item.id == "5") {
+                  navigator.navigate("VoucherScreen");
                 }
               }}>
               <View
                 style={[styles.iconContainer, { backgroundColor: item.color }]}
               >
-                <Image source={item.icon} style={styles.menuIcon} />
+                <Icon name={item.icon} size={22} color={item.id === "8" ? colors.white : colors.white} />
               </View>
               <Typography variant="body1" style={styles.menuText}>
                 {item.title}
               </Typography>
-              <Image
-                source={assets.icons.profileScreen.right}
-                style={styles.arrowIcon}
-              />
+              <Icon name="chevron-right" size={22} color={colors.grey[700]} style={styles.arrowIcon} />
             </TouchableOpacity>
           ))}
         </View>
@@ -221,8 +226,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   arrowIcon: {
-    width: 16,
-    height: 16,
-    tintColor: "black",
+    // width: 16,
+    // height: 16,
+    // tintColor: "black",
   },
 });
