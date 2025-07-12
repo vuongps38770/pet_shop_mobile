@@ -40,3 +40,7 @@ yarn-error.*
 
 #logs
 *.log
+
+#keystore
+release.keystore
+app/release.keystore

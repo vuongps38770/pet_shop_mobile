@@ -25,3 +25,10 @@ app/libs/*.aar
 
 #fcmkeys
 app/google-services.json
+
+
+#keystore
+app/release.keystore
+*.keystore
+
+gradle.properties
