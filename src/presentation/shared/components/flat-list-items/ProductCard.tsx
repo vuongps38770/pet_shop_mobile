@@ -17,7 +17,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ item, onPress }) => (
       <FontAwesome name="star" size={15} color="#FFA726" />
       <Text> {item.rating.average} ({item.rating.total} đánh giá)</Text>
     </View>
-    <Text numberOfLines={1} ellipsizeMode='tail' style={styles.productName}>{item.name}</Text>
+    <Text numberOfLines={2} ellipsizeMode='tail' style={styles.productName}>{item.name}</Text>
     <Text style={styles.productPrice}>
       <FormatProduct item={item} />
     </Text>
@@ -34,7 +34,6 @@ const styles = StyleSheet.create({
   productCard: {
     width: '46%',
     backgroundColor: colors.white,
-    height: 280,
     borderRadius: 16,
     padding: 10,
     marginBottom: 12,
@@ -64,7 +63,7 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   productName: {
-    fontSize: 15,
+    fontSize: 13,
     marginBottom: 2,
   },
   productPrice: {
