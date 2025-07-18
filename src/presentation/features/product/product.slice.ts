@@ -21,6 +21,8 @@ type ProductState = {
 
 
     categories:CategoryRespondDto[]
+    relatedProducts: ProductRespondSimplizeDto[];
+    relatedProductsStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
 };
 
 const initialState: ProductState = {
@@ -29,8 +31,9 @@ const initialState: ProductState = {
     error: undefined,
     pages: {},
     filterStatus: 'idle',
-    categories:[]
-
+    categories:[],
+    relatedProducts: [],
+    relatedProductsStatus: 'idle',
 };
 
 export const fetchProductDetail = createAsyncThunk<
@@ -84,6 +87,21 @@ export const fetchCategorByType = createAsyncThunk<
         );
     }
 })
+
+export const fetchRelatedProducts = createAsyncThunk<
+    ProductRespondSimplizeDto[],
+    string,
+    { rejectValue: string }
+>('product/fetchRelatedProducts', async (productId, { rejectWithValue }) => {
+    try {
+        const respond = await axiosInstance.get(`/products/${productId}/related`);
+        return respond.data.data as ProductRespondSimplizeDto[];
+    } catch (error: any) {
+        return rejectWithValue(
+            error?.response?.data?.message || error.message || 'Lỗi không xác định'
+        );
+    }
+});
 
 const productSlice = createSlice({
     name: 'product',
@@ -159,8 +177,16 @@ const productSlice = createSlice({
                 state.filterStatus = 'loading'
             })
 
-
-
+            .addCase(fetchRelatedProducts.pending, (state) => {
+                state.relatedProductsStatus = 'loading';
+            })
+            .addCase(fetchRelatedProducts.fulfilled, (state, action: PayloadAction<ProductRespondSimplizeDto[]>) => {
+                state.relatedProductsStatus = 'succeeded';
+                state.relatedProducts = action.payload;
+            })
+            .addCase(fetchRelatedProducts.rejected, (state) => {
+                state.relatedProductsStatus = 'failed';
+            })
 
 
     },
