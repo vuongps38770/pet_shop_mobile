@@ -9,6 +9,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import CustomToast from 'src/presentation/shared/components/CustomToast';
+import { configureGoogleSignIn } from 'app/config/googleConfig';
+import { useDeeplink } from 'shared/hooks/useDeeplink';
 
 const toastConfig = {
   success: (props: any) => (
@@ -35,26 +37,28 @@ const toastConfig = {
 };
 
 const AppContent = () => {
-    const isReady = useSplashScreen(2500);
-    if (!isReady) {
-        return <SplashScreen />;
-    }
-    return (
-        <AppNavigator />
-    );
+  const isReady = useSplashScreen(2500);
+  if (!isReady) {
+    return <SplashScreen />;
+  }
+  return (
+    <AppNavigator />
+  );
 };
 
 const App = () => {
-    return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaView style={{ flex: 1 }}>
-                <Provider store={store}>
-                    <AppContent />
-                    <Toast config={toastConfig} />
-                </Provider>
-            </SafeAreaView>
-        </GestureHandlerRootView>
-    );
+  // configureGoogleSignIn();
+ 
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Provider store={store}>
+          <AppContent />
+          <Toast config={toastConfig} />
+        </Provider>
+      </SafeAreaView>
+    </GestureHandlerRootView>
+  );
 };
 
 export default App;
