@@ -147,7 +147,7 @@ const ProfileDetail = () => {
 
   const handleEditEmail = () => {
     // TODO: Implement email editing logic with email verification
-    Alert.alert('Thông báo', 'Tính năng sửa email sẽ được cập nhật sau');
+    navigation.navigate('AddEmailScreen')
   };
 
   const renderBackdrop = useCallback(

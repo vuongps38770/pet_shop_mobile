@@ -35,12 +35,12 @@ const ProfileScreen = () => {
       },
     ],
     [
-      {
-        id: "3",
-        title: "Giỏ hàng",
-        icon: "shopping-cart",
-        color: colors.app.primary.main,
-      },
+      // {
+      //   id: "3",
+      //   title: "Giỏ hàng",
+      //   icon: "shopping-cart",
+      //   color: colors.app.primary.main,
+      // },
       {
         id: "4",
         title: "Yêu thích",
@@ -61,6 +61,12 @@ const ProfileScreen = () => {
       },
     ],
     [
+      {
+        id: "7-shop",
+        title: "Nhắn tin với shop",
+        icon: "chat",
+        color: colors.app.primary.main,
+      },
       {
         id: "7",
         title: "Câu hỏi thường gặp",
@@ -90,7 +96,10 @@ const ProfileScreen = () => {
         content="Bạn có chắc muốn đăng xuất?"
         title="Đăng xuất tài khoản"
         onNegativePress={() => { setIsModalVisible(!isModalVisible) }}
-        onPositivePress={() => { dispatch(logOut()); }}
+        onPositivePress={async () => { 
+          await dispatch(logOut()).unwrap();
+          dispatch({ type: 'RESET_ALL_STATE' });
+         }}
         onClose={() => { setIsModalVisible(!isModalVisible) }}
       />
       <View style={styles.header}>
@@ -127,6 +136,10 @@ const ProfileScreen = () => {
                   navigator.navigate("ProfileDetail");
                 } else if (item.id == "5") {
                   navigator.navigate("VoucherScreen");
+                } else if (item.id == "7-shop") {
+                  navigator.navigate("ChatList");
+                } else if (item.id == "6") {
+                  navigator.navigate("Notification");
                 }
               }}>
               <View

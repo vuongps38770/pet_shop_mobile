@@ -63,6 +63,44 @@ export const updateProfile = createAsyncThunk<
   }
 });
 
+export const sendOtpAddEmail = createAsyncThunk<
+  void,
+  string,
+  { rejectValue: { codeType?: string; message: string } }
+>(
+  'profile/sendOtpAddEmail',
+  async (email, { rejectWithValue }) => {
+    try {
+      await axiosInstance.post('/auth/send-otp-add-email', { email });
+    } catch (error: any) {
+      console.log(error);
+      
+      return rejectWithValue({
+        codeType: error?.codeType,
+        message: error?.errors?.[0] || error.message || 'Lỗi không xác định',
+      });
+    }
+  }
+);
+
+export const verifyOtpAddEmail = createAsyncThunk<
+  void,
+  { email: string; otp: string },
+  { rejectValue: { codeType?: string; message: string } }
+>(
+  'profile/verifyOtpAddEmail',
+  async ({ email, otp }, { rejectWithValue }) => {
+    try {
+      await axiosInstance.post('/auth/verify-otp-add-email', { email, otp });
+    } catch (error: any) {
+      return rejectWithValue({
+        codeType: error?.codeType,
+        message: error?.errors?.[0] || error.message || 'Lỗi không xác định',
+      });
+    }
+  }
+);
+
 const profileSlice = createSlice({
   name: 'profile',
   initialState,
