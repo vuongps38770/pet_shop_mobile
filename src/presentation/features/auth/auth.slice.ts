@@ -47,6 +47,22 @@ export const login = createAsyncThunk(
     }
 )
 
+interface LoginOAuthPayload {
+  accessToken: string;
+  refreshToken: string;
+}
+export const loginOAuth = createAsyncThunk(
+    'auth/loginOauth',
+    async ({ accessToken, refreshToken }:LoginOAuthPayload, { rejectWithValue }) => {
+        try {
+            await storageHelper.setAccessToken(accessToken)
+            await storageHelper.setRefreshToken(refreshToken)
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error);
+        }
+    }
+)
 
 
 //dang ky
@@ -102,6 +118,63 @@ export const checkPhone = createAsyncThunk(
     }
 )
 
+export const sendOtpResetPassword = createAsyncThunk<
+  void,
+  { email: string },
+  { rejectValue: { codeType?: string; message: string } }
+>(
+  'auth/sendOtpResetPassword',
+  async ({ email }, { rejectWithValue }) => {
+    try {
+      await axiosInstance.post('/auth/send-otp-reset-password', { email });
+    } catch (error: any) {
+        console.log(error);
+        
+      return rejectWithValue({
+        
+        codeType: error?.codeType,
+        message: error?.errors?.[0] || error?.message || 'Lỗi không xác định',
+      });
+    }
+  }
+);
+
+export const verifyOtpResetPassword = createAsyncThunk<
+  { token: string },
+  { email: string; otp: string },
+  { rejectValue: { codeType?: string; message: string } }
+>(
+  'auth/verifyOtpResetPassword',
+  async ({ email, otp }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.post('/auth/verify-otp-reset-password', { email, otp });
+      return { token: res.data.data.token };
+    } catch (error: any) {
+      return rejectWithValue({
+        codeType: error?.codeType,
+        message: error?.errors?.[0] || error.message || 'Lỗi không xác định',
+      });
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk<
+  void,
+  { email: string; password: string; token: string },
+  { rejectValue: { codeType?: string; message: string } }
+>(
+  'auth/changePassword',
+  async ({ email, password, token }, { rejectWithValue }) => {
+    try {
+      await axiosInstance.post('/auth/change-password', { email, password, token });
+    } catch (error: any) {
+      return rejectWithValue({
+        codeType: error?.codeType,
+        message: error?.errors?.[0] || error.message || 'Lỗi không xác định',
+      });
+    }
+  }
+);
 
 
 
@@ -161,7 +234,17 @@ const authSlice = createSlice({
                 state.loginStatus = 'failed'
             })
 
-
+            /** loginOauth */
+            .addCase(loginOAuth.pending, (state) => {
+                state.loginStatus = 'pending'
+            })
+            .addCase(loginOAuth.fulfilled, (state, action) => {
+                state.loginStatus = 'logged_in'
+                state.isAuthenticated = true
+            })
+            .addCase(loginOAuth.rejected, (state, action) => {
+                state.loginStatus = 'failed'
+            })
 
             /** validate thông tin */
             .addCase(checkPhone.fulfilled, (state, action) => {
