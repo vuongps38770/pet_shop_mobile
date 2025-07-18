@@ -17,6 +17,7 @@ const PendingScreen = () => {
   } = useOrder();
   const navigation = useMainNavigation();
   const [checkingPayment, setCheckingPayment] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const toast = useToast();
   React.useEffect(() => {
     const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
@@ -25,6 +26,7 @@ const PendingScreen = () => {
       switch (event.returnCode) {
         case '1':
           console.log('Thanh toán thành công');
+          setIsSuccess(true);
           break;
         case '-1':
           console.log('Thanh toán thất bại');
@@ -55,12 +57,14 @@ const PendingScreen = () => {
     }
   }, [paymentStatus, checkingPayment]);
   return (
-    <View style={styles.container}>
-      <Text style={styles.status}>Đang chờ thanh toán</Text>
+    <View style={[styles.container, isSuccess && { backgroundColor: '#4CAF50' }]}>
+      <Text style={styles.status}>
+        {isSuccess ? 'Thanh toán thành công' : 'Đang chờ thanh toán'}
+      </Text>
       <Text style={styles.warning}>
-        Cùng Shop bảo vệ quyền lợi của bạn - {" "}
-        <Text style={styles.bold}>KHÔNG CHUYỂN TIỀN TRƯỚC</Text> cho Shipper khi
-        đơn hàng chưa được giao tới với bất kỳ lý do gì
+      {isSuccess ? 'Đơn hàng đã được thanh toán thành công' : 'Đơn hàng của bạn đang chờ thanh toán'}
+        {/* <Text style={styles.bold}>KHÔNG CHUYỂN TIỀN TRƯỚC</Text> cho Shipper khi
+        đơn hàng chưa được giao tới với bất kỳ lý do gì */}
       </Text>
 
       <View style={styles.buttonContainer}>
