@@ -3,5 +3,8 @@ export type AuthStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
   Verify: undefined;
-  ResetPassword: { identifier: string };
+  ResetPassword: { identifier: string,email:string };
+  VerifyOtpResetPassword:{
+    email:string
+  }
 };
