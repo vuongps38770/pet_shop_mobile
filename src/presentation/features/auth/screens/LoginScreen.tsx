@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Pressable,
+  Linking,
 } from "react-native";
 import { FormInput } from '../../../shared/components/forms/FormInput';
 import { BORDER_RADIUS, SPACING } from "../../../shared/theme/layout";
@@ -21,12 +22,16 @@ import { loginSchema } from "../../../../app/utils/validation";
 import { storageHelper } from 'app/config/storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
-import { login } from '../auth.slice';
+import { login, loginOAuth } from '../auth.slice';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import PawStep from 'assets/images/paw-step.svg';
 import Bubbles from 'assets/images/bubbles.svg';
 import Decor from '../components/DecorView';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useDeeplink } from 'shared/hooks/useDeeplink';
+import { useGoogleDeeplink } from '../hooks/useGoogleDeeplink';
+import { useGoogleSignInLauncher } from '../hooks/useGoogleSignInLauncher';
+
 
 
 const LoginScreen = () => {
@@ -34,6 +39,17 @@ const LoginScreen = () => {
   const [secureText, setSecureText] = useState(true);
   const dispatch = useDispatch<AppDispatch>()
   const loginStatus = useSelector((state: RootState) => state.auth.loginStatus)
+  useEffect(() => {
+    if (loginStatus == 'failed') {
+      Alert.alert("Đăng nhập thất bại");
+    }
+  }, [loginStatus])
+  useGoogleDeeplink(); // ✅ tự động xử lý deeplink
+
+  const { launchGoogleSignIn } = useGoogleSignInLauncher();
+
+
+
   const {
     values,
     errors,
@@ -57,7 +73,7 @@ const LoginScreen = () => {
         } else {
           deviceId = await storageHelper.getOrCreateMobileDeviceId();
         }
-        dispatch(login({ password: values.password, phone: values.phone, userAgent: deviceId }))
+        await dispatch(login({ password: values.password, phone: values.phone, userAgent: deviceId }))
 
       } catch (error: any) {
         console.log("Login error:", error);
@@ -65,7 +81,7 @@ const LoginScreen = () => {
           error.response?.data?.message ||
           error.message ||
           "Lỗi không xác định";
-        Alert.alert("Đăng nhập thất bại", message);
+
       }
     },
   });
@@ -73,9 +89,9 @@ const LoginScreen = () => {
 
 
   return (
-    <View style={{ position: 'relative', flex: 1 , backgroundColor:colors.background.default}}>
+    <View style={{ position: 'relative', flex: 1, backgroundColor: colors.background.default }}>
       {/** decoảtion view */}
-      <Decor/>
+      <Decor />
 
       <View style={styles.container}>
 
@@ -152,7 +168,7 @@ const LoginScreen = () => {
         {/* <Text style={styles.orText}>hoặc</Text> */}
 
         <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity style={styles.socialButton} onPress={() => { }}>
+          <TouchableOpacity style={styles.socialButton} onPress={() => { launchGoogleSignIn() }}>
             <Image source={assets.images.Google} style={styles.socialIcon} />
             <Text style={styles.socialText}>Tiếp tục với Google</Text>
           </TouchableOpacity>
@@ -257,7 +273,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.M,
     justifyContent: "center",
     marginVertical: SPACING.S,
-    flex:1
+    flex: 1
   },
   socialIcon: {
     width: 20,
