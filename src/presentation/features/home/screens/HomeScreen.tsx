@@ -81,6 +81,8 @@ const HomeScreen = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     console.log('Refreshing...');
+    await dispatch(getPersonalizedSuggestions())
+    await dispatch(getPopularSuggestions())
     await dispatch(getPoPularProduct());
     setRefreshing(false);
   };
@@ -175,33 +177,35 @@ const HomeScreen = () => {
           style={styles.searchIcon}
         />
         <TextInput
+          focusable={false}
           placeholder="Tìm kiếm sản phẩm..."
           style={styles.searchInput}
-          value={searchParam}
-          onChangeText={(text) =>
-            setSearchParam(text)
-          }
-          returnKeyType='search'
-          onSubmitEditing={() => {
-            if (searchParam.trim() != "") {
-              mainNav.navigate('ProductShow', { title: `kết quả của "${searchParam}"`, filter: { search: searchParam.trim() } })
-            } else {
-              Keyboard.dismiss();
-              setSearchParam('');
-            }
+          // value={searchParam}
+          // onChangeText={(text) =>
+          //   setSearchParam(text)
+          // }
+          // returnKeyType='search'
+          // onSubmitEditing={() => {
+          //   if (searchParam.trim() != "") {
+          //     mainNav.navigate('ProductShow', { title: `kết quả của "${searchParam}"`, filter: { search: searchParam.trim() } })
+          //   } else {
+          //     Keyboard.dismiss();
+          //     setSearchParam('');
+          //   }
 
-          }}
+          // }}
+          onPress={()=>mainNav.navigate('ProductShow', { title: ``, filter: {  } })}
         />
       </View>
 
       <View style={styles.banner}>
         <View>
-          <Text style={styles.bannerTitle}>Special Offer!</Text>
+          <Text style={styles.bannerTitle}>Mua sắm ngay!</Text>
           <Text style={styles.bannerSubtitle}>
-            Get 20% off on all pet food this week
+            Hãy tìm kiếm những sản phẩm thú cưng yêu thích của bạn
           </Text>
           <TouchableOpacity style={styles.shopNowButton} onPress={()=>{mainNav.navigate('ExploreScreen')}}>
-            <Text style={{ color: 'white' }}>Shop now</Text>
+            <Text style={{ color: 'white' }}>Mua sắm ngay</Text>
           </TouchableOpacity>
         </View>
         <Image
@@ -385,7 +389,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 6,
     fontFamily: Fonts.roboto.regular,
-
+    maxWidth: 200
   },
   bannerImage: {
     width: 87,

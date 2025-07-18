@@ -14,29 +14,37 @@ import reviewReducer from '../features/review/review.slice';
 import pickVoucherReducer from '../features/order/pick-voucher.slice';
 import notificationReducer from '../features/notification/notification.slice';
 import exploreReducer from '../features/home/explore.slice';
+import chatReducer from '../features/chat/slice';
 import appReducer from './slices';
+import rootReducer from './rootReducer';
 
-
+// const persistConfig = {
+//   key: 'root',
+//   storage,
+//   blacklist: [], 
+// };
 
 export const store = configureStore({
-  reducer: {
-    global: appReducer,
-    auth: authReducer,
-    home: homeSlice,
-    product: productSlice,
-    cart: cartSlice,
-    favorite: favoriteReducer,
-    newAddress: newAddressReducer,
-    order: orderSlice,
-    profile: profileReducer,
-    voucher: voucherReducer,
-    orderDetail: orderDetailReducer,
-    review: reviewReducer,
-    pickVoucher: pickVoucherReducer,
-    notification: notificationReducer,
-    explore: exploreReducer,
+  // reducer: {
+  //   global: appReducer,
+  //   auth: authReducer,
+  //   home: homeSlice,
+  //   product: productSlice,
+  //   cart: cartSlice,
+  //   favorite: favoriteReducer,
+  //   newAddress: newAddressReducer,
+  //   order: orderSlice,
+  //   profile: profileReducer,
+  //   voucher: voucherReducer,
+  //   orderDetail: orderDetailReducer,
+  //   review: reviewReducer,
+  //   pickVoucher: pickVoucherReducer,
+  //   notification: notificationReducer,
+  //   explore: exploreReducer,
+  //   chat: chatReducer,
+  // },
+  reducer: rootReducer,
 
-  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

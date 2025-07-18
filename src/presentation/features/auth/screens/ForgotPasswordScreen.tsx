@@ -5,11 +5,18 @@ import { SPACING, BORDER_RADIUS } from 'shared/theme/layout';
 import { typography } from 'shared/theme/typography';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from 'src/presentation/store/store';
+import axiosInstance from 'app/config/axios';
+import { sendOtpResetPassword } from '../auth.slice';
+import { useAuthNavigation } from 'shared/hooks/navigation-hooks/useAuthNavigationHooks';
 
 const ForgotPasswordScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useAuthNavigation();
+  const dispatch = useDispatch<AppDispatch>();
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validateInput = (value: string) => {
     const phoneRegex = /^(0|\+84)[0-9]{9,10}$/;
@@ -20,21 +27,28 @@ const ForgotPasswordScreen = () => {
     return 'Vui lòng nhập đúng số điện thoại hoặc email';
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const err = validateInput(input);
     if (err) {
       setError(err);
       return;
     }
-    
-    // TODO: Gửi request tìm tài khoản
-    // TODO: Nếu không tìm thấy tài khoản, hiển thị thông báo lỗi
-    // setError('Không tìm thấy tài khoản với thông tin này');
-    // return;
-    
     setError('');
-    // Chuyển đến màn hình nhập mật khẩu mới
-    (navigation as any).navigate('ResetPassword', { identifier: input.trim() });
+    setLoading(true);
+    try {
+      await dispatch(sendOtpResetPassword({ email: input.trim() })).unwrap();
+      setLoading(false);
+      navigation.navigate('VerifyOtpResetPassword',{email:input});
+    } catch (err: any) {
+      setLoading(false);
+      if (err?.codeType === 'EMAIL_NOT_FOUND') {
+        setError('Không tìm thấy email này');
+      } else if (err?.codeType === 'OAUTH_ACCOUNT_ERR') {
+        setError('Tài khoản này đăng nhập bằng Google/Apple, không thể đặt lại mật khẩu qua email');
+      } else {
+        setError(err?.message || 'Gửi OTP thất bại');
+      }
+    }
   };
 
   return (
@@ -67,8 +81,8 @@ const ForgotPasswordScreen = () => {
           />
         </View>
         {!!error && <Text style={styles.error}>{error}</Text>}
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Tìm tài khoản</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? 'Đang gửi...' : 'Tìm tài khoản'}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

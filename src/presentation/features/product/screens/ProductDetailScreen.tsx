@@ -31,7 +31,7 @@ import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigati
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
 
-import { fetchProductDetail } from '../product.slice'
+import { fetchProductDetail, fetchRelatedProducts } from '../product.slice'
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { addToCart, resetStatus } from 'src/presentation/features/cart/cart.slice';
 import { addToFavorite, removeFromFavorite } from '../../favorite/favorite.slice';
@@ -52,6 +52,8 @@ const ProductDetailScreen = () => {
   const mainNav = useMainNavigation()
   const product = useSelector((state: RootState) => state.product.currentProductDetail)
   const isFetching = useSelector((state: RootState) => state.product.status === 'loading')
+  const relatedProducts = useSelector((state: RootState) => state.product.relatedProducts)
+  const relatedProductsStatus = useSelector((state: RootState) => state.product.relatedProductsStatus)
   const { addToCartStatus } = useSelector((state: RootState) => state.cart)
 
   const { addToFavoriteStatus } = useSelector((state: RootState) => state.favorite)
@@ -67,6 +69,12 @@ const ProductDetailScreen = () => {
     }
     fetch()
   }, [])
+
+  useEffect(() => {
+    if (product && product._id) {
+      dispatch(fetchRelatedProducts(product._id));
+    }
+  }, [product, product?._id]);
   useEffect(() => {
     dispatch(resetStatus());
   }, []);
@@ -96,14 +104,6 @@ const ProductDetailScreen = () => {
   }, [addToCartStatus, dispatch]); // Thêm dispatch vào dependency array để đảm bảo closure chính xác
 
 
-
-  const relatedProducts = [
-    { id: '1', name: 'Gold Earring from Executive', price: '$1.400.000', image: 'http://www.vanhoanggroup.com/Portals/28054/Hoan/Hoan1/bo-bit-tet-dat-vang-7.jpg' },
-    { id: '2', name: 'Modern Kebaya Outer - Nona Rara', price: '$980.000', image: 'https://tse3.mm.bing.net/th?id=OIP.pkhaiWA4PfscbrLvCzejrAHaHa&pid=Api&P=0&h=180' },
-    { id: '3', name: 'Modern Kebaya Outer - Nona Rara', price: '$980.000', image: 'https://i.ytimg.com/vi/Ko5NyQ1lMLs/maxresdefault.jpg' },
-    { id: '4', name: 'Modern Kebaya Outer - Nona Rara', price: '$980.000', image: 'https://tse3.mm.bing.net/th?id=OIP.pkhaiWA4PfscbrLvCzejrAHaHa&pid=Api&P=0&h=180' },
-    { id: '5', name: 'Modern Kebaya Outer - Nona Rara', price: '$980.000', image: 'https://i.ytimg.com/vi/Ko5NyQ1lMLs/maxresdefault.jpg' }
-  ];
 
   const handleAddToCart = (variantId: string, quantity: number) => {
     if (quantity <= 0) {
@@ -217,19 +217,27 @@ const ProductDetailScreen = () => {
           {/* <Text style={styles.readMore}>Read more</Text> */}
 
           <Text style={styles.sectionTitle}>Sản phẩm liên quan</Text>
-          <FlatList
-            data={relatedProducts}
-            horizontal
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.relatedItem}>
-                <Image source={{ uri: item.image }} style={styles.relatedImage} />
-                <Text style={styles.relatedName}>{item.name}</Text>
-                <Text style={styles.relatedPrice}>{item.price}</Text>
-              </View>
-            )}
-            showsHorizontalScrollIndicator={false}
-          />
+          {relatedProductsStatus === 'loading' ? (
+            <Text>Đang tải sản phẩm liên quan...</Text>
+          ) : (
+            <FlatList
+              data={relatedProducts}
+              horizontal
+              keyExtractor={item => item._id}
+              renderItem={({ item }) => (
+                <View style={styles.relatedItem}>
+                  <Image source={{ uri: item.images[0] }} style={styles.relatedImage} />
+                  <Text style={styles.relatedName}>{item.name}</Text>
+                  <Text style={styles.relatedPrice}>
+                    {item.minPromotionalPrice === item.maxPromotionalPrice
+                      ? `${item.minPromotionalPrice.toLocaleString()}₫`
+                      : `${item.minPromotionalPrice.toLocaleString()}₫ - ${item.maxPromotionalPrice.toLocaleString()}₫`}
+                  </Text>
+                </View>
+              )}
+              showsHorizontalScrollIndicator={false}
+            />
+          )}
         </View>
         <ProductReviewSection showProductInfo={false} productId={productId}/>
       </ScrollView>

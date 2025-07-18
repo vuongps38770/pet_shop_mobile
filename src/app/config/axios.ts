@@ -7,22 +7,22 @@ import axios, {
 import { Platform } from 'react-native';
 import { storageHelper } from './storage';
 import { APIErrorCode, ErrorHandler, mapErr } from './types/error';
-
-
+import Constants from 'expo-constants';
+const BASE_API_URL = Constants.expoConfig?.extra?.BASE_URL
 // export const BASE_URL = 'http://192.168.2.107:3000';
 
 // Base URL configuration
-// export const BASE_URL = Platform.select({
-//   ios: 'http://192.168.1.2:3000',
-//   android: 'http://192.168.1.7:3000',
-//   default: 'http://192.168.1.2:3000',
-// });
-
 export const BASE_URL = Platform.select({
-  ios: 'https://pet-shop-api-server.onrender.com',
-  android: 'https://pet-shop-api-server.onrender.com',
-  default: 'https://pet-shop-api-server.onrender.com',
+  ios: BASE_API_URL,
+  android: BASE_API_URL,
+  default: BASE_API_URL,
 });
+
+// export const BASE_URL = Platform.select({
+//   ios: 'https://pet-shop-api-server.onrender.com',
+//   android: 'https://pet-shop-api-server.onrender.com',
+//   default: 'https://pet-shop-api-server.onrender.com',
+// });
 
 
 
@@ -32,7 +32,7 @@ export const BASE_URL = Platform.select({
 // Create axios instance
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 25000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

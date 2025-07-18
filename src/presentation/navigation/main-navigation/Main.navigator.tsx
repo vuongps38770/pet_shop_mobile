@@ -30,6 +30,11 @@ import { useCheckPaymentQueue } from "shared/hooks/useCheckPaymentQueue";
 import { useUserInfo } from "shared/hooks/useUserInfo";
 import NotificationScreen from "src/presentation/features/notification/screens/NotificationScreen";
 import ExploreScreen from "src/presentation/features/home/screens/ExploreScreen";
+import ChatWithAdminScreen from "src/presentation/features/chat/screens/ChatWithAdminScreen";
+import ChatListScreen from "src/presentation/features/chat/screens/ChatListScreen";
+import OrderAllDetailsScreen from "src/presentation/features/order-detail/screens/OrderAllDetailsScreen";
+import AddEmailScreen from "src/presentation/features/profile/screens/AddEmailScreen";
+import VerifyOtpAddEmailScreen from "src/presentation/features/profile/screens/VerifyOtpAddEmailScreen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -45,106 +50,137 @@ const MainNavigator = () => {
   useCheckPaymentQueue()
   useUserInfo()
   return (
-      <SafeAreaView style={{ flex: 1 }}>
-        <Stack.Navigator screenOptions={{ animation: "fade" }}>
-          <Stack.Screen
-            name="MainScreen"
-            component={TabNavigator}
-            options={{ headerShown: false }}
-          />
+    <SafeAreaView style={{ flex: 1 }}>
+      <Stack.Navigator screenOptions={{ animation: "fade" }}>
+        <Stack.Screen
+          name="MainScreen"
+          component={TabNavigator}
+          options={{ headerShown: false }}
+        />
 
-          <Stack.Screen
-            name="ProductDetail"
-            component={ProductDetailScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ProfileDetail"
-            component={ProfileDetail}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ProductShow"
-            component={ProductShow}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="AllCategoriesScreen"
-            component={AllCategoriesScreen}
-            options={{ headerShown: false }}
-          />
+        <Stack.Screen
+          name="ProductDetail"
+          component={ProductDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ProfileDetail"
+          component={ProfileDetail}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ProductShow"
+          component={ProductShow}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AllCategoriesScreen"
+          component={AllCategoriesScreen}
+          options={{ headerShown: false }}
+        />
 
-          <Stack.Screen
-            name="FavouriteScreen"
-            component={FavoriteScreen}
-            options={{ headerShown: false }}
-          />
+        <Stack.Screen
+          name="FavouriteScreen"
+          component={FavoriteScreen}
+          options={{ headerShown: false }}
+        />
 
-          <Stack.Screen
-            name="NewAddressScreen"
-            component={NewAddressScreen}
-            options={{ headerShown: false }}
-          />
+        <Stack.Screen
+          name="NewAddressScreen"
+          component={NewAddressScreen}
+          options={{ headerShown: false }}
+        />
 
-          <Stack.Screen
-            name="AddressPickScreen"
-            component={AddressPickScreen}
-            options={{ headerShown: false }}
-          />
+        <Stack.Screen
+          name="AddressPickScreen"
+          component={AddressPickScreen}
+          options={{ headerShown: false }}
+        />
 
-          <Stack.Screen
-            name="AllAddressesScreen"
-            component={AllAddressesScreen}
-            options={{ headerShown: false }}
-          />
+        <Stack.Screen
+          name="AllAddressesScreen"
+          component={AllAddressesScreen}
+          options={{ headerShown: false }}
+        />
 
-          <Stack.Screen
-            name="OrderScreen"
-            component={OrderScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="PendingScreen"
-            component={PendingScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="OrderDetail"
-            component={OrderDetailScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ScreenReviews"
-            component={ReviewScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="VoucherScreen"
-            component={VoucherScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="MyVoucherScreen"
-            component={MyVoucherScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="PickVoucherScreen"
-            component={PickVoucherScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Notification"
-            component={NotificationScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ExploreScreen"
-            component={ExploreScreen}
-            options={{ headerShown: false }}
-          />
-        </Stack.Navigator>
-      </SafeAreaView>
+        <Stack.Screen
+          name="OrderScreen"
+          component={OrderScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PendingScreen"
+          component={PendingScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OrderDetail"
+          component={OrderDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ScreenReviews"
+          component={ReviewScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VoucherScreen"
+          component={VoucherScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MyVoucherScreen"
+          component={MyVoucherScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PickVoucherScreen"
+          component={PickVoucherScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Notification"
+          component={NotificationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ExploreScreen"
+          component={ExploreScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="ChatWithAdmin"
+          component={ChatWithAdminScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="ChatList"
+          component={ChatListScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="AllDetails"
+          component={OrderAllDetailsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddEmailScreen"
+          component={AddEmailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VerifyOtpAddEmailScreen"
+          component={VerifyOtpAddEmailScreen}
+          options={{ headerShown: false }}
+        />
+
+      </Stack.Navigator>
+
+
+    </SafeAreaView>
 
   );
 }

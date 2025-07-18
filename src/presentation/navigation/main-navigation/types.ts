@@ -27,5 +27,10 @@ export type MainStackParamList = {
   VoucherScreen: undefined;
   MyVoucherScreen: undefined;
   PickVoucherScreen: { total: number };
-  ExploreScreen:undefined
+  ExploreScreen:undefined,
+  ChatWithAdmin: undefined
+  ChatList: undefined,
+  AllDetails:{orderId?:string},
+  AddEmailScreen:undefined,
+  VerifyOtpAddEmailScreen:{email:string}
 };

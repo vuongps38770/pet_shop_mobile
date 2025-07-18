@@ -35,6 +35,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="petshop" android:host="app"/>
+        <data android:scheme="petshop" android:host="login"/>
       </intent-filter>
     </activity>
   </application>

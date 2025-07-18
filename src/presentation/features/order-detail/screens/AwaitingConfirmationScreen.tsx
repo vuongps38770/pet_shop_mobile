@@ -11,12 +11,15 @@ import OrderDetailModal from '../components/OrderDetailModal';
 import WaitForPaymentItem from '../components/WaitForPaymentItem';
 import { useToast } from 'shared/components/CustomToast';
 import { checkOrder } from '../slices/waitForPayment.slice';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 
 const { PayZaloBridge } = NativeModules;
 const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
 
 const AwaitingConfirmationScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigation = useMainNavigation()
   const { data, fetchStatus, fetchError, loadMoreStatus } = useSelector((state: RootState) => state.orderDetail.awaitingConfirmation);
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedOrder, setSelectedOrder] = React.useState<any>(null);
@@ -100,7 +103,8 @@ const AwaitingConfirmationScreen = () => {
       });
   };
 
-  const handleItemPress = (item: any) => {
+  const handleItemPress = (item: OrderRespondDto) => {
+    
     setSelectedOrder(item);
     setModalVisible(true);
   };
@@ -121,7 +125,7 @@ const AwaitingConfirmationScreen = () => {
 
   return (
     <View style={styles.container}>
-      <FlatList
+      <FlatList<OrderRespondDto>
         contentContainerStyle={[
           allOrders.length === 0 && { flex: 1 },
         ]}

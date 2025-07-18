@@ -1,5 +1,5 @@
 export type UserInfoRespondDto = {
-
+    _id: string;
     surName: string;
 
     name: string;

@@ -7,4 +7,6 @@ export interface FilterOptions {
   categoryId?:string,
   supplierId?:string,
   rootCategoryId?:string
+  minPrice?: number;
+  maxPrice?: number;
 } 
