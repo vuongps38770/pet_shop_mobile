@@ -33,7 +33,9 @@ const ProductSimpleCard = ({ product, onAddToCart }: { product: ProductRespondSi
         <Image source={{ uri: product.images?.[0] }} style={styles.productSimpleImg} />
         <View style={styles.starRow}>
           <FontAwesome name="star" size={15} color="#FFA726" />
-          <Text> {product.rating?.average?.toFixed(1) || 0} ({product.rating?.total || 0} đánh giá)</Text>
+          <Text> {typeof product.rating?.average === 'number'
+            ? product.rating.average.toFixed(1)
+            : '0.0'} ({product.rating?.total || 0} đánh giá)</Text>
         </View>
         <Text style={styles.productSimpleName} numberOfLines={2}>{product.name}</Text>
         <Text style={styles.productSimplePrice}>
@@ -67,45 +69,45 @@ const ARTICLES = [
 
 
 const FAQS = [
-  { 
-    id: 1, 
-    question: 'Nên tắm cho chó mèo bao lâu 1 lần?', 
-    answer: 'Chó: 1-2 tuần/lần. Mèo: 1-2 tháng/lần. Tùy thuộc vào loại lông, hoạt động và thời tiết.' 
+  {
+    id: 1,
+    question: 'Nên tắm cho chó mèo bao lâu 1 lần?',
+    answer: 'Chó: 1-2 tuần/lần. Mèo: 1-2 tháng/lần. Tùy thuộc vào loại lông, hoạt động và thời tiết.'
   },
-  { 
-    id: 2, 
-    question: 'Có nên cho mèo ăn xương cá?', 
-    answer: 'Không nên! Xương cá dễ gây hóc và tổn thương hệ tiêu hóa. Chỉ cho ăn thịt cá đã lọc xương.' 
+  {
+    id: 2,
+    question: 'Có nên cho mèo ăn xương cá?',
+    answer: 'Không nên! Xương cá dễ gây hóc và tổn thương hệ tiêu hóa. Chỉ cho ăn thịt cá đã lọc xương.'
   },
-  { 
-    id: 3, 
-    question: 'Thú cưng bị rụng lông nhiều phải làm sao?', 
-    answer: 'Có thể do thiếu dinh dưỡng, stress hoặc bệnh lý. Nên đưa đến bác sĩ thú y để kiểm tra.' 
+  {
+    id: 3,
+    question: 'Thú cưng bị rụng lông nhiều phải làm sao?',
+    answer: 'Có thể do thiếu dinh dưỡng, stress hoặc bệnh lý. Nên đưa đến bác sĩ thú y để kiểm tra.'
   },
-  { 
-    id: 4, 
-    question: 'Nên cho chó mèo ăn mấy bữa một ngày?', 
-    answer: 'Chó: 2-3 bữa/ngày. Mèo: 2-4 bữa/ngày. Tùy theo độ tuổi và kích thước.' 
+  {
+    id: 4,
+    question: 'Nên cho chó mèo ăn mấy bữa một ngày?',
+    answer: 'Chó: 2-3 bữa/ngày. Mèo: 2-4 bữa/ngày. Tùy theo độ tuổi và kích thước.'
   },
-  { 
-    id: 5, 
-    question: 'Có cần tiêm phòng cho thú cưng không?', 
-    answer: 'Rất cần thiết! Tiêm phòng giúp bảo vệ thú cưng khỏi các bệnh nguy hiểm.' 
+  {
+    id: 5,
+    question: 'Có cần tiêm phòng cho thú cưng không?',
+    answer: 'Rất cần thiết! Tiêm phòng giúp bảo vệ thú cưng khỏi các bệnh nguy hiểm.'
   },
-  { 
-    id: 6, 
-    question: 'Thú cưng bị nôn mửa có nguy hiểm không?', 
-    answer: 'Nếu nôn 1-2 lần có thể do ăn quá nhanh. Nếu nôn nhiều lần cần đưa đến bác sĩ ngay.' 
+  {
+    id: 6,
+    question: 'Thú cưng bị nôn mửa có nguy hiểm không?',
+    answer: 'Nếu nôn 1-2 lần có thể do ăn quá nhanh. Nếu nôn nhiều lần cần đưa đến bác sĩ ngay.'
   },
-  { 
-    id: 7, 
-    question: 'Nên chọn thức ăn khô hay ướt cho thú cưng?', 
-    answer: 'Có thể kết hợp cả hai. Thức ăn khô tốt cho răng, thức ăn ướt cung cấp nước.' 
+  {
+    id: 7,
+    question: 'Nên chọn thức ăn khô hay ướt cho thú cưng?',
+    answer: 'Có thể kết hợp cả hai. Thức ăn khô tốt cho răng, thức ăn ướt cung cấp nước.'
   },
-  { 
-    id: 8, 
-    question: 'Thú cưng bị ngứa và gãi nhiều là bệnh gì?', 
-    answer: 'Có thể do dị ứng, ký sinh trùng hoặc bệnh da. Cần kiểm tra và điều trị sớm.' 
+  {
+    id: 8,
+    question: 'Thú cưng bị ngứa và gãi nhiều là bệnh gì?',
+    answer: 'Có thể do dị ứng, ký sinh trùng hoặc bệnh da. Cần kiểm tra và điều trị sớm.'
   }
 ];
 
@@ -153,7 +155,7 @@ const ExploreScreen = () => {
   const loadInitialData = useCallback(() => {
     // Reset state trước khi load lại data (tương tự Shopee)
     dispatch(resetExploreState());
-    
+
     // Load lại tất cả data
     dispatch(fetchCategorySuggest());
     dispatch(fetchPages({ page: 1, limit: 20 }));
@@ -172,10 +174,10 @@ const ExploreScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background.light }}>
       {/* Header ẩn/hiện khi scroll */}
-      <Animated.View style={[styles.animatedHeader, { transform: [{ translateY: headerTranslateY }] }]}> 
+      <Animated.View style={[styles.animatedHeader, { transform: [{ translateY: headerTranslateY }] }]}>
         {navigation.canGoBack() && (
-          <TouchableOpacity 
-            style={styles.headerBackBtn} 
+          <TouchableOpacity
+            style={styles.headerBackBtn}
             onPress={() => navigation.goBack()}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
@@ -191,18 +193,18 @@ const ExploreScreen = () => {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true }
         )}
-      
+
       >
         {/* Search bar */}
-        <TouchableOpacity style={styles.searchBarContainer} onPress={()=>{navigation.navigate('ProductShow',{filter:{limit:10,},title:""})}}>
+        <TouchableOpacity style={styles.searchBarContainer} onPress={() => { navigation.navigate('ProductShow', { filter: { limit: 10, }, title: "" }) }}>
           <TextInput
             style={styles.searchBar}
             placeholder="Tìm kiếm sản phẩm..."
             placeholderTextColor={colors.text.secondary}
-            editable={false} 
+            editable={false}
           />
         </TouchableOpacity>
-        
+
         {/* Banner slider */}
         {banners.length > 0 && (
           <View style={styles.bannerContainer}>
@@ -224,7 +226,7 @@ const ExploreScreen = () => {
         {/* Danh mục */}
         <View style={styles.sectionTitleRow}>
           <Text style={styles.sectionTitle}>Danh mục</Text>
-          <TouchableOpacity onPress={()=>navigation.navigate('AllCategoriesScreen')}><Text style={styles.seeAll}>Xem tất cả</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('AllCategoriesScreen')}><Text style={styles.seeAll}>Xem tất cả</Text></TouchableOpacity>
         </View>
         <FlatList
           data={categories}
@@ -257,10 +259,10 @@ const ExploreScreen = () => {
                 <View style={styles.voucherCard}>
                   <View style={styles.voucherHeader}>
                     <View style={styles.voucherIconContainer}>
-                      <Icon 
-                        name={item.discount_type === 'percent' ? 'percent' : 'local-offer'} 
-                        size={24} 
-                        color={colors.white} 
+                      <Icon
+                        name={item.discount_type === 'percent' ? 'percent' : 'local-offer'}
+                        size={24}
+                        color={colors.white}
                       />
                     </View>
                     <View style={styles.voucherInfo}>
@@ -275,11 +277,11 @@ const ExploreScreen = () => {
                   </Text>
                   <View style={styles.voucherProgress}>
                     <View style={styles.progressBar}>
-                      <View 
+                      <View
                         style={[
-                          styles.progressFill, 
+                          styles.progressFill,
                           { width: `${(item.used / item.quantity) * 100}%` }
-                        ]} 
+                        ]}
                       />
                     </View>
                     <Text style={styles.progressText}>
@@ -359,16 +361,16 @@ const ExploreScreen = () => {
             </View>
           ))}
           {!showAllFAQs && FAQS.length > 2 && (
-            <TouchableOpacity 
-              style={styles.showMoreButton} 
+            <TouchableOpacity
+              style={styles.showMoreButton}
               onPress={() => setShowAllFAQs(true)}
             >
               <Text style={styles.showMoreText}>Xem thêm {FAQS.length - 2} câu hỏi</Text>
             </TouchableOpacity>
           )}
           {showAllFAQs && (
-            <TouchableOpacity 
-              style={styles.showMoreButton} 
+            <TouchableOpacity
+              style={styles.showMoreButton}
               onPress={() => setShowAllFAQs(false)}
             >
               <Text style={styles.showMoreText}>Thu gọn</Text>
@@ -384,7 +386,7 @@ const ExploreScreen = () => {
             <MasonryList
               data={uniqueProducts}
               keyExtractor={(item: ProductRespondSimplizeDto) => item._id}
-              renderItem={({ item, i }: { item: unknown; i: number }) => <ProductSimpleCard product={item as ProductRespondSimplizeDto} onAddToCart={(product) => {/* TODO: handle after add to cart */}} />}
+              renderItem={({ item, i }: { item: unknown; i: number }) => <ProductSimpleCard product={item as ProductRespondSimplizeDto} onAddToCart={(product) => {/* TODO: handle after add to cart */ }} />}
               contentContainerStyle={{ paddingHorizontal: CARD_PADDING, paddingBottom: 32 }}
               onEndReached={handleLoadMore}
               onEndReachedThreshold={0.2}
@@ -411,7 +413,7 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 8,
     backgroundColor: colors.background.light,
-    marginTop:60
+    marginTop: 60
   },
   searchBar: {
     backgroundColor: colors.white,
@@ -719,7 +721,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-    headerTitleText: {
+  headerTitleText: {
     color: colors.white,
     fontSize: 20,
     fontWeight: 'bold',
