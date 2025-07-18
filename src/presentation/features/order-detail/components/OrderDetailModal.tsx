@@ -1,9 +1,11 @@
 import { formatDateTimeVN } from 'app/utils/time';
 import React, { useState } from 'react';
 import { Modal, View, ScrollView, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import AppModal from 'shared/components/modals/AppModal';
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
 import { OrderStatus } from 'app/types/OrderStatus';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 
 const ORDER_STATUS_VI: Record<string, string> = {
     NEWORDER: 'Chờ xác nhận',
@@ -36,6 +38,7 @@ const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel,
     statusColorMode?: 'yellow' | 'green' | 'red' | 'blue',
     onReview?: (orderId: string) => void,
 }) => {
+    const navigation = useMainNavigation();
 
     const [confirmModal, setConfirmModal] = useState(false);
     if (!order) return null;
@@ -68,7 +71,17 @@ const OrderDetailModal = ({ visible, order, onClose, showCancelButton, onCancel,
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContentNew}>
                     <ScrollView>
-                        <Text style={styles.modalTitleNew}>Chi tiết đơn hàng</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                          <Text style={styles.modalTitleNew}>Tổng quan đơn hàng</Text>
+                          {order?._id && (
+                            <TouchableOpacity
+                              onPress={() => navigation.navigate('AllDetails', { orderId: order._id })}
+                              style={{ paddingVertical: 4, paddingHorizontal: 12, backgroundColor: '#FFAF42', borderRadius: 8 }}
+                            >
+                              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Xem chi tiết</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                         <View style={styles.orderInfoRow}>
                             <Text style={styles.orderId}>HD: {order.sku || ''}</Text>
                             <View style={[styles.statusBadge, { backgroundColor: badgeColor.bg }]}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, FlatList, Text, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
-import { fetchDeliveredOrders, updateOrderStatus, resetStatus } from '../slices/delivered.slice';
+import { fetchDeliveredOrders, updateOrderStatus, resetStatus, fetchDeliveredOrdersLoadMore } from '../slices/delivered.slice';
 import DeliveredItem from '../components/DeliveredItem';
 import OrderDetailModal from '../components/OrderDetailModal';
 import { LoadingView } from 'shared/components/LoadingView';
@@ -13,12 +13,33 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const DeliveredScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { data, fetchStatus, fetchError, updateStatus, updateStatusError } = useSelector((state: RootState) => state.orderDetail.delivered);
+  const { data, fetchStatus, fetchError, updateStatus, updateStatusError, loadMoreStatus } = useSelector((state: RootState) => state.orderDetail.delivered);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [actionOrderId, setActionOrderId] = useState<string>('');
-  const navigation = useMainNavigation()
+  const navigation = useMainNavigation();
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [page, setPage] = useState(1);
+  const [allOrders, setAllOrders] = useState<any[]>([]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    dispatch(fetchDeliveredOrders({ page: 1, limit: 10 })).then((res: any) => {
+      setAllOrders(res.payload?.data || []);
+      setRefreshing(false);
+    });
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    (dispatch as any)(fetchDeliveredOrdersLoadMore({ page: nextPage, limit: 10 })).then((res: any) => {
+      setAllOrders((prev: any[]) => [...prev, ...(res.payload?.data?.data || [])]);
+      setPage(nextPage);
+    });
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       dispatch(fetchDeliveredOrders({ page: 1, limit: 10 }));
@@ -83,7 +104,13 @@ const DeliveredScreen = () => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={data?.data || []}
+        contentContainerStyle={[
+          allOrders.length === 0 && { flex: 1 },
+          styles.listContainer,
+        ]}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        data={allOrders}
         renderItem={({ item }) => (
           <DeliveredItem
             order={item}
@@ -94,7 +121,21 @@ const DeliveredScreen = () => {
         )}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
+        ListFooterComponent={
+          data?.hasNext ? (
+            <TouchableOpacity style={{ marginVertical: 16, alignSelf: 'center', padding: 12, backgroundColor: '#eee', borderRadius: 8 }} onPress={handleLoadMore} disabled={loadMoreStatus === 'loading'}>
+              <Text style={{ color: '#333', fontWeight: 'bold' }}>{loadMoreStatus === 'loading' ? 'Đang tải...' : 'Tải thêm'}</Text>
+            </TouchableOpacity>
+          ) : null
+        }
+        ListEmptyComponent={
+          <View style={styles.errorContainer}>
+            <Text style={{ fontSize: 50 }}>📦</Text>
+            <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>
+              Không có đơn hàng nào đã giao/đã nhận
+            </Text>
+          </View>
+        }
       />
 
       <OrderDetailModal

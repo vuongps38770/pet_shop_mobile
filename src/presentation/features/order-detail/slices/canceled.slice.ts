@@ -3,6 +3,7 @@ import axiosInstance from 'app/config/axios';
 import { OrderListReqDto } from 'src/presentation/dto/req/order.req.dto';
 import { OrderListResDto } from 'src/presentation/dto/res/order-respond.dto';
 import { OrderStatus } from 'app/types/OrderStatus';
+import { RebuyItemDto } from 'src/presentation/dto/res/order-respond.dto';
 
 export type CanceledState = {
   loading: boolean;
@@ -65,6 +66,24 @@ export const fetchCanceledOrdersLoadMore = createAsyncThunk<
       if (query.sortOrder) params.append('sortOrder', query.sortOrder);
       const res = await axiosInstance.get(`/order/my?${params.toString()}`);
       return { data: res.data.data as OrderListResDto, page: query.page };
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
+    }
+  }
+);
+
+export const fetchRebuyItemsByOrderId = createAsyncThunk<
+  RebuyItemDto[],
+  string,
+  { rejectValue: string }
+>(
+  'orderDetail/fetchRebuyItemsByOrderId',
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get(`/order/getRebuyItem/${orderId}`);
+      
+      return res.data.data as RebuyItemDto[] ?? [];
+
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');
     }

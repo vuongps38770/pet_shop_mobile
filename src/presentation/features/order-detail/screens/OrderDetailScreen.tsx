@@ -15,6 +15,8 @@ const OrderDetailScreen = () => {
     return (
         <Tab.Navigator
             screenOptions={{
+                swipeEnabled: false,
+                animationEnabled: false,
                 tabBarScrollEnabled: true,
                 tabBarActiveTintColor: colors.app.primary.main,       
                 tabBarInactiveTintColor: colors.grey[500],     
