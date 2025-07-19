@@ -13,7 +13,7 @@ const CartScreen = () => {
   const navigation = useMainNavigation();
   const dispatch = useDispatch<AppDispatch>();
   const { items, selectedIds } = useSelector((state: RootState) => state.cart || []);
-
+  const { getCartStatus} = useSelector((state: RootState) => state.cart);
   const [quantities, setQuantities] = useState<{ [id: string]: number }>({});
   const debounceTimers = useRef<{ [id: string]: NodeJS.Timeout }>({});
 
@@ -114,6 +114,14 @@ const CartScreen = () => {
     dispatch(setSelectedIds(selectedIds.filter(i => i !== id)));
   };
 
+  if (getCartStatus === 'loading') {
+    return (
+      <View style={styles.center}>
+        <Text>Đang tải giỏ hàng...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.insideContainer} contentContainerStyle={{ paddingBottom: 60 }}>
@@ -178,7 +186,7 @@ const CartScreen = () => {
       {(selectedIds.length > 0 &&
         <View style={styles.outterButton}>
           <TouchableOpacity style={styles.payButton} onPress={handleOder}>
-            <Text style={styles.payButtonText}>PROCEED PAY</Text>
+            <Text style={styles.payButtonText}>Đặt hàng</Text>
           </TouchableOpacity>
         </View>
 
@@ -212,6 +220,11 @@ const CartScreen = () => {
 export default CartScreen;
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
