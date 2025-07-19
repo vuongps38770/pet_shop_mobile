@@ -26,16 +26,16 @@ const CanceledScreen = () => {
   const [rebuySelectedIds, setRebuySelectedIds] = useState<string[]>([]);
   const navigation = useMainNavigation()
   const [refreshing, setRefreshing] = React.useState(false);
-  
+
   const handleRefresh = () => {
-      setRefreshing(true);
-      setPage(1);
-      dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
-        setAllOrders(res.payload?.data || []);
-        setRefreshing(false);
-      });
-    };
-  
+    setRefreshing(true);
+    setPage(1);
+    dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
+      setAllOrders(res.payload?.data || []);
+      setRefreshing(false);
+    });
+  };
+
 
   useEffect(() => {
     setPage(1);
@@ -69,14 +69,6 @@ const CanceledScreen = () => {
     );
   }
 
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ fontSize: 50, width: 70, height: 70 }}>❌</Text>
-        <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đã hủy</Text>
-      </View>
-    );
-  }
 
   const handleBuyAgain = async (order: OrderRespondDto) => {
     setRebuyLoading(true);
@@ -117,6 +109,12 @@ const CanceledScreen = () => {
       <FlatList
         refreshing={refreshing}
         onRefresh={handleRefresh}
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={{ fontSize: 50, width: 70, height: 70 }}>❌</Text>
+            <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đã hủy</Text>
+          </View>
+        }
         contentContainerStyle={[
           allOrders.length === 0 ? { flex: 1 } : { padding: 16 },
         ]}
