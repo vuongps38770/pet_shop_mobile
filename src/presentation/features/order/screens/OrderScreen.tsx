@@ -30,7 +30,7 @@ import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
 import { MainStackParamList } from "src/presentation/navigation/main-navigation/types";
-
+import Icon from 'react-native-vector-icons/MaterialIcons';
 // Định nghĩa type params chuẩn
 type OrderScreenRouteParams = {
   reOrderItems?: OrderReqItem[];
@@ -82,7 +82,7 @@ const OrderScreen = () => {
         {/* Header */}
         <View style={styles.headerWrap}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerBackBtn}>
-            <IconBack width={24} height={24} color={colors.white} stroke={colors.white} />
+            <Icon name="arrow-back" size={24} color={colors.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Thanh toán đơn hàng</Text>
           <View style={{ width: 24 }} />
