@@ -39,6 +39,7 @@ export const fetchAwaitingPickupOrders = createAsyncThunk<
       const params = new URLSearchParams();
       // Gộp status PROCESSING và SHIPPED
       params.append('statuses', OrderStatus.PROCESSING);
+      params.append('statuses', OrderStatus.CONFIRMED);
       params.append('statuses', OrderStatus.SHIPPED);
       if (query.page) params.append('page', String(query.page));
       if (query.limit) params.append('limit', String(query.limit));

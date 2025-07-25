@@ -46,7 +46,6 @@ const CanceledScreen = () => {
     }, [dispatch])
   );
 
-
   useEffect(() => {
     if (data && data.data && page === 1) {
       setAllOrders(data.data);
@@ -72,14 +71,6 @@ const CanceledScreen = () => {
     );
   }
 
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ fontSize: 50, width: 70, height: 70 }}>❌</Text>
-        <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đã hủy</Text>
-      </View>
-    );
-  }
 
   const handleBuyAgain = async (order: OrderRespondDto) => {
     setRebuyLoading(true);
@@ -120,6 +111,12 @@ const CanceledScreen = () => {
       <FlatList
         refreshing={refreshing}
         onRefresh={handleRefresh}
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={{ fontSize: 50, width: 70, height: 70 }}>❌</Text>
+            <Text style={{ color: '#888', fontSize: 16, marginTop: 20 }}>Không có đơn hàng nào đã hủy</Text>
+          </View>
+        }
         contentContainerStyle={[
           allOrders.length === 0 ? { flex: 1 } : { padding: 16 },
         ]}
