@@ -25,7 +25,7 @@ import { LocationDTO } from "src/presentation/dto/res/newaddress-respond.dto";
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 import { FlatList } from "react-native-gesture-handler";
 import { debounce } from "lodash";
-import { clearSuggest,setUserAddressData } from '../address.slice'
+import { clearSuggest,setUserAddressData, resetUserAddressData } from '../address.slice'
 import AvoidKeyboardDummyView from "shared/components/AvoidKeyboardDummyView";
 import provincestest from 'src/app/constants/test-address.json'
 import { LogBox } from 'react-native';
@@ -52,6 +52,9 @@ export const NewAddressScreen = () => {
   useEffect(() => { dispatch(clearSuggest()) }, [])
   useEffect(() => {
     dispatch(getProvinces());
+    return () => {
+      dispatch(resetUserAddressData());
+    };
   }, []);
 
   useEffect(() => {
@@ -253,7 +256,7 @@ export const NewAddressScreen = () => {
 
 
 
-      {fetchAddressSuggestionStatus === 'pending' && (
+      {/* {fetchAddressSuggestionStatus === 'pending' && (
         <View style={{ padding: 16 }}>
           <Text>Loading suggestions...</Text>
         </View>
@@ -274,7 +277,7 @@ export const NewAddressScreen = () => {
           )}
           style={styles.suggestionsList}
         />
-      ):null}
+      ):null} */}
 
       <AvoidKeyboardDummyView />
       <TouchableOpacity style={styles.button} onPress={handleSave}>

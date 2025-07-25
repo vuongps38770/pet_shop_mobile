@@ -8,7 +8,8 @@ import {
     StyleSheet,
     Dimensions,
 } from 'react-native';
-
+import LeftTriangle from 'assets/icons/left-filled-arrow-triangle.svg'
+import RightTriangle from 'assets/icons/right-filled-arrow-triangle.svg'
 
 type ImageSliderProps = {
     urls: string[];
@@ -101,12 +102,14 @@ const ImageSlider = ({ urls, height, width, showIndicator = true,
             )}
             {showNavigationButtons && currentIndex > 0 && (
                 <TouchableOpacity style={styles.leftButton} onPress={handlePrev}>
-                    <Text style={styles.buttonText}>◀</Text>
+                    {/* <Text style={styles.buttonText}>◀</Text> */}
+                    <LeftTriangle width={20} height={20}/>
                 </TouchableOpacity>
             )}
             {showNavigationButtons && currentIndex < urls.length - 1 && (
                 <TouchableOpacity style={styles.rightButton} onPress={handleNext}>
-                    <Text style={styles.buttonText}>▶</Text>
+                    {/* <Text style={styles.buttonText}>▶</Text> */}
+                    <RightTriangle width={20} height={20}/>
                 </TouchableOpacity>
             )}
         </View>
@@ -127,6 +130,8 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 20,
         zIndex: 1,
+        justifyContent:'center',
+        alignItems:'center'
     },
     indicatorContainer: {
         position: 'absolute',
@@ -152,6 +157,8 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 20,
         zIndex: 1,
+        justifyContent:'center',
+        alignItems:'center'
     },
     buttonText: {
         color: 'white',

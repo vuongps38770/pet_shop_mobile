@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -10,8 +10,6 @@ import {
   ActivityIndicator,
   NativeModules,
   NativeEventEmitter,
-  FlatList,
-  TextInput,
 } from "react-native";
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 import { colors } from "shared/theme/colors";
@@ -22,16 +20,16 @@ import { PaymentMethods } from "../components/PaymentMethods";
 import { AddressModal } from "../components/AddressModal";
 import { LoadingView } from "shared/components/LoadingView";
 import { useOrder } from "../hooks/useOrder";
-import { useToast } from "shared/components/CustomToast";
-import { storageHelper } from "app/config/storage";
+import { getMyAddresses } from "src/presentation/features/address/address.slice";
 import { OrderGroupSummaryItem } from "../components/OrderGroupSummaryItem";
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { useRoute } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
 import { MainStackParamList } from "src/presentation/navigation/main-navigation/types";
 import Icon from 'react-native-vector-icons/MaterialIcons';
-// Định nghĩa type params chuẩn
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "src/presentation/store/store";
+import { OrderReqItem } from "src/presentation/dto/req/order.req.dto";
 type OrderScreenRouteParams = {
   reOrderItems?: OrderReqItem[];
 };
@@ -43,12 +41,25 @@ const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
 const OrderScreen = () => {
   const navigation = useMainNavigation();
   const route = useRoute<RouteProp<MainStackParamList,'OrderScreen'>>();
+  const dispatch = useDispatch<AppDispatch>();
   const reOrderItems = route.params?.reOrderItems;
-  const [isAddressModalOpen, setAddressModalOpen] = useState(false);
-  const [slideAnim] = useState(new Animated.Value(Dimensions.get('window').height));
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '90%'], []);
   const [isAddressSheetOpen, setAddressSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAddressSheetOpen) {
+      bottomSheetRef.current?.snapToIndex(0);
+    } else {
+      bottomSheetRef.current?.close();
+    }
+  }, [isAddressSheetOpen]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      dispatch(getMyAddresses());
+    }, [dispatch])
+  );
 
   const {
     order,
@@ -180,10 +191,10 @@ const OrderScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* BottomSheet chọn địa chỉ - Đặt ngoài ScrollView */}
+      {/* BottomSheet chọn địa chỉ */}
       <BottomSheet
         ref={bottomSheetRef}
-        index={isAddressSheetOpen ? 0 : -1}
+        index={isAddressSheetOpen ? 1 : -1}
         snapPoints={snapPoints}
         enablePanDownToClose
         onClose={closeModal}
@@ -196,7 +207,7 @@ const OrderScreen = () => {
           />
         )}
       >
-        <BottomSheetView style={{ padding: 16, paddingBottom: 16 }}>
+        <BottomSheetView style={[{ flex: 1, padding: 16, paddingBottom: 16 }]}>
           <View style={styles.addressSheetHeader}>
             <Text style={styles.addressSheetTitle}>Chọn địa chỉ giao hàng</Text>
             <TouchableOpacity
@@ -243,13 +254,6 @@ const OrderScreen = () => {
               </TouchableOpacity>
             )}
           />
-
-          <TouchableOpacity
-            style={styles.addressSheetCloseBtn}
-            onPress={closeModal}
-          >
-            <Text style={styles.addressSheetCloseText}>Đóng</Text>
-          </TouchableOpacity>
         </BottomSheetView>
       </BottomSheet>
     </>

@@ -5,6 +5,7 @@ import { spacing } from 'theme/spacing';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
 import { fetchDeliveredOrders, fetchDeliveredOrdersLoadMore } from '../slices/delivered.slice';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AwaitingShippingScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -12,13 +13,16 @@ const AwaitingShippingScreen = () => {
   const [page, setPage] = useState(1);
   const [allOrders, setAllOrders] = useState<any[]>([]);
 
-  useEffect(() => {
-    setPage(1);
-    dispatch(fetchDeliveredOrders({ page: 1 })).then((res: any) => {
-      setAllOrders(res.payload?.data || []);
-    });
-  }, [dispatch]);
-  
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setPage(1);
+      dispatch(fetchDeliveredOrders({ page: 1 })).then((res: any) => {
+        setAllOrders(res.payload?.data || []);
+      });
+    }, [dispatch])
+  );
+
   useEffect(() => {
     if (data && data.data && page === 1) {
       setAllOrders(data.data);

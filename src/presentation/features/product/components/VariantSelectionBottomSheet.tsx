@@ -227,13 +227,23 @@ const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = 
             );
         }
 
+        // Kiểm tra tồn kho
+        const currentStock = matchedVariant?.stock || autoVariant?.stock || 0;
+        if (currentStock === 0) {
+            return (
+                <TouchableOpacity style={[styles.cartButton, { backgroundColor: colors.grey[400] }]} disabled>
+                    <Text style={styles.cartText}>Hết hàng</Text>
+                </TouchableOpacity>
+            );
+        }
+
         const variantId = autoVariant?._id || matchedVariant?._id;
         return (
             <TouchableOpacity
                 style={styles.cartButton}
                 onPress={() => onConfirm(variantId!, quantity)}
             >
-                <Text style={styles.cartText}>Thêm vào giỏ</Text>
+                <Text style={styles.cartText}>Thêm vào giỏ hàng</Text>
             </TouchableOpacity>
         );
     };
