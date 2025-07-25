@@ -6,7 +6,6 @@ export interface FilterOptions {
   order?: "asc" | "desc"
   categoryId?:string,
   supplierId?:string,
-  rootCategoryId?:string
   minPrice?: number;
   maxPrice?: number;
 } 
