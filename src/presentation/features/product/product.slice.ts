@@ -6,6 +6,7 @@ import { ProductPaginationRespondDto } from 'src/presentation/dto/res/pagination
 import { ProductRespondSimplizeDto } from 'src/presentation/dto/res/product-respond.dto';
 import { FilterOptions } from 'src/presentation/dto/req/filter-option.req.dto';
 import { CategoryRespondDto } from 'src/presentation/dto/res/category-respond.dto';
+import { SupplierRespondDto } from 'src/presentation/dto/res/supplier-respond.dto';
 import { string } from 'yup';
 
 type ProductState = {
@@ -21,6 +22,7 @@ type ProductState = {
 
 
     categories:CategoryRespondDto[]
+    suppliers: SupplierRespondDto[];
     relatedProducts: ProductRespondSimplizeDto[];
     relatedProductsStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
 };
@@ -32,6 +34,7 @@ const initialState: ProductState = {
     pages: {},
     filterStatus: 'idle',
     categories:[],
+    suppliers: [],
     relatedProducts: [],
     relatedProductsStatus: 'idle',
 };
@@ -81,6 +84,21 @@ export const fetchCategorByType = createAsyncThunk<
         console.log("kjbhb");
         
         return respond.data.data as CategoryRespondDto[];
+    } catch (error: any) {
+        return rejectWithValue(
+            error?.response?.data?.message || error.message || 'Lỗi không xác định'
+        );
+    }
+})
+
+export const fetchSuppliers = createAsyncThunk<
+    SupplierRespondDto[],
+    void,
+    { rejectValue: string }
+>('product/fetchSuppliers', async (_, { rejectWithValue }) => {
+    try {
+        const respond = await axiosInstance.get('supplier/get-all');
+        return respond.data.data as SupplierRespondDto[];
     } catch (error: any) {
         return rejectWithValue(
             error?.response?.data?.message || error.message || 'Lỗi không xác định'
@@ -145,6 +163,10 @@ const productSlice = createSlice({
             .addCase(fetchCategorByType.fulfilled, (state, action: PayloadAction<CategoryRespondDto[]>) => {
                 state.status = 'succeeded';
                 state.categories = action.payload;
+            })
+            .addCase(fetchSuppliers.fulfilled, (state, action: PayloadAction<SupplierRespondDto[]>) => {
+                state.status = 'succeeded';
+                state.suppliers = action.payload;
             })
 
 
