@@ -60,7 +60,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
     };
 
     const handleDecrease = () => {
-        if (!isOutOfStock) {
+        if (!isOutOfStock && quantity > 1) {
             onDecrease(item._id);
             setInputQuantity((quantity - 1).toString());
         }
@@ -128,17 +128,31 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
                             </View>
                             <View style={styles.quantityContainer}>
                                 <TouchableOpacity
-                                    style={[styles.button, isOutOfStock && styles.disabledButton]}
+                                    style={[styles.button, (isOutOfStock || quantity <= 1) && styles.disabledButton]}
                                     onPress={handleDecrease}
-                                    disabled={isOutOfStock}
+                                    disabled={isOutOfStock || quantity <= 1}
                                 >
                                     <Text style={[styles.buttonText, isOutOfStock && styles.disabledButtonText]}>-</Text>
                                 </TouchableOpacity>
                                 <TextInput
                                     value={inputQuantity}
                                     onChangeText={(text) => {
-                                        const filtered = text.replace(/[^0-9]/g, ''); 
-                                        setInputQuantity(filtered);
+                                        const filtered = text.replace(/[^0-9]/g, '');
+                                        let numValue = parseInt(filtered, 10) || 0;
+
+                                        if (numValue <= 0 && filtered !== '') {
+                                            numValue = 1;       
+                                        }
+
+                                        const maxStock = item.availableStock;
+                                        if (numValue > maxStock) {
+                                            numValue = maxStock;
+                                        }
+
+                                        setInputQuantity(numValue.toString());
+                                        if (onChangeQuantity) {
+                                            onChangeQuantity(item._id, numValue);
+                                        }
                                     }}
                                     onBlur={handleQuantitySubmit}
                                     keyboardType="numeric"
@@ -146,9 +160,9 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
                                     style={[styles.inputQuantity, isOutOfStock && styles.outOfStockText]}
                                 />
                                 <TouchableOpacity
-                                    style={[styles.button, (isOutOfStock || isOverStock) && styles.disabledButton]}
+                                    style={[styles.button, (isOutOfStock || quantity >= item.availableStock) && styles.disabledButton]}
                                     onPress={handleIncrease}
-                                    disabled={isOutOfStock || isOverStock}
+                                    disabled={isOutOfStock || quantity >= item.availableStock}
                                 >
                                     <Text style={[styles.buttonText, (isOutOfStock || isOverStock) && styles.disabledButtonText]}>+</Text>
                                 </TouchableOpacity>
@@ -158,6 +172,10 @@ const CartItem: React.FC<CartItemProps> = ({ item, checked, onCheck, onIncrease,
                             <Text style={[styles.productName, isOutOfStock && styles.outOfStockText]} numberOfLines={2}>{item.productName}</Text>
                             <Text style={[styles.unitText, isOutOfStock && styles.outOfStockSecondaryText]}>{unitText}</Text>
                             <Text style={[styles.price, isOutOfStock && styles.outOfStockText]}>{PriceFormatter.formatPrice(item.promotionalPrice)}</Text>
+                            {/* Hiển thị tồn kho */}
+                            <Text style={[styles.stockText, isOutOfStock && styles.outOfStockSecondaryText]}>
+                                Tồn kho: {item.availableStock}
+                            </Text>
                             {isOverStock && (
                                 <Text style={{ color: colors.error, fontSize: 12, marginTop: 4 }}>
                                     Số lượng vượt quá tồn kho ({item.availableStock}). Vui lòng giảm lại.
@@ -318,4 +336,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
+    stockText: {
+        fontSize: 13,
+        color: colors.text.secondary,
+        marginTop: 2,
+    }
 });

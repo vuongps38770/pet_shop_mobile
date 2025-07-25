@@ -9,6 +9,7 @@ import { OrderStatus } from 'app/types/OrderStatus';
 import OrderDetailModal from '../components/OrderDetailModal';
 import { PriceFormatter } from 'app/utils/priceFormatter';
 import { LoadingView } from 'shared/components/LoadingView';
+import { useFocusEffect } from '@react-navigation/native';
 
 const AwaitingpickupScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,12 +19,15 @@ const AwaitingpickupScreen = () => {
   const [page, setPage] = useState(1);
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
-  useEffect(() => {
-    setPage(1);
-    dispatch(fetchAwaitingPickupOrders({ page: 1 })).then((res: any) => {
-      setAllOrders(res.payload?.data || []);
-    });
-  }, [dispatch]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setPage(1);
+      dispatch(fetchAwaitingPickupOrders({ page: 1 })).then((res: any) => {
+        setAllOrders(res.payload?.data || []);
+      });
+    }, [dispatch])
+  );
 
   useEffect(() => {
     if (data && data.data && page === 1) {
@@ -106,7 +110,7 @@ const AwaitingpickupScreen = () => {
     <View style={styles.container}>
       <FlatList
         contentContainerStyle={[
-          allOrders.length === 0 && { flex: 1 }, 
+          allOrders.length === 0 && { flex: 1 },
         ]}
         refreshing={refreshing}
         onRefresh={handleRefresh}

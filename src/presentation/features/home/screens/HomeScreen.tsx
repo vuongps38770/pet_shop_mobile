@@ -32,8 +32,7 @@ import TypingBanner from '../components/TypingBanner';
 const HomeScreen = () => {
   const mainNav = useMainNavigation()
   const dispatch = useDispatch<AppDispatch>()
-  const { popularProductList, fetchPopularProductListStatus, personalizedSuggestions, popularSuggestions } = useSelector((state: RootState) => state.home)
-  const [searchParam, setSearchParam] = useState("");
+  const { popularProductList, personalizedSuggestions, popularSuggestions } = useSelector((state: RootState) => state.home)
   const scrollViewRef = useRef<ScrollView | null>(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
@@ -243,7 +242,7 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
       <FlatList
-        style={{ marginHorizontal: 10 }}
+        style={{ marginHorizontal: 10,paddingBottom:70 }}
         data={popularProductList}
         numColumns={2}
         keyExtractor={(item) => item._id}
@@ -261,17 +260,14 @@ const HomeScreen = () => {
         }}
       />
 
-      <View style={styles.sectionHeader}>
+      {/* <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Pet Services</Text>
         <TouchableOpacity onPress={() => {
-          // mainNav.navigate('ProductShow',{filter:{limit:10},title:"Tất cả"})
-          /**todo */
         }}>
           <Text style={styles.sectionLink}>See All</Text>
         </TouchableOpacity>
 
       </View>
-      {/* Pet Services scroll ngang */}
       <FlatList
         data={[
           {
@@ -301,7 +297,7 @@ const HomeScreen = () => {
             </TouchableOpacity>
           </View>
         )}
-      />
+      /> */}
       </Animated.ScrollView>
     </View>
   );

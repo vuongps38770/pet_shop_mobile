@@ -186,6 +186,9 @@ const newAddressSlice = createSlice({
     resetFetchMyAddressesStatus(state) {
       state.fetchMyAddressesStatus = "idle";
       state.fetchMyAddressesError = null;
+    },
+    resetUserAddressData(state) {
+      state.userAddressData = null;
     }
   },
   extraReducers: (builder) => {
@@ -268,5 +271,5 @@ const newAddressSlice = createSlice({
 
 export default newAddressSlice.reducer;
 
-export const { clearSuggest, setUserAddressData, resetCreateAddressStatus, resetFetchMyAddressesStatus } = newAddressSlice.actions;
+export const { clearSuggest, setUserAddressData, resetCreateAddressStatus, resetFetchMyAddressesStatus, resetUserAddressData } = newAddressSlice.actions;
 

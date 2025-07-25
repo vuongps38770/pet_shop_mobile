@@ -139,7 +139,7 @@ const ProductDetailScreen = () => {
 
     return (
       <TouchableOpacity style={styles.cartButton} onPress={handleOpenVariantSelection}>
-        <Text style={styles.cartText}>Thêm vào giỏ</Text>
+        <Text style={styles.cartText}>Thêm vào giỏ hàng</Text>
       </TouchableOpacity>
     );
   };
@@ -190,11 +190,14 @@ const ProductDetailScreen = () => {
           <View style={styles.priceRow}>
             <FormatProduct
               item={product}
+              normalPriceFontSize={20}
+              originalPriceFontSize={18}
+              promotionalPriceFontSize={20}
             />
 
           </View>
 
-          <Text style={styles.sectionTitle}>PRODUCT DESCRIPTION</Text>
+          <Text style={styles.sectionTitle}>Mô tả sản phẩm</Text>
           {/*todo*/}
 
           {product.descriptions && product.descriptions.map((des, idx) => (

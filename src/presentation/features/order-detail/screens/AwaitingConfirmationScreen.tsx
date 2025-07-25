@@ -13,6 +13,8 @@ import { useToast } from 'shared/components/CustomToast';
 import { checkOrder } from '../slices/waitForPayment.slice';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto';
+import { useFocusEffect } from '@react-navigation/native';
+import { LoadingView } from 'shared/components/LoadingView';
 
 const { PayZaloBridge } = NativeModules;
 const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
@@ -39,13 +41,15 @@ const AwaitingConfirmationScreen = () => {
   };
 
 
+  useFocusEffect(
+    React.useCallback(() => {
+      setPage(1);
+      dispatch(fetchAwaitingConfirmOrders({ page: 1 })).then((res: any) => {
+        setAllOrders(res.payload?.data || []);
+      });
+    }, [dispatch])
+  );
 
-  React.useEffect(() => {
-    setPage(1);
-    dispatch(fetchAwaitingConfirmOrders({ page: 1 })).then((res: any) => {
-      setAllOrders(res.payload?.data || []);
-    });
-  }, [dispatch]);
 
   React.useEffect(() => {
     if (data && data.data && page === 1) {
@@ -78,11 +82,10 @@ const AwaitingConfirmationScreen = () => {
 
   if (fetchStatus === 'loading') {
     return (
-      <View style={styles.center}>
-        <Text>Đang tải...</Text>
-      </View>
+       <LoadingView />
     );
   }
+  
   if (fetchStatus === 'failed') {
     return (
       <View style={styles.center}>
@@ -104,7 +107,7 @@ const AwaitingConfirmationScreen = () => {
   };
 
   const handleItemPress = (item: OrderRespondDto) => {
-    
+
     setSelectedOrder(item);
     setModalVisible(true);
   };

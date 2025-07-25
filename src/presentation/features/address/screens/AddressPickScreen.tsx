@@ -142,7 +142,7 @@ const AddressPickScreen = () => {
       Alert.alert('Thành công', 'Địa chỉ đã được tạo thành công', [
         {
           text: 'OK',
-          onPress: () => navigation.navigate('AllAddressesScreen')
+          onPress: () => navigation.pop(2)
         }
       ]);
     } catch (error) {

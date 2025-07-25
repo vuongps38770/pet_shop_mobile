@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, UIManager, LayoutAnimation, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Platform, UIManager, LayoutAnimation, Dimensions, TextInput, ScrollView } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { CategoryRespondDto } from '../../../dto/res/category-respond.dto';
 
@@ -9,307 +9,459 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
 import { fetchCategorByType } from '../product.slice'
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
-import CurvedUpIcon from 'assets/icons/curved-up.svg';
-import CurvedDownIcon from 'assets/icons/curved-down.svg';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { Fonts } from 'theme/fonts';
 import { useFocusEffect } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/Ionicons';
-const screenWidth = Dimensions.get('window').width
 
+const screenWidth = Dimensions.get('window').width;
+
+// Bật LayoutAnimation cho Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+const DEFAULT_CATEGORY_ICON = 'https://cdn-icons-png.flaticon.com/512/616/616408.png';
 export const AllCategoriesScreen = () => {
-  // State chọn root (tầng 1)
-  const [selectedRootId, setSelectedRootId] = useState<string>("");
-  const [currentCategoryId, setCurrentCategoryId] = useState<string>("");
-  const dispatch = useDispatch<AppDispatch>()
-  const navigation = useMainNavigation()
-  const categoryList = useSelector((state: RootState) => state.product.categories)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRootId, setSelectedRootId] = useState<string | null>(null);
+  const [expandedL2, setExpandedL2] = useState<Set<string>>(new Set());
+  const [filteredCategories, setFilteredCategories] = useState<CategoryRespondDto[]>([]);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useMainNavigation();
+  const categoryList = useSelector((state: RootState) => state.product.categories);
+
   useFocusEffect(
-      React.useCallback(() => {
-        dispatch(fetchCategorByType());
-      }, [dispatch])
-    );
-  // Khi mount, tự động chọn root đầu tiên nếu có
+    React.useCallback(() => {
+      dispatch(fetchCategorByType());
+    }, [dispatch])
+  );
+
+  // Cập nhật filteredCategories khi searchQuery hoặc categoryList thay đổi
   useEffect(() => {
-    if (categoryList && categoryList.length > 0 && !selectedRootId) {
+    if (searchQuery.trim() === "") {
+      setFilteredCategories(categoryList);
+    } else {
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      const filtered = categoryList.filter(
+        (category) =>
+          category.name.toLowerCase().includes(lowerCaseQuery) ||
+          category.children?.some(
+            (child) =>
+              child.name.toLowerCase().includes(lowerCaseQuery) ||
+              child.children?.some((grandchild) =>
+                grandchild.name.toLowerCase().includes(lowerCaseQuery)
+              )
+          )
+      );
+      setFilteredCategories(filtered);
+    }
+  }, [searchQuery, categoryList]);
+
+  // Khi mount, tự động chọn root đầu tiên nếu có và không có query
+  useEffect(() => {
+    if (categoryList && categoryList.length > 0 && !selectedRootId && searchQuery.trim() === "") {
       setSelectedRootId(categoryList[0]._id);
     }
-  }, [categoryList]);
+  }, [categoryList, searchQuery]);
 
-  // Khi đổi root, reset currentCategoryId
+  // Khi đổi root, reset expandedL2
   useEffect(() => {
-    setCurrentCategoryId("");
+    setExpandedL2(new Set());
   }, [selectedRootId]);
 
-  // Tab tầng 1: các root
-  const renderRootTab = ({ item }: { item: CategoryRespondDto }) => {
-    const isSelected = item._id === selectedRootId;
-    return (
-      <TouchableOpacity
-        onPress={() => setSelectedRootId(item._id)}
-        style={[styles.tabItem, isSelected && styles.activeTab]}
-        activeOpacity={0.85}
-      >
-        <Text style={[styles.tabText, isSelected && styles.activeTabText]}>{item.name}</Text>
-      </TouchableOpacity>
-    );
+  const handleL1Select = (categoryId: string) => {
+    setSelectedRootId(categoryId === selectedRootId ? null : categoryId);
   };
 
-  // Danh mục con cấp 3 (children của children)
-  const renderItemChilderen = ({ item }: { item: CategoryRespondDto }) => {
-    return (
-      <TouchableOpacity
-        style={styles.childCard}
-        onPress={() => {
-          navigation.navigate('ProductShow', { filter: { categoryId: item._id }, title: item.name })
-        }}
-        activeOpacity={0.85}
-      >
-        <Text style={styles.childCardText}>{item.name}</Text>
-      </TouchableOpacity>
-    );
+  const handleL2Toggle = (categoryId: string) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedL2(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(categoryId)) {
+        newExpanded.delete(categoryId);
+      } else {
+        newExpanded.add(categoryId);
+      }
+      return newExpanded;
+    });
   };
 
-  // Danh mục gốc (tầng 2)
-  const renderItemCategory = ({ item }: { item: CategoryRespondDto }) => {
-    const isSelected = item._id === currentCategoryId;
-    return (
-      <View style={styles.categoryCardWrap}>
-        <View style={[styles.categoryCard, isSelected && styles.categoryCardActive]}>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => navigation.navigate('ProductShow', { title: item.name, filter: { rootCategoryId: item._id } })}>
-            <Text style={styles.categoryCardTitle}>{item.name}</Text>
-          </TouchableOpacity>
-          {item.children && item.children.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setCurrentCategoryId(currentCategoryId == item._id ? "" : item._id)}
-              style={styles.categoryCardArrow}
-              activeOpacity={0.7}
-            >
-              {isSelected
-                ? <CurvedUpIcon width={22} height={22} fill={colors.app.primary.main} />
-                : <CurvedDownIcon width={22} height={22} fill={colors.grey[400]} />
-              }
-            </TouchableOpacity>
-          )}
-        </View>
-        {/* Tầng 3: children của item */}
-        {isSelected && (
-          <View style={styles.childListWrap}>
-            {item.children && item.children.length > 0 ?
-              <FlashList<CategoryRespondDto>
-                data={item.children}
-                renderItem={renderItemChilderen}
-                keyExtractor={(item) => item._id}
-                numColumns={2}
-                estimatedItemSize={100}
-                extraData={currentCategoryId}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{}}
-              />
-              :
-              <Text style={styles.noChildText}>Hiện chưa có danh mục!</Text>
-            }
-          </View>
-        )}
-      </View>
-    );
+  const clearSearch = () => {
+    setSearchQuery("");
   };
 
-  // Lấy root đang chọn
-  const selectedRoot = categoryList.find((cat: CategoryRespondDto) => cat._id === selectedRootId);
-  const rootChildren = selectedRoot ? selectedRoot.children : [];
+  const selectedCategory = filteredCategories.find(
+    (cat: CategoryRespondDto) => cat._id === selectedRootId
+  );
 
-  // Thay đổi ở tầng 2: nếu rootChildren rỗng thì show dòng "Hiện chưa có danh mục!"
   return (
     <View style={styles.container}>
-      {/* header */}
+      {/* Header */}
       <View style={styles.headerWrap}>
         <Text style={styles.headerTitle}>Tất Cả Danh Mục</Text>
         <TouchableOpacity style={styles.headerCloseBtn} onPress={() => navigation.pop()}>
-          <Icon name="close" size={22} color={colors.app.primary.main} />
+          <Icon name="close" size={22} color={colors.grey[600]} />
         </TouchableOpacity>
       </View>
-      {/* tab tầng 1: các root */}
-      <View style={styles.tabBar}>
-        {categoryList.length > 0 ? (
+
+      {/* Search Bar */}
+      <View style={styles.searchBarContainer}>
+        <Icon name="search" size={20} color={colors.grey[500]} style={styles.searchIcon} />
+        <TextInput
+          placeholder="Tìm kiếm danh mục..."
+          placeholderTextColor={colors.grey[500]}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={clearSearch} style={styles.clearSearchButton}>
+            <Icon name="close-circle" size={20} color={colors.grey[500]} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Level 1 Categories */}
+      <View style={styles.l1CategoriesContainer}>
+        {filteredCategories.length > 0 ? (
           <FlashList
-            data={categoryList}
-            renderItem={renderRootTab}
+            data={filteredCategories}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                key={item._id}
+                onPress={() => handleL1Select(item._id)}
+                style={[styles.l1CategoryItem, selectedRootId === item._id && styles.l1CategoryItemSelected]}
+                activeOpacity={0.85}
+              >
+                <Image 
+                  source={item.icon ? { uri: item.icon } : { uri: DEFAULT_CATEGORY_ICON }} 
+                  style={styles.l1CategoryImage} 
+                />
+                <Text style={[styles.l1CategoryText, selectedRootId === item._id && styles.l1CategoryTextSelected]} numberOfLines={2}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
+            )}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item) => item._id}
             extraData={selectedRootId}
-            estimatedItemSize={56}
+            estimatedItemSize={100}
+            contentContainerStyle={styles.l1CategoriesListContent}
           />
         ) : (
-          <Text style={{textAlign: 'center', padding: 12, color: colors.text.secondary}}>Đang tải danh mục...</Text>
+          searchQuery.length > 0 ? (
+            <View style={styles.emptyStateContainer}>
+              <Icon name="search" size={60} color={colors.grey[300]} />
+              <Text style={styles.emptyStateText}>Không tìm thấy danh mục cho "{searchQuery}"</Text>
+              <TouchableOpacity onPress={clearSearch} style={styles.clearSearchTextButton}>
+                <Text style={styles.clearSearchText}>Xóa tìm kiếm</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.loadingStateContainer}>
+              <Text style={styles.loadingStateText}>Đang tải danh mục...</Text>
+            </View>
+          )
         )}
       </View>
-      {/* danh muc goc (tầng 2) */}
-      {rootChildren && rootChildren.length > 0 ? (
-        <FlashList<CategoryRespondDto>
-          data={rootChildren}
-          renderItem={renderItemCategory}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(item) => item._id}
-          estimatedItemSize={100}
-          extraData={currentCategoryId}
-          style={{ marginTop: 20 }}
-        />
+
+      {/* Level 2 and Level 3 Categories */}
+      {selectedCategory ? (
+        <View style={styles.l2l3CategoriesContainer}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {selectedCategory.children && selectedCategory.children.length > 0 ? (
+              selectedCategory.children.map((l2Category, index) => (
+                <View key={l2Category._id} style={styles.l2CategoryWrap}>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('ProductShow', { filter: { rootCategoryId: l2Category._id }, title: l2Category.name })}
+                    style={styles.l2CategoryItem}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.l2CategoryTitle}>{l2Category.name}</Text>
+                    {l2Category.children && l2Category.children.length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => handleL2Toggle(l2Category._id)}
+                        style={styles.l2CategoryToggle}
+                      >
+                        <Icon
+                          name={expandedL2.has(l2Category._id) ? "chevron-up" : "chevron-down"}
+                          size={22}
+                          color={colors.grey[500]}
+                        />
+                      </TouchableOpacity>
+                    )}
+                  </TouchableOpacity>
+
+                  {expandedL2.has(l2Category._id) && l2Category.children && l2Category.children.length > 0 && (
+                    <View style={styles.l3ListContainer}>
+                      <FlashList
+                        data={l2Category.children}
+                        renderItem={({ item: l3Category }) => (
+                          <TouchableOpacity
+                            key={l3Category._id}
+                            onPress={() => navigation.navigate('ProductShow', { filter: { categoryId: l3Category._id }, title: l3Category.name })}
+                            style={styles.l3CategoryItem}
+                          >
+                            <Text style={styles.l3CategoryText}>{l3Category.name}</Text>
+                          </TouchableOpacity>
+                        )}
+                        keyExtractor={(item) => item._id}
+                        estimatedItemSize={50}
+                        numColumns={2}
+                        contentContainerStyle={styles.l3ListContent}
+                      />
+                    </View>
+                  )}
+
+                  {expandedL2.has(l2Category._id) && (!l2Category.children || l2Category.children.length === 0) && (
+                    <Text style={styles.noSubCategoryText}>Không có danh mục con</Text>
+                  )}
+                </View>
+              ))
+            ) : (
+              <View style={styles.noSubCategoriesContainer}>
+                <Icon name="layers" size={60} color={colors.grey[300]} />
+                <Text style={styles.noSubCategoriesText}>Không có danh mục nào cho danh mục này</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
       ) : (
-        <Text style={styles.noChildText}>Hiện chưa có danh mục!</Text>
+        <View style={styles.emptyStateContainer}>
+          <Icon name="layers" size={60} color={colors.grey[300]} />
+          <Text style={styles.emptyStateText}>Chọn một danh mục ở trên để khám phá các danh mục con</Text>
+        </View>
       )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 0,
     backgroundColor: colors.background.default,
   },
   headerWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.app.primary.main,
-    paddingHorizontal: 18,
-    paddingTop: 28,
-    paddingBottom: 18,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingTop: 50,
+    paddingBottom: 16,
     elevation: 4,
-    shadowColor: colors.app.primary.main,
-    shadowOpacity: 0.12,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    marginBottom: 8,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   headerTitle: {
-    fontSize: 24,
-        fontFamily: Fonts.roboto.bold,
-        color: colors.white,
+    fontSize: 22,
+    fontFamily: Fonts.roboto.bold,
+    color: colors.text.primary,
   },
   headerCloseBtn: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.grey[100],
     borderRadius: 20,
-    padding: 6,
-    marginLeft: 8,
+    padding: 8,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   headerCloseIcon: {
-    width: 22,
-    height: 22,
+    width: 20,
+    height: 20,
     resizeMode: 'contain',
-    tintColor: colors.app.primary.main,
+    tintColor: colors.grey[600],
   },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-    paddingHorizontal: 8,
-  },
-  tabItem: {
-    minWidth: 90,
-    minHeight: 40, // thêm dòng này để đảm bảo chiều cao tối thiểu
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    backgroundColor: colors.grey[100],
-    borderRadius: 18,
-    marginHorizontal: 8,
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    justifyContent:'center',
-    alignItems:'center'
-  },
-  activeTab: {
-    backgroundColor: colors.app.primary.main,
-    shadowColor: colors.app.primary.main,
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  tabText: {
-    fontSize: 16,
-    color: colors.text.secondary,
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: colors.white,
-    fontWeight: 'bold',
-  },
-  categoryCardWrap: {
-    marginHorizontal: 16,
-    marginBottom: 18,
-  },
-  categoryCard: {
+  searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
+    margin: 16,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    fontSize: 16,
+    color: colors.text.primary,
+  },
+  clearSearchButton: {
+    marginLeft: 10,
+    padding: 5,
+  },
+  l1CategoriesContainer: {
+    paddingVertical: 10,
+  },
+  l1CategoriesListContent: {
+    paddingHorizontal: 16,
+  },
+  l1CategoryItem: {
+    width: 90,
+    height: 110,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  l1CategoryItemSelected: {
+    borderColor: colors.app.primary.main,
+    shadowColor: colors.app.primary.main,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  l1CategoryImage: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    marginBottom: 5,
+  },
+  l1CategoryText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+  l1CategoryTextSelected: {
+    color: colors.app.primary.main,
+    fontWeight: 'bold',
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 50,
+    paddingHorizontal: 20,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: colors.grey[500],
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  loadingStateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 50,
+  },
+  loadingStateText: {
+    fontSize: 16,
+    color: colors.grey[500],
+  },
+  clearSearchTextButton: {
+    marginTop: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  clearSearchText: {
+    color: colors.app.primary.main,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  l2l3CategoriesContainer: {
+    flex: 1,
+    backgroundColor: colors.white,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  l2CategoryWrap: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.grey[100],
+  },
+  l2CategoryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: colors.white,
+  },
+  l2CategoryTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text.primary,
+  },
+  l2CategoryToggle: {
+    padding: 5, // Tăng vùng chạm cho icon
+  },
+  l3ListContainer: {
+    backgroundColor: colors.grey[50],
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  l3ListContent: {
+    paddingHorizontal: 10,
+  },
+  l3CategoryItem: {
+    flex: 1,
+    backgroundColor: colors.white,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.grey[200],
-    shadowColor: colors.shadow,
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  categoryCardActive: {
-    borderColor: colors.app.primary.main,
-    shadowColor: colors.app.primary.main,
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  categoryCardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-  },
-  categoryCardArrow: {
-    marginLeft: 12,
-    padding: 4,
-    borderRadius: 12,
-    backgroundColor: colors.grey[100],
-  },
-  childListWrap: {
-    marginTop: 12,
-    backgroundColor: colors.grey[100],
-    borderRadius: 12,
-    padding: 10,
-  },
-  childCard: {
-    flex: 1,
     margin: 6,
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.app.primary.main,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
     shadowColor: colors.shadow,
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  childCardText: {
-    fontSize: 15,
+  l3CategoryText: {
+    fontSize: 13,
     color: colors.text.primary,
-    fontWeight: '500',
-  },
-  noChildText: {
-    width: '100%',
+    fontWeight: 'normal',
     textAlign: 'center',
+  },
+  noSubCategoryText: {
+    textAlign: 'center',
+    paddingVertical: 15,
+    color: colors.grey[500],
+    fontSize: 14,
+  },
+  noSubCategoriesContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  noSubCategoriesText: {
     fontSize: 16,
-    color: colors.text.secondary,
-    paddingVertical: 16,
+    color: colors.grey[500],
+    textAlign: 'center',
+    marginTop: 10,
   },
 });

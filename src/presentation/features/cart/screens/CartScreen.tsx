@@ -60,9 +60,13 @@ const CartScreen = () => {
   const subtotal = (items || []).reduce((sum, item) =>
     selectedIds.includes(item._id) ? sum + item.promotionalPrice * (quantities[item._id] ?? item.quantity) : sum, 0
   ) || 0;
-  const tax = 2;
-  const delivery = 3;
-  const total = subtotal + tax + delivery;
+
+  const selectedItemsCount = selectedIds.reduce((sum, id) => {
+    const item = items.find(i => i._id === id);
+    return sum + (item ? (quantities[id] ?? item.quantity) : 0);
+  }, 0);
+
+  const total = subtotal;
 
   const handleCheck = (id: string) => {
     if (selectedIds.includes(id)) {
@@ -158,51 +162,19 @@ const CartScreen = () => {
           </View>
         )}
 
-        {/* Promo code */}
-        {/*items.length > 0 && (
-          <View style={styles.promoContainer}>
-            <TextInput
-              placeholder="Promo code"
-              style={styles.promoInput}
-              placeholderTextColor={colors.text.secondary}
-            />
-            <TouchableOpacity style={styles.promoButton}>
-              <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 20 }}>+</Text>
-            </TouchableOpacity>
-          </View>
-        )*/}
-
-
       </ScrollView>
       {/* Tổng kết*/}
       {(selectedIds.length > 0 &&
-        <View style={styles.outterButton}>
+        <View style={styles.bottomBar}>
+          <View style={styles.summaryContainer}>
+            <Text style={styles.summaryLabel}>Tạm tính ({selectedItemsCount} sản phẩm):</Text>
+            <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(total)}</Text>
+          </View>
           <TouchableOpacity style={styles.payButton} onPress={handleOder}>
-            <Text style={styles.payButtonText}>PROCEED PAY</Text>
+            <Text style={styles.payButtonText}>Đặt hàng</Text>
           </TouchableOpacity>
+          
         </View>
-
-        // <>
-        //   <View style={styles.summaryRow}>
-        //     <Text style={styles.summaryLabel}>Subtotal</Text>
-        //     <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(subtotal)} </Text>
-        //   </View>
-        //   <View style={styles.summaryRow}>
-        //     <Text style={styles.summaryLabel}>Tax and Services</Text>
-        //     <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(tax)} </Text>
-        //   </View>
-        //   <View style={styles.summaryRow}>
-        //     <Text style={styles.summaryLabel}>Delivery</Text>
-        //     <Text style={styles.summaryValue}>{PriceFormatter.formatPrice(delivery)} </Text>
-        //   </View>
-        //   <View style={styles.summaryRow}>
-        //     <Text style={[styles.summaryLabel, { fontWeight: 'bold' }]}>Total</Text>
-        //     <Text style={[styles.summaryValue, { fontWeight: 'bold' }]}>{PriceFormatter.formatPrice(total)} </Text>
-        //   </View>
-
-
-
-        // </>
       )}
     </View>
 
@@ -274,41 +246,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 2,
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    color: colors.text.primary,
-    fontSize: 15,
-  },
-  summaryValue: {
-    color: colors.text.primary,
-    fontSize: 15,
-  },
-  usd: {
-    color: colors.text.secondary,
-    fontSize: 12,
-  },
-  outterButton: {
-    position: 'absolute',
-    paddingHorizontal: 14,
-    width: screenWidth,
-    left: 0,
-    bottom: 0,
-  },
   payButton: {
     backgroundColor: colors.app.primary.main,
     borderRadius: 12,
     alignItems: 'center',
     height: 50,
     justifyContent: 'center',
-    width: '100%',
-    borderColor: colors.app.primary.darker,
-    borderWidth: 4,
-    marginBottom: 10
+    flex: 1,
+    width:40
   },
   payButtonText: {
     color: colors.white,
@@ -345,4 +290,32 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontWeight: 'bold',
   },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.grey[200],
+    gap: 12
+  },
+  summaryContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.app.primary.main,
+  }
 });

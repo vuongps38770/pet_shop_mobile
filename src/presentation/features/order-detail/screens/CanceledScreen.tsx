@@ -11,6 +11,7 @@ import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigati
 import { OrderReqItem } from 'src/presentation/dto/req/order.req.dto';
 import { RebuyItemDto } from 'src/presentation/dto/res/order-respond.dto';
 import { Checkbox } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native';
 
 const CanceledScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -26,23 +27,25 @@ const CanceledScreen = () => {
   const [rebuySelectedIds, setRebuySelectedIds] = useState<string[]>([]);
   const navigation = useMainNavigation()
   const [refreshing, setRefreshing] = React.useState(false);
-  
-  const handleRefresh = () => {
-      setRefreshing(true);
-      setPage(1);
-      dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
-        setAllOrders(res.payload?.data || []);
-        setRefreshing(false);
-      });
-    };
-  
 
-  useEffect(() => {
+  const handleRefresh = () => {
+    setRefreshing(true);
     setPage(1);
     dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
       setAllOrders(res.payload?.data || []);
+      setRefreshing(false);
     });
-  }, [dispatch]);
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setPage(1);
+      dispatch(fetchCanceledOrders({ page: 1 })).then((res: any) => {
+        setAllOrders(res.payload?.data || []);
+      });
+    }, [dispatch])
+  );
+
 
   useEffect(() => {
     if (data && data.data && page === 1) {
