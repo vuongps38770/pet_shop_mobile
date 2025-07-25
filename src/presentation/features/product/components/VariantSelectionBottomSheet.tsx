@@ -30,7 +30,7 @@ interface VariantSelectionBottomSheetProps {
     addToCartStatus: string;
 }
 
-const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = ({
+export const VariantSelectionBottomSheet: React.FC<VariantSelectionBottomSheetProps> = ({
     visible,
     onClose,
     onConfirm,
