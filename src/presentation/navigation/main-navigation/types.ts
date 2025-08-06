@@ -32,5 +32,6 @@ export type MainStackParamList = {
   ChatList: undefined,
   AllDetails:{orderId?:string},
   AddEmailScreen:undefined,
-  VerifyOtpAddEmailScreen:{email:string}
+  VerifyOtpAddEmailScreen:{email:string},
+  PickOrderScreen:undefined
 };

@@ -396,7 +396,7 @@ const ProfileDetail = () => {
             <Icon name="chevron-right" size={20} color={colors.text.secondary} />
           </TouchableOpacity>
           
-          {user?.avatar && (
+          {/* {user?.avatar && (
             <TouchableOpacity
               style={styles.bottomSheetOption}
               onPress={handleRemoveAvatar}
@@ -409,7 +409,7 @@ const ProfileDetail = () => {
               </View>
               <Icon name="chevron-right" size={20} color={colors.red.main} />
             </TouchableOpacity>
-          )}
+          )} */}
           
           <TouchableOpacity
             style={styles.bottomSheetCancel}

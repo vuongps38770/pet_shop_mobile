@@ -21,6 +21,8 @@ import { CreateMessageDto } from 'src/presentation/dto/req/message.req';
 import { useOrderSuggestionFromClipboard, OrderSuggestionDto } from 'shared/hooks/useOrderSuggestionFromClipboard';
 import ImageViewing from 'react-native-image-viewing';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { useFocusEffect } from '@react-navigation/native';
+import { setCurrentSelectedOrderId } from '../slice/pick-order.slice';
 dayjs.extend(relativeTime);
 dayjs.locale('vi');
 
@@ -28,6 +30,7 @@ const ChatWithAdminScreen = () => {
     const navigation = useMainNavigation();
     const dispatch = useDispatch<AppDispatch>();
     const shopConversation = useSelector((state: RootState) => state.chat.conservation.shopConversation);
+    const currentSelectedOrderId = useSelector((state: RootState) => state.chat.pickOrder.currentSelectedOrderId);
     const { user } = useUserInfo();
     const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -60,6 +63,19 @@ const ChatWithAdminScreen = () => {
     useEffect(() => {
         storageHelper.getAccessToken().then(setToken);
     }, []);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            if (currentSelectedOrderId && shopConversation?._id) {
+                const data = {
+                    conversationId: shopConversation._id,
+                    orderId: currentSelectedOrderId,
+                };
+                socket.emit(SEND_MESSAGE_EVENT, data);
+                dispatch(setCurrentSelectedOrderId(null)); 
+            }
+        }, [currentSelectedOrderId, shopConversation?._id])
+    );
 
     useEffect(() => {
         const ensureShopConversation = async () => {
@@ -113,19 +129,19 @@ const ChatWithAdminScreen = () => {
         socket.connect();
 
         socket.on('connect', () => {
-            console.log('✅ Socket connected:', socket.id);
+            console.log(' Socket connected:', socket.id);
         });
 
         socket.on('connect_error', (err) => {
-            console.error('❌ Socket connection error:', err.message);
+            console.error(' Socket connection error:', err.message);
         });
 
         socket.on(AUTHORIZED_EVENT, (msg) => {
-            console.error('🚫 Unauthorized:', msg);
+            console.error(' Unauthorized:', msg);
         });
 
         socket.on('disconnect', (reason) => {
-            console.warn('⚠️ Socket disconnected:', reason);
+            console.warn(' Socket disconnected:', reason);
         });
 
 
@@ -271,7 +287,7 @@ const ChatWithAdminScreen = () => {
                 mediaTypes: 'images',
                 allowsEditing: true,
                 quality: 1,
-                selectionLimit: 3 - imagePreview.length, 
+                selectionLimit: 3 - imagePreview.length,
             });
             if (!result.canceled && result.assets?.length) {
                 const uris = result.assets.map(a => a.uri).filter(Boolean);
@@ -323,7 +339,7 @@ const ChatWithAdminScreen = () => {
 
     const renderItem = ({ item }: { item: MessageRespondDto }) => {
 
-        
+
         let orderId: string | null = null;
         if (item.orderId) {
             orderId = item.orderId;
@@ -336,14 +352,14 @@ const ChatWithAdminScreen = () => {
             }
         }
         return (
-        <View
-            style={[
-                styles.messageContainer,
-                item.sender === user?._id ? styles.userMessage : styles.adminMessage,
-            ]}
-        >
-            {item.images && item.images.length > 0 && (
-                <View style={styles.messageImagesContainer}>
+            <View
+                style={[
+                    styles.messageContainer,
+                    item.sender === user?._id ? styles.userMessage : styles.adminMessage,
+                ]}
+            >
+                {item.images && item.images.length > 0 && (
+                    <View style={styles.messageImagesContainer}>
                         {(item.images ?? []).map((img, idx) => (
                             <TouchableOpacity
                                 key={img + idx}
@@ -353,12 +369,12 @@ const ChatWithAdminScreen = () => {
                                     setImageViewerVisible(true);
                                 }}
                             >
-                            <Image source={{ uri: img }} style={styles.messageImage} />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            )}
-            {item.content ? <Text style={styles.messageText}>{item.content}</Text> : null}
+                                <Image source={{ uri: img }} style={styles.messageImage} />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+                {item.content ? <Text style={styles.messageText}>{item.content}</Text> : null}
                 {/* Nếu có orderId và đã fetch xong, hiển thị block thông tin đơn hàng */}
                 {orderId && orderSuggestionMap[orderId] && (
                     <TouchableOpacity
@@ -372,8 +388,8 @@ const ChatWithAdminScreen = () => {
                         <Text style={{ color: '#333' }}>Người nhận: <Text style={{ fontWeight: 'bold' }}>{orderSuggestionMap[orderId]?.shippingAddress?.receiverFullname}</Text></Text>
                     </TouchableOpacity>
                 )}
-        </View>
-    );
+            </View>
+        );
     };
 
     return (
@@ -382,7 +398,6 @@ const ChatWithAdminScreen = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={80}
         >
-            {/* Gợi ý đơn hàng từ clipboard - hiển thị ngay trên ô nhập chat */}
             {orderSuggestion && showOrderSuggestion && (
                 <View style={{ backgroundColor: '#222', opacity: 0.95, borderRadius: 12, marginHorizontal: 12, marginBottom: 4, padding: 12, borderWidth: 1, borderColor: '#FFAF42', flexDirection: 'row', alignItems: 'center', position: 'absolute', left: 0, right: 0, bottom: 60, zIndex: 10 }}>
                     <View style={{ flex: 1 }}>
@@ -402,7 +417,6 @@ const ChatWithAdminScreen = () => {
                 </View>
             )}
 
-            {/* Modal gửi đơn hàng */}
             {showOrderSendModal && (
                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100, justifyContent: 'center', alignItems: 'center' }}>
                     <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '85%', maxWidth: 400 }}>
@@ -499,11 +513,7 @@ const ChatWithAdminScreen = () => {
                     </TouchableOpacity>
                     {imagePreview.length === 0 && (
                         <>
-                            <TouchableOpacity style={styles.optionItem} onPress={() => { setShowOptions(false); /* TODO: chọn sản phẩm */ }}>
-                                <Ionicons name="pricetag-outline" size={22} color={colors.app.primary.main} />
-                                <Text style={styles.optionText}>Sản phẩm</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.optionItem} onPress={() => { setShowOptions(false); /* TODO: chọn đơn hàng */ }}>
+                            <TouchableOpacity style={styles.optionItem} onPress={() => { setShowOptions(false); navigation.navigate('PickOrderScreen'); }}>
                                 <Ionicons name="receipt-outline" size={22} color={colors.app.primary.main} />
                                 <Text style={styles.optionText}>Đơn hàng</Text>
                             </TouchableOpacity>
