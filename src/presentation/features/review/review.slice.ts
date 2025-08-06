@@ -139,9 +139,13 @@ const reviewSlice = createSlice({
             if (act === 'LIKE') {
               review.isLiked = true;
               review.isDisliked = false;
+              review.likeList.push("")
+              review.disLikeList.pop()
             } else if (act === 'DISLIKE') {
               review.isDisliked = true;
               review.isLiked = false;
+              review.disLikeList.push("")
+              review.likeList.pop()
             }
           }
         }

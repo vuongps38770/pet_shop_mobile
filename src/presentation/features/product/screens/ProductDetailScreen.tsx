@@ -39,14 +39,14 @@ import { HeartAnimatedIcon } from 'shared/components/HeartAnimatedIcon';
 import { debounce } from 'lodash';
 import ProductReviewSection from '../../review/components/ProductReviewSection';
 import VariantSelectionBottomSheet from '../components/VariantSelectionBottomSheet';
-
+import CartIcon from 'assets/icons/shopping-cart-outline-svgrepo-com.svg'
 const screenWidth = Dimensions.get('window').width;
 
 
 
 const ProductDetailScreen = () => {
   const route = useRoute<RouteProp<MainStackParamList, 'ProductDetail'>>()
-  const productId = route.params.productId ?? "683eb18c148e72b5b379f648"
+  const productId = route.params.productId ?? ""
   const dispatch = useDispatch<AppDispatch>()
 
   const mainNav = useMainNavigation()
@@ -79,7 +79,6 @@ const ProductDetailScreen = () => {
     dispatch(resetStatus());
   }, []);
   useEffect(() => {
-    // Bỏ qua lần render đầu tiên để tránh hiển thị toast không mong muốn
     if (isFirstRenderForAddToCartStatus.current) {
       isFirstRenderForAddToCartStatus.current = false;
       return;
@@ -101,7 +100,7 @@ const ProductDetailScreen = () => {
       }
       dispatch(resetStatus())
     }
-  }, [addToCartStatus, dispatch]); // Thêm dispatch vào dependency array để đảm bảo closure chính xác
+  }, [addToCartStatus, dispatch]); 
 
 
 
@@ -127,7 +126,6 @@ const ProductDetailScreen = () => {
     }
   }, 300);
 
-  // Thêm hàm renderAddToCartButton
   const renderAddToCartButton = () => {
     if (addToCartStatus === 'loading') {
       return (
@@ -179,7 +177,11 @@ const ProductDetailScreen = () => {
               onPress={() => {
                 handleFavorite(favoriteIds.includes(product._id), product._id);
               }}
+              size={20}
             />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toCartButton} onPress={() => mainNav.navigate('MainScreen', { route: 'CartTab' })}>
+            <CartIcon width={20} height={20}/>
           </TouchableOpacity>
         </View>
 
@@ -345,7 +347,22 @@ const styles = StyleSheet.create({
   heartButton: {
     position: 'absolute',
     top: 40,
-    right: 20
+    right: 70,
+    backgroundColor:colors.grey[500],
+    padding:10,
+    justifyContent:'center',
+    alignItems:'center',
+    borderRadius:'50%'
+  },
+  toCartButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor:colors.grey[500],
+    padding:10,
+    justifyContent:'center',
+    alignItems:'center',
+    borderRadius:'50%'
   },
   content: {
     padding: 16

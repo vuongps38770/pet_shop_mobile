@@ -88,7 +88,7 @@ axiosInstance.interceptors.response.use(
           // Call refresh token API
           const response = await axios.post(`${BASE_URL}/auth/refresh-token`, {
             refreshToken,
-            userAgent: storageHelper.getOrCreateMobileDeviceId
+            userAgent: await storageHelper.getOrCreateMobileDeviceId()
           });
 
           const { accessToken, newRefreshToken } = response.data;

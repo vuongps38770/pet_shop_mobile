@@ -4,6 +4,7 @@ import { colors } from 'theme/colors'
 import { PriceFormatter } from 'app/utils/priceFormatter'
 import { OrderRespondDto } from 'src/presentation/dto/res/order-respond.dto'
 import { formatDateTimeVN } from 'app/utils/time'
+import { OrderStatus } from 'app/types/OrderStatus'
 
 type AwaitingPickupItemProps = {
     order: OrderRespondDto;
@@ -25,6 +26,8 @@ const AwaitingpickupItem: React.FC<AwaitingPickupItemProps> = ({ order, onPress,
                 return 'Đang xử lý';
             case 'SHIPPED':
                 return 'Đã giao cho vận chuyển';
+            case OrderStatus.CONFIRMED:
+                return 'Đã xác nhận';
             default:
                 return status;
         }
@@ -36,6 +39,8 @@ const AwaitingpickupItem: React.FC<AwaitingPickupItemProps> = ({ order, onPress,
                 return colors.orange.dark;
             case 'SHIPPED':
                 return colors.blue.dark;
+            case OrderStatus.CONFIRMED:
+                return colors.blue.main
             default:
                 return colors.grey[500];
         }
@@ -67,6 +72,7 @@ const AwaitingpickupItem: React.FC<AwaitingPickupItemProps> = ({ order, onPress,
                 <Text style={[styles.statusText, { color: getStatusColor(order.status) }]}>
                     {getStatusText(order.status)}
                 </Text>
+                <View/>
                 <Text style={styles.price}>{PriceFormatter.formatPrice(order.totalPrice)}</Text>
             </View>
         </Wrapper>

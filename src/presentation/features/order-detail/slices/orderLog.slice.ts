@@ -2,14 +2,18 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from 'app/config/axios';
 
 export enum OrderAction {
-  CANCEL_ORDER = 'CANCEL_ORDER',
-  CREATE_ORDER = 'CREATE_ORDER',
-  CONFIRM_ORDER = 'CONFIRM_ORDER',
-  SHIPPING_ORDER = 'SHIPPING_ORDER',
-  CONFIRM_PAYMENT = 'CONFIRM_PAYMENT',
-  COMPLETE_ORDER = 'COMPLETE_ORDER',
-  RETURN_ORDER = 'RETURN_ORDER',
-  REFUND_ORDER = 'REFUND_ORDER',
+  CANCEL_ORDER = "CANCEL_ORDER",
+  CREATE_ORDER = "CREATE_ORDER",
+  CONFIRM_ORDER = "CONFIRM_ORDER",
+  SHIPPING_ORDER = "SHIPPING_ORDER",
+  CONFIRM_PAYMENT = "CONFIRM_PAYMENT",
+  COMPLETE_ORDER = "COMPLETE_ORDER",
+  RETURN_ORDER = "RETURN_ORDER",
+  REFUND_ORDER = "REFUND_ORDER",
+  WAIT_PAYMENT_ORDER = "WAIT_PAYMENT_ORDER",
+  PROCESS_ORDER = "PROCESS_ORDER",
+  DELIVER_ORDER = "DELIVER_ORDER",
+  FAIL_DELIVERY_ORDER = "FAIL_DELIVERY_ORDER"
 }
 
 export type OrderLogDto = {
@@ -93,7 +97,7 @@ export const translateOrderAction = (action: OrderAction): string => {
     case OrderAction.CONFIRM_ORDER:
       return 'Xác nhận đơn';
     case OrderAction.SHIPPING_ORDER:
-      return 'Đang giao hàng';
+      return 'Đang chờ bàn giao';
     case OrderAction.CONFIRM_PAYMENT:
       return 'Xác nhận thanh toán';
     case OrderAction.COMPLETE_ORDER:
@@ -102,6 +106,14 @@ export const translateOrderAction = (action: OrderAction): string => {
       return 'Trả hàng';
     case OrderAction.REFUND_ORDER:
       return 'Hoàn tiền';
+    case OrderAction.DELIVER_ORDER:
+      return 'Bắt đầu giao hàng';
+    case OrderAction.FAIL_DELIVERY_ORDER:
+      return 'Giao hàng thất bại';
+    case OrderAction.PROCESS_ORDER:
+      return 'Xử lý đơn';
+    case OrderAction.WAIT_PAYMENT_ORDER:
+      return 'Chờ thanh toán';
     default:
       return action;
   }
