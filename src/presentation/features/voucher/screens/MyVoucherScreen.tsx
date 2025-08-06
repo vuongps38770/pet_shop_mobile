@@ -151,7 +151,10 @@ export const MyVoucherScreen = () => {
             }
             actionTextColor="#FFA63D"
             onPress={() => {
-
+              
+              if(filterStatus === 'collected_unused'){
+                navigation.navigate('ExploreScreen')
+              }
             }}
             buttonType={
               filterStatus === 'collected_used'

@@ -35,6 +35,7 @@ import ChatListScreen from "src/presentation/features/chat/screens/ChatListScree
 import OrderAllDetailsScreen from "src/presentation/features/order-detail/screens/OrderAllDetailsScreen";
 import AddEmailScreen from "src/presentation/features/profile/screens/AddEmailScreen";
 import VerifyOtpAddEmailScreen from "src/presentation/features/profile/screens/VerifyOtpAddEmailScreen";
+import PickOrderScreen from "src/presentation/features/chat/screens/PickOrderScreen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -174,6 +175,11 @@ const MainNavigator = () => {
         <Stack.Screen
           name="VerifyOtpAddEmailScreen"
           component={VerifyOtpAddEmailScreen}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="PickOrderScreen"
+          component={PickOrderScreen}
           options={{ headerShown: false }}
         />
 
