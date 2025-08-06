@@ -110,7 +110,7 @@ const DeliveredScreen = () => {
         ]}
         refreshing={refreshing}
         onRefresh={handleRefresh}
-        data={allOrders}
+        data={data?.data || []}
         renderItem={({ item }) => (
           <DeliveredItem
             order={item}

@@ -45,6 +45,8 @@ export const fetchDeliveredOrders = createAsyncThunk<
       if (query.sortBy) params.append('sortBy', query.sortBy);
       if (query.sortOrder) params.append('sortOrder', query.sortOrder);
       const res = await axiosInstance.get(`/order/my?${params.toString()}`);
+      console.log(res.data.data);
+      
       return res.data.data as OrderListResDto;
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message || error.message || 'Lỗi không xác định');

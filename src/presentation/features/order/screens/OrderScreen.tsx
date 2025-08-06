@@ -36,24 +36,18 @@ type OrderScreenRouteParams = {
 
 const { PayZaloBridge } = NativeModules;
 const payZaloBridgeEmitter = new NativeEventEmitter(PayZaloBridge);
-
+const SCREEN_HEIGHT = Dimensions.get('window').height
 
 const OrderScreen = () => {
   const navigation = useMainNavigation();
-  const route = useRoute<RouteProp<MainStackParamList,'OrderScreen'>>();
+  const route = useRoute<RouteProp<MainStackParamList, 'OrderScreen'>>();
   const dispatch = useDispatch<AppDispatch>();
   const reOrderItems = route.params?.reOrderItems;
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['50%', '90%'], []);
+  const snapPoints = useMemo(() => [SCREEN_HEIGHT*0.5, SCREEN_HEIGHT*0.9], []);
   const [isAddressSheetOpen, setAddressSheetOpen] = useState(false);
 
-  useEffect(() => {
-    if (isAddressSheetOpen) {
-      bottomSheetRef.current?.snapToIndex(0);
-    } else {
-      bottomSheetRef.current?.close();
-    }
-  }, [isAddressSheetOpen]);
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -194,7 +188,7 @@ const OrderScreen = () => {
       {/* BottomSheet chọn địa chỉ */}
       <BottomSheet
         ref={bottomSheetRef}
-        index={isAddressSheetOpen ? 1 : -1}
+        index={isAddressSheetOpen ? 0 : -1}
         snapPoints={snapPoints}
         enablePanDownToClose
         onClose={closeModal}
@@ -207,7 +201,7 @@ const OrderScreen = () => {
           />
         )}
       >
-        <BottomSheetView style={[{ flex: 1, padding: 16, paddingBottom: 16 }]}>
+        <BottomSheetView style={[{ flex: 1, padding: 16, paddingBottom: 16, minHeight: SCREEN_HEIGHT * 0.5 }]}>
           <View style={styles.addressSheetHeader}>
             <Text style={styles.addressSheetTitle}>Chọn địa chỉ giao hàng</Text>
             <TouchableOpacity
@@ -217,43 +211,55 @@ const OrderScreen = () => {
               <Text style={styles.addressSheetAddText}>+ Tạo địa chỉ mới</Text>
             </TouchableOpacity>
           </View>
-
-          <BottomSheetFlatList
-            data={sortedAddresses}
-            keyExtractor={(item) => item._id}
-            contentContainerStyle={{ paddingBottom: 16 }}
-            ListEmptyComponent={
-              <Text style={{ marginBottom: 8 }}>Bạn chưa có địa chỉ nào.</Text>
-            }
-            renderItem={({ item: address }) => (
-              <TouchableOpacity
-                style={[
-                  styles.addressCard,
-                  shippingAddressId === address._id && styles.addressCardActive
-                ]}
-                onPress={() => {
-                  handleSelectAddress(address._id);
-                  closeModal();
-                }}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.addressCardName}>{address.receiverFullname}</Text>
-                  <Text style={styles.addressCardText}>
-                    {address.streetAndNumber}, {address.ward}, {address.district}, {address.province}
-                  </Text>
-                  {address.isDefault && (
-                    <Text style={styles.addressCardDefault}>Mặc định</Text>
+          {sortedAddresses.length == 0
+            ?
+            <View style={{ width: '100%', height: 400, justifyContent: 'center', alignItems: 'center' }}>
+              <Text >Bạn chưa có địa chỉ giao hàng nào!</Text>
+            </View>
+            :
+            <BottomSheetFlatList
+              data={sortedAddresses}
+              keyExtractor={(item) => item._id}
+              contentContainerStyle={{ paddingBottom: 16 }}
+              ListEmptyComponent={
+                <Text style={{ marginBottom: 8 }}>Bạn chưa có địa chỉ nào.</Text>
+              }
+              ListFooterComponent={
+                sortedAddresses.length > 0 && sortedAddresses.length < 3 ? (
+                  <View style={{ height: 400 }} /> 
+                ) : null
+              }
+              renderItem={({ item: address }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.addressCard,
+                    shippingAddressId === address._id && styles.addressCardActive
+                  ]}
+                  onPress={() => {
+                    handleSelectAddress(address._id);
+                    closeModal();
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.addressCardName}>{address.receiverFullname}</Text>
+                    <Text style={styles.addressCardText}>
+                      {address.streetAndNumber}, {address.ward}, {address.district}, {address.province}
+                    </Text>
+                    {address.isDefault && (
+                      <Text style={styles.addressCardDefault}>Mặc định</Text>
+                    )}
+                    <Text style={styles.addressCardDate}>
+                      Tạo: {new Date(address.createdDate).toLocaleString()}
+                    </Text>
+                  </View>
+                  {shippingAddressId === address._id && (
+                    <Text style={styles.addressCardChecked}>Đã chọn</Text>
                   )}
-                  <Text style={styles.addressCardDate}>
-                    Tạo: {new Date(address.createdDate).toLocaleString()}
-                  </Text>
-                </View>
-                {shippingAddressId === address._id && (
-                  <Text style={styles.addressCardChecked}>Đã chọn</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          />
+                </TouchableOpacity>
+              )}
+            />
+          }
+
         </BottomSheetView>
       </BottomSheet>
     </>

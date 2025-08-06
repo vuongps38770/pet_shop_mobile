@@ -10,21 +10,22 @@ import { colors } from '../theme/colors';
 
 export const APP_ICON_SIZE = 24;
 
-const size = APP_ICON_SIZE * 1.2;
+const siz_icon = APP_ICON_SIZE * 1.2;
 
 const AnimatedHeart = Animated.createAnimatedComponent(LucideHeart);
 
 type Props = {
   isFavorite: boolean;
   onPress: () => void;
+  size?: number;
 };
 
-export const HeartAnimatedIcon = ({ isFavorite, onPress }: Props) => {
+export const HeartAnimatedIcon = ({ isFavorite, onPress,size= siz_icon}: Props) => {
   const scale = useSharedValue(1);
-  const [iconColor, setIconColor] = useState(isFavorite ? colors.red.main : colors.grey[500]);
+  const [iconColor, setIconColor] = useState(isFavorite ? colors.red.main : colors.white);
 
   useEffect(() => {
-    setIconColor(isFavorite ? colors.red.main : colors.grey[500]);
+    setIconColor(isFavorite ? colors.red.main : colors.white);
   }, [isFavorite]);
 
   const animatedStyle = useAnimatedStyle(() => {

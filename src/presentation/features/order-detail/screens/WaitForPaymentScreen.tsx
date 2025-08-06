@@ -34,7 +34,8 @@ const WaitForPaymentScreen = () => {
   );
 
   // Lắng nghe sự kiện từ ZaloPay
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
     const subscription = payZaloBridgeEmitter.addListener('EventPayZalo', (event) => {
       console.log('ZaloPay Event:', event);
       setCheckingPayment(true);
@@ -61,8 +62,14 @@ const WaitForPaymentScreen = () => {
       setCheckingPayment(false);
     });
 
-    return () => subscription.remove();
-  }, [currentPaymentId]);
+    // Cleanup khi màn hình bị blur
+    return () => {
+      subscription.remove();
+      console.log('🧹 Removed ZaloPay listener');
+    };
+  }, [currentPaymentId])
+);
+
 
   useEffect(() => {
     if (getUrlStatus === 'success' && payUrl) {

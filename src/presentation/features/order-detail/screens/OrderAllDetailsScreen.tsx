@@ -33,7 +33,7 @@ const OrderAllDetailsScreen = () => {
     id: orderData._id,
     recipient: {
       name: orderData.shippingAddress?.receiverFullname || '',
-      phone: '', 
+      phone: '',
       address: `${orderData.shippingAddress?.streetAndNumber || ''}, ${orderData.shippingAddress?.ward || ''}, ${orderData.shippingAddress?.district || ''}, ${orderData.shippingAddress?.province || ''}`.replace(/(, )+/g, ', ').replace(/^, |, $/g, ''),
     },
     total: orderData.productPrice,
@@ -97,7 +97,7 @@ const OrderAllDetailsScreen = () => {
             </Text>
           </View>
         )}
-      <View style={styles.recipientBlock}>
+        <View style={styles.recipientBlock}>
           <Text>
             <Text style={styles.orderId}>Người nhận: </Text>
             <Text style={styles.paymentMethod}>{order?.recipient?.name}</Text>
@@ -110,8 +110,8 @@ const OrderAllDetailsScreen = () => {
             <Text style={styles.orderId}>Địa chỉ: </Text>
             <Text style={styles.paymentMethod}>{order?.recipient?.address}</Text>
           </Text>
-      </View>
-      <Text style={styles.sectionTitle}>Sản phẩm</Text>
+        </View>
+        <Text style={styles.sectionTitle}>Sản phẩm</Text>
         {orderData && orderData.orderDetailItems && orderData.orderDetailItems.length > 0 ? (
           Object.values(
             orderData.orderDetailItems.reduce((acc: any, item: any) => {
@@ -133,7 +133,9 @@ const OrderAllDetailsScreen = () => {
                 {product.image ? (
                   <Image source={{ uri: product.image }} style={{ width: 80, height: 80, borderRadius: 6, marginHorizontal: 10 }} />
                 ) : null}
-                <Text style={styles.productName}>{product.productName}</Text>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text style={styles.productName}>{product.productName}</Text>
+                </View>
               </View>
               {product.variants.map((variant: any) => (
                 <View key={variant._id} style={{ marginLeft: 10, marginBottom: 2 }}>
@@ -144,21 +146,21 @@ const OrderAllDetailsScreen = () => {
                   <Text style={styles.productInfo}>Giá: {(variant.promotionalPrice || variant.sellingPrice).toLocaleString()}đ</Text>
                 </View>
               ))}
-          </View>
+            </View>
           ))
         ) : (
           <Text style={styles.productInfo}>Không có sản phẩm</Text>
         )}
-      <View style={styles.priceBlock}>
-        <Text style={styles.priceLabel}>Tổng giá trị:</Text>
+        <View style={styles.priceBlock}>
+          <Text style={styles.priceLabel}>Tổng giá trị:</Text>
           <Text style={styles.priceValue}>{order?.total?.toLocaleString()}đ</Text>
-      </View>
-      <View style={styles.priceBlock}>
-        <Text style={styles.priceLabel}>Giảm giá:</Text>
+        </View>
+        <View style={styles.priceBlock}>
+          <Text style={styles.priceLabel}>Giảm giá:</Text>
           <Text style={styles.priceValue}>-{order?.discount?.toLocaleString()}đ</Text>
-      </View>
-      <View style={styles.priceBlock}>
-        <Text style={[styles.priceLabel, { fontWeight: 'bold' }]}>Thành tiền:</Text>
+        </View>
+        <View style={styles.priceBlock}>
+          <Text style={[styles.priceLabel, { fontWeight: 'bold' }]}>Thành tiền:</Text>
           <Text style={[styles.priceValue, { fontWeight: 'bold', color: '#4CAF50' }]}>{order?.finalTotal?.toLocaleString()}đ</Text>
         </View>
         {/* Hỗ trợ khách hàng */}
@@ -185,26 +187,26 @@ const OrderAllDetailsScreen = () => {
           >
             <Text style={{ color: '#1976D2', fontWeight: 'bold' }}>Sao chép</Text>
           </TouchableOpacity>
-      </View>
+        </View>
         <Text>
           <Text style={styles.orderId}>Phương thức thanh toán: </Text>
           <Text style={styles.paymentMethod}>{order?.paymentMethod}</Text>
         </Text>
-      <Text style={styles.sectionTitle}>Lịch sử cập nhật</Text>
+        <Text style={styles.sectionTitle}>Lịch sử cập nhật</Text>
         {logLoading && <ActivityIndicator size="small" color="#FFAF42" style={{ marginVertical: 10 }} />}
         {logError && <Text style={{ color: 'red', marginBottom: 10 }}>{logError}</Text>}
-      <FlatList
+        <FlatList
           data={logs}
           keyExtractor={item => item._id}
           renderItem={({ item }) => (
-          <View style={styles.historyItem}>
+            <View style={styles.historyItem}>
               <Text style={styles.historyStatus}>{translateOrderAction(item.action)}</Text>
               <Text style={styles.historyTime}>{new Date(item.createdAt).toLocaleString('vi-VN')}</Text>
-          </View>
-        )}
-        scrollEnabled={false}
-      />
-    </ScrollView>
+            </View>
+          )}
+          scrollEnabled={false}
+        />
+      </ScrollView>
     </View>
   )
 }
