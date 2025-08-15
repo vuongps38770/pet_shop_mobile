@@ -68,10 +68,10 @@ export const loginOAuth = createAsyncThunk(
 //dang ky
 export const signUp = createAsyncThunk(
     'auth/signUp',
-    async ({ password, name, surName, phone }: SignUpReqDto, { rejectWithValue }) => {
+    async ({ password, name, surName, phone, otpCode }: SignUpReqDto, { rejectWithValue }) => {
         try {
             await axiosInstance.post('auth/signup', {
-                password, phone, name, surName
+                password, phone, name, surName,otpCode
             })
 
         } catch (error) {

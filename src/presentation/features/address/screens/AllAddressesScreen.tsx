@@ -1,10 +1,10 @@
 import { StyleSheet, Text, View, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppDispatch, RootState } from 'src/presentation/store/store'
 import { getMyAddresses } from '../address.slice'
 import { colors } from 'theme/colors'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import AllAddressItem from '../components/AllAddressItem'
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks'
@@ -43,10 +43,12 @@ const AllAddressesScreen = () => {
     const navigation = useMainNavigation()
     const { myAddresses, fetchMyAddressesStatus, fetchMyAddressesError } = useSelector((state: RootState) => state.newAddress)
     const [actionLoading, setActionLoading] = useState(false)
+    useFocusEffect(
+        useCallback(()=>{
+            dispatch(getMyAddresses())
+        },[])
+    )
 
-    useEffect(() => {
-        dispatch(getMyAddresses())
-    }, [])
 
     const sortedAddresses = [...myAddresses].sort((a, b) => {
         if (a.isDefault) return -1
@@ -164,11 +166,11 @@ const AllAddressesScreen = () => {
                 <Text style={styles.addButtonText}>Thêm địa chỉ mới</Text>
             </TouchableOpacity>
 
-            {actionLoading && (
+            {/* {actionLoading && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color={colors.app.primary.main} />
                 </View>
-            )}
+            )} */}
         </View>
     )
 }

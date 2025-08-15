@@ -100,7 +100,7 @@ const voucherSlice = createSlice({
         state.itemLoading[id] = false;
         const index = state.data.findIndex(v => v._id === id);
         if (index !== -1) {
-          state.data[index].is_collected = true;
+          state.data[index] = { ...state.data[index], is_collected: true };
         }
       })
       .addCase(saveUserVouchers.rejected, (state, action) => {

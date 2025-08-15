@@ -1,6 +1,7 @@
 import { FilterOptions } from "src/presentation/dto/req/filter-option.req.dto";
 import { MainBottomTabParamList } from "./bottom-tabs-navigators/types";
 import { OrderReqItem } from "src/presentation/dto/req/order.req.dto";
+import { BlogRespondDto } from "src/presentation/dto/res/blog-respond.dto";
 
 export type MainStackParamList = {
   MainScreen: undefined|{route:keyof MainBottomTabParamList}
@@ -33,5 +34,7 @@ export type MainStackParamList = {
   AllDetails:{orderId?:string},
   AddEmailScreen:undefined,
   VerifyOtpAddEmailScreen:{email:string},
-  PickOrderScreen:undefined
+  PickOrderScreen:undefined,
+  PostDetailScreen:{postId:string},
+  NewsScreen: { blog: BlogRespondDto }
 };

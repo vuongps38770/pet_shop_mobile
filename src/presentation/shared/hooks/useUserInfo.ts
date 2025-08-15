@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserInfo } from "src/presentation/store/slices/user-info.slice";
 import { AppDispatch, RootState } from "src/presentation/store/store";
@@ -11,5 +11,9 @@ export const useUserInfo = () => {
     dispatch(getUserInfo());
   }, [dispatch]);
 
-  return { user: data, isLoading, error };
+  const fetchUserInfo = useCallback(() => {
+    return dispatch(getUserInfo());
+  }, [dispatch]);
+
+  return { user: data, isLoading, error,refetch: fetchUserInfo  };
 };

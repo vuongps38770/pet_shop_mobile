@@ -27,6 +27,8 @@ import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/botto
 import ImageViewing from 'react-native-image-viewing';
 import { Image as RNImage } from 'react-native';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import { useFocusEffect } from '@react-navigation/native';
+import { useUserInfo } from 'shared/hooks/useUserInfo';
 
 const ProfileDetail = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,11 +47,13 @@ const ProfileDetail = () => {
   // Bottom sheet ref
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['25%', '50%'], []);
+  const {  refetch } = useUserInfo()
+  useFocusEffect(
+    useCallback(()=>{
+      dispatch(getUserInfo());
+    },[dispatch])
+  );
 
-  useEffect(() => {
-    dispatch(getUserInfo());
-  }, [dispatch]);
-  
   useEffect(() => {
     if (user) {
       setEditName(user.name);
@@ -62,6 +66,7 @@ const ProfileDetail = () => {
   const handleChangeAvatar = () => {
     setIsImagePickerVisible(true);
     bottomSheetRef.current?.expand();
+    refetch()
   };
 
   const handleCameraPress = async () => {
@@ -146,8 +151,8 @@ const ProfileDetail = () => {
   };
 
   const handleEditEmail = () => {
-    // TODO: Implement email editing logic with email verification
     navigation.navigate('AddEmailScreen')
+    refetch()
   };
 
   const renderBackdrop = useCallback(
@@ -167,18 +172,20 @@ const ProfileDetail = () => {
       setIsImagePickerVisible(false);
     }
   }, []);
-
+  useEffect(()=>{
+    console.log(editName);
+  },[editName])
   const handleSave = () => {
     dispatch(updateProfile({
       name: editName.trim(),
       surName: editSurName.trim(),
-      // phone và email sẽ được xử lý riêng sau này
     }))
       .unwrap()
       .then(() => {
         Alert.alert('Thành công', 'Cập nhật thông tin người dùng thành công');
         dispatch(getUserInfo());
         setIsEditing(false);
+        refetch()
       })
       .catch((err) => {
         Alert.alert('Lỗi', err || 'Cập nhật thông tin thất bại');
@@ -189,7 +196,6 @@ const ProfileDetail = () => {
     if (user) {
       setEditName(user.name);
       setEditSurName(user.surName);
-      // phone và email sẽ được xử lý riêng sau này
     }
     setIsEditing(false);
   };

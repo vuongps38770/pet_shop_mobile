@@ -90,20 +90,26 @@ export const VoucherScreen = () => {
         scrollEnabled={false}
         data={allVouchers}
         keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <VoucherCard
-            voucher={item}
-            actionLabel={item.is_collected ? "Đã lưu" : "Thu thập"}
-            onPress={() => {
-              if (!item.is_collected) {
-                dispatch(saveUserVouchers(item._id));
-              }
-            }}
-            isLoading={itemLoading[item._id]}
-            buttonType={item.quantity === item.used ?ButtonType.NONE:ButtonType.ADD_TO_CART}
-            
-          />
-        )}
+        extraData={allVouchers}
+        renderItem={({ item }) => {
+          const isButtonDisabled = item.is_collected || item.quantity === item.used;
+          const buttonType = item.quantity === item.used ? ButtonType.NONE: (item.is_collected ? ButtonType.ADDED : ButtonType.ADD_TO_CART);
+          const actionLabel = item.is_collected ? "Đã lưu" : "Thu thập";
+          
+          return (
+            <VoucherCard
+              voucher={item}
+              actionLabel={actionLabel}
+              onPress={() => {
+                if (!isButtonDisabled) {
+                  dispatch(saveUserVouchers(item._id));
+                }
+              }}
+              isLoading={itemLoading[item._id]}
+              buttonType={buttonType}
+            />
+          );
+        }}
 
         ListEmptyComponent={
           !isLoading ? (

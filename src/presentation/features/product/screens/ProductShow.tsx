@@ -11,6 +11,7 @@ import {
     ScrollView,
     Animated,
     Easing,
+    ActivityIndicator,
 } from 'react-native';
 import { colors } from 'shared/theme/colors';
 import { Typography } from 'shared/components/Typography';
@@ -75,7 +76,7 @@ export const ProductShow = () => {
     const sectionRefs = useRef<Record<string, any>>({});
     const scrollViewRef = useRef<ScrollView | null>(null);
     filterSections.forEach(s => { if (!sectionRefs.current[s.key]) sectionRefs.current[s.key] = React.createRef<View>(); });
-
+    const filterStatus = useSelector((state: RootState) => state.product.filterStatus)
     // Animation cho filter panel
     const filterAnim = useRef(new Animated.Value(0)).current; // 0: đóng, 1: mở
     const FILTER_PANEL_HEIGHT = 380; // chiều cao panel filter
@@ -85,7 +86,7 @@ export const ProductShow = () => {
             toValue: isFilterOpen ? 1 : 0,
             duration: 250,
             easing: Easing.out(Easing.cubic),
-            useNativeDriver: true, 
+            useNativeDriver: true,
         }).start();
     }, [isFilterOpen]);
 
@@ -112,7 +113,16 @@ export const ProductShow = () => {
 
         getData();
     }, [filter]);
-
+    const handleApplyFilter = () => {
+        const newFilter = {
+            ...filter,
+            page: 1, // Reset page to 1 when filters are applied
+            minPrice: minPrice ? Number(minPrice) : undefined,
+            maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        };
+        setFilter(newFilter);
+        setIsFilterOpen(false);
+    };
     const handleLoadMore = () => {
         if (pages && pages.hasNextPage && !isLoadingMore) {
             setIsLoadingMore(true);
@@ -163,7 +173,6 @@ export const ProductShow = () => {
         }
         setSelectedSection(found);
     };
-
     return (
         <View style={styles.container}>
             {/* Thanh tìm kiếm sticky trên đầu */}
@@ -181,7 +190,9 @@ export const ProductShow = () => {
                             returnKeyType='search'
                             onSubmitEditing={() => {
                                 if (searchParam.trim() !== "") {
-                                    setFilter((prev) => ({ ...prev, search: searchParam.trim() }))
+                                    setFilter((prev) => ({ ...prev, search: searchParam.trim(), page: 1 }));
+                                }else{
+                                    setFilter((prev) => ({ ...prev, search: undefined, page: 1 }));
                                 }
                             }}
                         />
@@ -294,27 +305,31 @@ export const ProductShow = () => {
                     </Animated.View>
                 )}
             </View>
+            {/* {filterStatus === 'loading' && !isLoadingMore
+                ?
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.app.primary.main} />
+                    <Text style={{ marginTop: 10 }}>Đang tải sản phẩm...</Text>
+                </View>
+                : */}
+                <FlatList<ProductRespondSimplizeDto>
+                    data={pages?.data}
+                    numColumns={2}
+                    keyExtractor={(item: ProductRespondSimplizeDto, index) => item._id + index}
+                    renderItem={renderItem}
+                    contentContainerStyle={[styles.list, { paddingTop: 120 }]}
+                    onEndReached={handleLoadMore}
+                    onEndReachedThreshold={0.2}
+                    ListFooterComponent={
+                        isLoadingMore ? (
+                            <Text style={styles.loadingText}>Đang tải thêm...</Text>
+                        ) : pages && !pages.hasNextPage ? (
+                            <Text style={styles.loadingText}>Đã tải hết!</Text>
+                        ) : null
+                    }
+                />
+            {/* } */}
 
-            {/* Filter Panel Shopee style - Animated slide down/up, đè lên FlatList */}
-
-
-            {/* Danh sách sản phẩm giữ nguyên, chỉ paddingTop cho sticky search bar */}
-            <FlatList<ProductRespondSimplizeDto>
-                data={pages?.data}
-                numColumns={2}
-                keyExtractor={(item: ProductRespondSimplizeDto, index) => item._id + index}
-                renderItem={renderItem}
-                contentContainerStyle={[styles.list, { paddingTop: 120 }]} // chỉ paddingTop cho search bar
-                onEndReached={handleLoadMore}
-                onEndReachedThreshold={0.2}
-                ListFooterComponent={
-                    isLoadingMore ? (
-                        <Text style={styles.loadingText}>Đang tải thêm...</Text>
-                    ) : pages && !pages.hasNextPage ? (
-                        <Text style={styles.loadingText}>Đã tải hết!</Text>
-                    ) : null
-                }
-            />
         </View>
     );
 };
@@ -324,6 +339,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background.default,
         paddingHorizontal: 10,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 200,
     },
     header: {
         flexDirection: 'row',

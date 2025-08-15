@@ -36,6 +36,9 @@ import OrderAllDetailsScreen from "src/presentation/features/order-detail/screen
 import AddEmailScreen from "src/presentation/features/profile/screens/AddEmailScreen";
 import VerifyOtpAddEmailScreen from "src/presentation/features/profile/screens/VerifyOtpAddEmailScreen";
 import PickOrderScreen from "src/presentation/features/chat/screens/PickOrderScreen";
+import BlogScreen from "src/presentation/features/blog/screens/BlogScreen";
+import PostDetailScreen from "src/presentation/features/blog/screens/PostDetailScreen";
+import NewsScreen from "src/presentation/features/home/screens/NewsScreen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -180,6 +183,16 @@ const MainNavigator = () => {
          <Stack.Screen
           name="PickOrderScreen"
           component={PickOrderScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PostDetailScreen"
+          component={PostDetailScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="NewsScreen"
+          component={NewsScreen}
           options={{ headerShown: false }}
         />
 

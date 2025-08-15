@@ -25,15 +25,16 @@ const FavoriteCard: React.FC<FavoriteCardProps> = ({
         <Image source={{ uri: item.images[0] }} style={styles.productImage} />
 
         {/* Rating Bubble */}
-        <View style={styles.ratingBubble}>
+        {/* <View style={styles.ratingBubble}>
           <Text style={styles.starIcon}>⭐</Text>
           <Text style={styles.ratingText}>4.5</Text>
           <Text style={styles.reviewCount}>(20+)</Text>
-        </View>
+        </View> */}
 
         {/* Heart Icon */}
         <View style={styles.heartIconContainer}>
           <HeartAnimatedIcon
+            unFavoriteIconColor={colors.grey[500]}
             isFavorite={isFavorite}
             onPress={() => onHeartPress(item._id, !isFavorite)}
           />
@@ -72,8 +73,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     boxShadow: '0 0 4px rgba(0,0,0,0.3)',
-    margin:2,
-    
+    margin: 2,
+
   },
   imageWrapper: {
     width: '100%',

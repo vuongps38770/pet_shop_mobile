@@ -5,10 +5,11 @@ import { FormatProduct } from 'shared/components/format-price';
 import { FontAwesome } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
-import { fetchCategorySuggest, fetchPages, fetchBanners, fetchSpecialRatings, fetchHotVouchers, resetExploreState } from '../explore.slice';
+import { fetchCategorySuggest, fetchPages, fetchBanners, fetchSpecialRatings, fetchHotVouchers, fetchPublishedBlogs, resetExploreState } from '../explore.slice';
 import { addToCart } from 'src/presentation/features/cart/cart.slice';
 import MasonryList from '@react-native-seoul/masonry-list';
 import { ProductRespondSimplizeDto } from 'src/presentation/dto/res/product-respond.dto';
+import { BlogRespondDto } from 'src/presentation/dto/res/blog-respond.dto';
 import { useNavigation } from '@react-navigation/native';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -59,10 +60,32 @@ const ProductSimpleCard = ({ product, onAddToCart }: { product: ProductRespondSi
 
 
 
-const ARTICLES = [
-  { id: 1, title: 'Cách chăm sóc mèo con', image: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80', desc: 'Hướng dẫn chi tiết cho người mới nuôi mèo.' },
-  { id: 2, title: 'Chó bị rụng lông phải làm sao?', image: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=400&q=80', desc: 'Nguyên nhân và cách xử lý khi chó rụng lông.' },
-];
+// Component hiển thị bài viết
+const BlogCard = ({ blog, onPress }: { blog: BlogRespondDto, onPress: () => void }) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <TouchableOpacity style={styles.blogCard} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.blogContent}>
+        <Text style={styles.blogTitle} numberOfLines={2}>{blog.title}</Text>
+        <Text style={styles.blogSummary} numberOfLines={2}>{blog.summary}</Text>
+        <View style={styles.blogMeta}>
+          <Text style={styles.blogAuthor}>{blog.author}</Text>
+          <Text style={styles.blogDate}>{formatDate(blog.createdAt)}</Text>
+        </View>
+      </View>
+      <View style={styles.blogIcon}>
+        <Icon name="article" size={24} color={colors.app.primary.main} />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 
 
@@ -115,7 +138,7 @@ const HEADER_HEIGHT = 56;
 
 const ExploreScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { categories, fetchCategoriesStatus, products, fetchProductsStatus, fetchProductsError, productsPagination, banners, fetchBannersStatus, ratings, fetchRatingsStatus, hotVouchers, fetchHotVouchersStatus } = useSelector((state: RootState) => state.explore);
+  const { categories, fetchCategoriesStatus, products, fetchProductsStatus, fetchProductsError, productsPagination, banners, fetchBannersStatus, ratings, fetchRatingsStatus, hotVouchers, fetchHotVouchersStatus, blogs, fetchBlogsStatus } = useSelector((state: RootState) => state.explore);
   const navigation = useMainNavigation();
   const [showAllFAQs, setShowAllFAQs] = useState(false);
 
@@ -162,6 +185,7 @@ const ExploreScreen = () => {
     dispatch(fetchBanners());
     dispatch(fetchSpecialRatings());
     dispatch(fetchHotVouchers());
+    dispatch(fetchPublishedBlogs());
   }, [dispatch]);
 
   // Load more sản phẩm khi kéo hết
@@ -295,23 +319,26 @@ const ExploreScreen = () => {
         )}
 
         {/* Bài viết cho thú cưng */}
-        <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>Bài viết cho thú cưng</Text>
-        </View>
-        <FlatList
-          data={ARTICLES}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={{ paddingHorizontal: 16, marginBottom: 8 }}
-          renderItem={({ item }) => (
-            <View style={styles.articleCard}>
-              <Image source={{ uri: item.image }} style={styles.articleImg} />
-              <Text style={styles.articleTitle}>{item.title}</Text>
-              <Text style={styles.articleDesc}>{item.desc}</Text>
+        {blogs.length > 0 && (
+          <>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Bài viết cho thú cưng</Text>
             </View>
-          )}
-        />
+            <FlatList
+              data={blogs}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={item => item._id}
+              contentContainerStyle={{ paddingHorizontal: 16, marginBottom: 8 }}
+              renderItem={({ item }) => (
+                <BlogCard
+                  blog={item}
+                  onPress={() => navigation.navigate('NewsScreen', { blog: item })}
+                />
+              )}
+            />
+          </>
+        )}
 
         {/* Đánh giá nổi bật */}
         {ratings.length > 0 && (
@@ -754,5 +781,61 @@ const styles = StyleSheet.create({
   },
   bannerIndicatorActive: {
     backgroundColor: colors.white,
+  },
+  // Blog card styles
+  blogCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 16,
+    width: 280,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  blogContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  blogTitle: {
+    fontSize: 16,
+    color: colors.text.primary,
+    fontWeight: '700',
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  blogSummary: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    fontWeight: '400',
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  blogMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  blogAuthor: {
+    fontSize: 12,
+    color: colors.app.primary.main,
+    fontWeight: '500',
+  },
+  blogDate: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    fontWeight: '400',
+  },
+  blogIcon: {
+    width: 48,
+    height: 48,
+    backgroundColor: colors.app.primary.lightest,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

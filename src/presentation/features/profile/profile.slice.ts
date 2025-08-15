@@ -55,6 +55,8 @@ export const updateProfile = createAsyncThunk<
   { rejectValue: string }
 >('user/updateProfile', async (payload, { rejectWithValue }) => {
   try {
+    console.log(payload);
+    
     const res = await axiosInstance.post('/users/update-info', payload);
 
     return res.data.data;

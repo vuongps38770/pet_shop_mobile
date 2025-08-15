@@ -177,6 +177,7 @@ const HomeScreen = () => {
         />
         <TextInput
           focusable={false}
+          // editable={false}
           placeholder="Tìm kiếm sản phẩm..."
           style={styles.searchInput}
           // value={searchParam}

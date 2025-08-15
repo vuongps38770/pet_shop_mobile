@@ -6,6 +6,7 @@ import { ProductPaginationRespondDto } from "src/presentation/dto/res/pagination
 import { ProductRespondSimplizeDto } from "src/presentation/dto/res/product-respond.dto";
 import { RatingRespondDto } from "src/presentation/dto/res/rating-respond.dto";
 import { VoucherRespondDto } from "src/presentation/dto/res/voucher-respond";
+import { BlogRespondDto, BlogPaginationRespondDto } from "src/presentation/dto/res/blog-respond.dto";
 
 export const fetchCategorySuggest = createAsyncThunk<CategoryRespondDto[]>(
   'explore/fetchCategorySuggest',
@@ -75,6 +76,19 @@ export const fetchPages = createAsyncThunk<
     }
 });
 
+export const fetchPublishedBlogs = createAsyncThunk<BlogPaginationRespondDto<BlogRespondDto>>(
+  'explore/fetchPublishedBlogs',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get('/blogs/status/published', {
+      });
+      return res.data.data as BlogPaginationRespondDto<BlogRespondDto>;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || 'Lỗi khi lấy bài viết');
+    }
+  }
+);
+
 const exploreSlice = createSlice({
   name: 'explore',
   initialState: {
@@ -94,6 +108,9 @@ const exploreSlice = createSlice({
     fetchProductsStatus: 'idle',
     fetchProductsError: null as string | null,
     productsPagination: null as ProductPaginationRespondDto<ProductRespondSimplizeDto> | null,
+    blogs: [] as BlogRespondDto[],
+    fetchBlogsStatus: 'idle',
+    fetchBlogsError: null as string | null,
   },
   reducers: {
     resetExploreState: (state) => {
@@ -113,6 +130,9 @@ const exploreSlice = createSlice({
       state.fetchProductsStatus = 'idle';
       state.fetchProductsError = null;
       state.productsPagination = null;
+      state.blogs = [];
+      state.fetchBlogsStatus = 'idle';
+      state.fetchBlogsError = null;
     },
   },
   extraReducers: (builder) => {
@@ -181,6 +201,18 @@ const exploreSlice = createSlice({
       .addCase(fetchPages.rejected, (state, action) => {
         state.fetchProductsStatus = 'error';
         state.fetchProductsError = action.payload as string || 'Lỗi không xác định';
+      })
+      .addCase(fetchPublishedBlogs.pending, (state) => {
+        state.fetchBlogsStatus = 'pending';
+        state.fetchBlogsError = null;
+      })
+      .addCase(fetchPublishedBlogs.fulfilled, (state, action) => {
+        state.fetchBlogsStatus = 'success';
+        state.blogs = action.payload.blogs;
+      })
+      .addCase(fetchPublishedBlogs.rejected, (state, action) => {
+        state.fetchBlogsStatus = 'error';
+        state.fetchBlogsError = action.payload as string || 'Lỗi không xác định';
       });
   },
 });

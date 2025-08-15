@@ -31,6 +31,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useDeeplink } from 'shared/hooks/useDeeplink';
 import { useGoogleDeeplink } from '../hooks/useGoogleDeeplink';
 import { useGoogleSignInLauncher } from '../hooks/useGoogleSignInLauncher';
+import AppModal from 'shared/components/modals/AppModal';
 
 
 
@@ -41,15 +42,17 @@ const LoginScreen = () => {
   const loginStatus = useSelector((state: RootState) => state.auth.loginStatus)
   useEffect(() => {
     if (loginStatus == 'failed') {
-      Alert.alert("Đăng nhập thất bại");
+      setTitle("Đăng nhập thất bại")
+      setContent("Vui lòng kiểm tra lại số điện thoại và mật khẩu")
+      setIsModalVisible(true)
     }
   }, [loginStatus])
-  useGoogleDeeplink(); // ✅ tự động xử lý deeplink
+  useGoogleDeeplink();
 
   const { launchGoogleSignIn } = useGoogleSignInLauncher();
-
-
-
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [content, setContent] = useState("")
+  const [title, setTitle] = useState("")
   const {
     values,
     errors,
@@ -92,7 +95,18 @@ const LoginScreen = () => {
     <View style={{ position: 'relative', flex: 1, backgroundColor: colors.background.default }}>
       {/** decoảtion view */}
       <Decor />
-
+      <AppModal
+        visible={isModalVisible}
+        content={content}
+        title={title}
+        onPositivePress={() => { setIsModalVisible(!isModalVisible) }}
+        onClose={() => {
+          setIsModalVisible(!isModalVisible)
+          setTitle("")
+          setContent("")
+        }}
+        hideNegativeButton={true}
+      />
       <View style={styles.container}>
 
         <View style={{ marginBottom: SPACING.XXL * 3 }} />

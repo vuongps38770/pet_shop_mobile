@@ -25,24 +25,31 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { setTempOtp, signUp } from '../auth.slice'
 import Decor from "../components/DecorView";
 import { spacing } from "shared/theme/spacing";
+import AppModal from "shared/components/modals/AppModal";
 const VerifyScreen = () => {
   const navigation = useAuthNavigation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const userFormData = useSelector((state: RootState) => state.auth.signUpData)
   const dispatch = useDispatch<AppDispatch>()
   const status = useSelector((state: RootState) => state.auth.checkPhoneStatus)
-  const signUpData = useSelector((state: RootState) => state.auth.signUpData)
+  const maskPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    return phone.replace(/\d(?=\d{2})/g, '*');
+  }
 
+
+  const [isModalVisible, setIsModalVisible] = useState(false)
+  const [content, setContent] = useState("")
+  const [title, setTitle] = useState("")
   useEffect(() => {
-    console.log(signUpData);
 
     if (status == 'not_match') {
-      Alert.alert("sai ma otp")
+      Alert.alert("MÃ otp không hợp lệ!")
     }
     else if (status == 'succsess') {
       Alert.alert(
-        "Registration Successful",
-        "You can now",
+        "Đăng ký thành công!",
+        "Bạn đã có thể đăng nhập",
         [
           {
             text: "OK",
@@ -52,10 +59,10 @@ const VerifyScreen = () => {
       );
     }
     else if (status == 'failed') {
-      Alert.alert("co loi ay ra vui long lam lai")
+      Alert.alert("Có lỗi xảy ra!")
     }
     else if (status == 'expired') {
-      Alert.alert("Ma het han")
+      Alert.alert("Mã hết hạn")
     }
   }, [status])
   const {
@@ -74,15 +81,15 @@ const VerifyScreen = () => {
       try {
         setIsSubmitting(true);
         dispatch(setTempOtp(values.otp))
-        dispatch(signUp(userFormData))
+        dispatch(signUp({ ...userFormData, otpCode: values.otp }))
         //todo 
 
 
       } catch (error: any) {
-        Alert.alert(
-          "Error",
-          error.response?.data?.message || "Invalid OTP. Please try again."
-        );
+        // Alert.alert(
+        //   "Error",
+        //   error.response?.data?.message || "Invalid OTP. Please try again."
+        // );
       } finally {
         setIsSubmitting(false);
       }
@@ -95,6 +102,18 @@ const VerifyScreen = () => {
       <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
         <Decor />
       </View>
+      <AppModal
+        visible={isModalVisible}
+        content={content}
+        title={title}
+        onPositivePress={() => { setIsModalVisible(!isModalVisible) }}
+        onClose={() => {
+          setIsModalVisible(!isModalVisible)
+          setTitle("")
+          setContent("")
+        }}
+        hideNegativeButton={true}
+      />
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.container}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -105,19 +124,19 @@ const VerifyScreen = () => {
 
           <View style={{ height: spacing["5xl"] }} />
 
-          <Text style={styles.header}>Verify OTP</Text>
+          <Text style={styles.header}>Xác thực OTP</Text>
           <Text style={styles.description}>
-            Please enter the OTP sent to your phone number
+            Vui lòng nhập mã OTP để tiếp tục, chúng tôi đã gửi mã đến {maskPhoneNumber(userFormData.phone)}
           </Text>
 
           <FormInput
-            label="Enter OTP"
+            label="OTP"
             value={values.otp}
             onChangeText={(text: string) => handleChange("otp")(text)}
             onBlur={() => handleBlur("otp")}
             error={touched.otp ? errors.otp : undefined}
             keyboardType="numeric"
-            placeholder="Enter 6-digit OTP"
+            placeholder="Nhập mã OTP"
             maxLength={6}
           />
 
@@ -127,7 +146,7 @@ const VerifyScreen = () => {
             disabled={isSubmitting}
           >
             <Text style={styles.verifyText}>
-              {isSubmitting ? "Verifying..." : "Verify OTP"}
+              {isSubmitting ? "Đang xác thực..." : "Xác thực OTP"}
             </Text>
           </TouchableOpacity>
 
@@ -136,16 +155,16 @@ const VerifyScreen = () => {
             onPress={async () => {
               try {
                 // await authApi.forgotPassword({ phone: route.params.phone });
-                Alert.alert("Success", "OTP has been resent to your phone number");
+                Alert.alert("Thành công", "OTP has been resent to your phone number");
               } catch (error: any) {
                 Alert.alert(
-                  "Error",
-                  error.response?.data?.message || "Failed to resend OTP. Please try again."
+                  "Lỗi",
+                  error.response?.data?.message || "Không thể gửi mã Otp!."
                 );
               }
             }}
           >
-            <Text style={styles.resendText}>Resend OTP</Text>
+            {/* <Text style={styles.resendText}>Resend OTP</Text> */}
           </TouchableOpacity>
         </View>
       </SafeAreaView>

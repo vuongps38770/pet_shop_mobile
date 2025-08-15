@@ -51,7 +51,7 @@ const AllAddressItem = ({ address, onEdit, onDelete, onSetDefault }: AllAddressI
                     ):(<View style={{flex:1}}/>)}
 
                     <View style={styles.rightActions}>
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             style={[styles.actionButton, styles.editButton]}
                             onPress={() => onEdit?.(address)}
                         >
@@ -59,7 +59,7 @@ const AllAddressItem = ({ address, onEdit, onDelete, onSetDefault }: AllAddressI
                             <Text style={[styles.actionText, { color: colors.text.secondary }]}>
                                 Sửa
                             </Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
                         <TouchableOpacity
                             style={[styles.actionButton, styles.deleteButton]}
