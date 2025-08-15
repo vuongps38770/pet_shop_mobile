@@ -19,7 +19,6 @@ import { assets } from 'shared/theme/assets';
 import { BORDER_RADIUS } from 'shared/theme/layout';
 import { sizes } from 'shared/theme/sizes';
 
-
 import { FilterOptions } from '../../../dto/req/filter-option.req.dto';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -29,11 +28,12 @@ import { RouteProp, useRoute } from '@react-navigation/native';
 import { MainStackParamList } from 'src/presentation/navigation/main-navigation/types';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
-import { fetchPages, addToPages } from '../product.slice'
+import { fetchPages, addToPages } from '../product.slice';
 import { ProductRespondSimplizeDto } from 'src/presentation/dto/res/product-respond.dto';
 import ProductCard from 'shared/components/flat-list-items/ProductCard';
-import FilterIcon from 'assets/icons/filter.svg'
-
+import FilterIcon from 'assets/icons/filter.svg';
+import { CategoryPicker, SupplierPicker } from '../components';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const filterSections = [
     { key: 'category', label: 'Danh mục' },
@@ -42,37 +42,40 @@ const filterSections = [
 ];
 
 export const ProductShow = () => {
-    const navigation = useMainNavigation()
+    const navigation = useMainNavigation();
+    const route = useRoute<RouteProp<MainStackParamList, 'ProductShow'>>();
 
-
-    const route = useRoute<RouteProp<MainStackParamList, 'ProductShow'>>()
-
-
-    const [filter, setFilter] = useState<FilterOptions>({ ...route.params.filter, limit: 10 })
-    const [searchParam, setSearchParam] = useState("")
+    const [filter, setFilter] = useState<FilterOptions>({ ...route.params.filter, limit: 10 });
+    const [searchParam, setSearchParam] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
     const [selectedSort, setSelectedSort] = useState('Mới nhất');
-    const [title, setTitle] = useState("")
+    const [title, setTitle] = useState("");
     const sortOptions = [
         'Mới nhất',
         'Cũ nhất',
         'Giá tăng dần',
         'Giá giảm dần',
         'Đánh giá cao nhất',
-        'Huỷ lọc'
-
+        'Huỷ lọc',
     ];
 
-    const pages = useSelector((state: RootState) => state.product.pages)
-
-
+    const pages = useSelector((state: RootState) => state.product.pages);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const dispatch = useDispatch<AppDispatch>()
+    const dispatch = useDispatch<AppDispatch>();
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [selectedSection, setSelectedSection] = useState('category');
-    const [minPrice, setMinPrice] = useState('');
-    const [maxPrice, setMaxPrice] = useState('');
+    const [isCategoryPickerVisible, setIsCategoryPickerVisible] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(filter.categoryId);
+    const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
+    const [isSupplierPickerVisible, setIsSupplierPickerVisible] = useState(false);
+    const [selectedSupplierId, setSelectedSupplierId] = useState<string | undefined>(filter.supplierId);
+    const [selectedSupplierName, setSelectedSupplierName] = useState<string>('');
+    const [filterKey, setFilterKey] = useState(0); // Force re-render when filter changes
+    
+    // Khởi tạo giá trị price từ filter hiện tại
+    const [minPrice, setMinPrice] = useState(filter.minPrice ? filter.minPrice.toString() : '');
+    const [maxPrice, setMaxPrice] = useState(filter.maxPrice ? filter.maxPrice.toString() : '');
     const sectionRefs = useRef<Record<string, any>>({});
     const scrollViewRef = useRef<ScrollView | null>(null);
     filterSections.forEach(s => { if (!sectionRefs.current[s.key]) sectionRefs.current[s.key] = React.createRef<View>(); });
@@ -92,8 +95,8 @@ export const ProductShow = () => {
 
     useEffect(() => {
         const getData = async () => {
-            dispatch(fetchPages(filter))
-
+            console.log('Filter changed, fetching data with:', filter);
+            dispatch(fetchPages(filter));
             setIsLoadingMore(false);
             let title = "";
 
@@ -109,10 +112,9 @@ export const ProductShow = () => {
 
             setTitle(title);
         };
-        console.log(filter);
-
         getData();
     }, [filter]);
+
     const handleApplyFilter = () => {
         const newFilter = {
             ...filter,
@@ -123,6 +125,13 @@ export const ProductShow = () => {
         setFilter(newFilter);
         setIsFilterOpen(false);
     };
+
+
+    // Log khi pages thay đổi
+    useEffect(() => {
+        console.log('Pages updated:', pages);
+    }, [pages]);
+  
     const handleLoadMore = () => {
         if (pages && pages.hasNextPage && !isLoadingMore) {
             setIsLoadingMore(true);
@@ -138,12 +147,10 @@ export const ProductShow = () => {
             <ProductCard
                 item={item}
                 onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
-
             />
         );
     };
 
-    // Scroll tới section khi ấn bên trái
     const handleSectionPress = (key: string) => {
         setSelectedSection(key);
         if (sectionRefs.current[key]?.current && scrollViewRef.current) {
@@ -156,7 +163,6 @@ export const ProductShow = () => {
         }
     };
 
-    // Highlight mục bên trái khi scroll bên phải
     const handleFilterScroll = (event: any) => {
         const scrollY = event.nativeEvent.contentOffset.y;
         let found = 'category';
@@ -173,9 +179,83 @@ export const ProductShow = () => {
         }
         setSelectedSection(found);
     };
+
+
+    const handleCategorySelect = (categoryId: string, categoryName: string) => {
+        setSelectedCategoryId(categoryId);
+        setSelectedCategoryName(categoryName);
+        // Không áp dụng filter ngay, chỉ lưu selection
+    };
+
+    const handleCategoryPickerOpen = () => {
+        setIsCategoryPickerVisible(true);
+    };
+
+    const handleSupplierSelect = (supplierId: string, supplierName: string) => {
+        setSelectedSupplierId(supplierId);
+        setSelectedSupplierName(supplierName);
+        // Không áp dụng filter ngay, chỉ lưu selection
+    };
+
+    const handleSupplierPickerOpen = () => {
+        setIsSupplierPickerVisible(true);
+    };
+
+    // Lấy tên category và supplier từ ID để hiển thị
+    const categoryList = useSelector((state: RootState) => state.product.categories);
+    const supplierList = useSelector((state: RootState) => state.product.suppliers);
+
+    const getCategoryNameById = (categoryId: string) => {
+        const findCategory = (categories: any[], id: string): string => {
+            for (const category of categories) {
+                if (category._id === id) return category.name;
+                if (category.children) {
+                    const found = findCategory(category.children, id);
+                    if (found) return found;
+                }
+            }
+            return '';
+        };
+        return findCategory(categoryList, categoryId);
+    };
+
+    const getSupplierNameById = (supplierId: string) => {
+        const supplier = supplierList.find(s => s._id === supplierId);
+        return supplier ? supplier.name : '';
+    };
+
+    // Cập nhật tên category và supplier khi filter thay đổi
+    useEffect(() => {
+        if (filter.categoryId && !selectedCategoryName && categoryList.length > 0) {
+            setSelectedCategoryName(getCategoryNameById(filter.categoryId));
+        }
+        if (filter.supplierId && !selectedSupplierName && supplierList.length > 0) {
+            setSelectedSupplierName(getSupplierNameById(filter.supplierId));
+        }
+    }, [filter.categoryId, filter.supplierId]);
+
+    // Cập nhật tên khi categoryList hoặc supplierList thay đổi
+    useEffect(() => {
+        if (filter.categoryId && categoryList.length > 0) {
+            const categoryName = getCategoryNameById(filter.categoryId);
+            if (categoryName && categoryName !== selectedCategoryName) {
+                setSelectedCategoryName(categoryName);
+            }
+        }
+        if (filter.supplierId && supplierList.length > 0) {
+            const supplierName = getSupplierNameById(filter.supplierId);
+            if (supplierName && supplierName !== selectedSupplierName) {
+                setSelectedSupplierName(supplierName);
+            }
+        }
+    }, [categoryList, supplierList]);
+
+    // Tính toán tên hiển thị
+    const displayCategoryName = selectedCategoryName || (filter.categoryId ? getCategoryNameById(filter.categoryId) : '') || 'Chọn danh mục...';
+    const displaySupplierName = selectedSupplierName || (filter.supplierId ? getSupplierNameById(filter.supplierId) : '') || 'Chọn thương hiệu...';
+
     return (
         <View style={styles.container}>
-            {/* Thanh tìm kiếm sticky trên đầu */}
             <View style={styles.stickySearchBarWrapper}>
                 <View style={styles.searchBarRow}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBack}>
@@ -196,15 +276,14 @@ export const ProductShow = () => {
                                 }
                             }}
                         />
-                        <TouchableOpacity style={styles.iconCamera}>
-                            {/* <Icon name="camera-outline" size={22} color={colors.app.primary.main} /> */}
-                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.iconCamera}></TouchableOpacity>
                     </View>
                     <TouchableOpacity style={styles.filterBtn} onPress={() => setIsFilterOpen(v => !v)}>
                         <FilterIcon width={22} height={22} />
                         <Text style={styles.filterTextCustom}>Lọc</Text>
                     </TouchableOpacity>
                 </View>
+
                 {isFilterOpen && (
                     <Animated.View
                         style={[
@@ -255,12 +334,28 @@ export const ProductShow = () => {
                             >
                                 <View ref={sectionRefs.current['category']} style={styles.filterSection}>
                                     <Text style={styles.filterSectionTitle}>Danh mục</Text>
-                                    <Text>Chọn danh mục...</Text>
+                                    <TouchableOpacity 
+                                        style={styles.categorySelector}
+                                        onPress={handleCategoryPickerOpen}
+                                    >
+                                        <Text style={styles.categorySelectorText}>
+                                            {displayCategoryName}
+                                        </Text>
+                                        <Icon name="chevron-forward" size={16} color={colors.grey[500]} />
+                                    </TouchableOpacity>
                                 </View>
 
                                 <View ref={sectionRefs.current['brand']} style={styles.filterSection}>
                                     <Text style={styles.filterSectionTitle}>Thương hiệu</Text>
-                                    <Text>Chọn thương hiệu...</Text>
+                                    <TouchableOpacity 
+                                        style={styles.categorySelector}
+                                        onPress={handleSupplierPickerOpen}
+                                    >
+                                        <Text style={styles.categorySelectorText}>
+                                            {displaySupplierName}
+                                        </Text>
+                                        <Icon name="chevron-forward" size={16} color={colors.grey[500]} />
+                                    </TouchableOpacity>
                                 </View>
 
                                 <View ref={sectionRefs.current['price']} style={styles.filterSection}>
@@ -283,7 +378,6 @@ export const ProductShow = () => {
                                         />
                                     </View>
                                 </View>
-
                                 <View style={{ height: 100 }} />
                             </ScrollView>
                         </View>
@@ -294,16 +388,72 @@ export const ProductShow = () => {
                                 onPress={() => {
                                     setMinPrice('');
                                     setMaxPrice('');
+                                    setSelectedCategoryId(undefined);
+                                    setSelectedCategoryName('');
+                                    setSelectedSupplierId(undefined);
+                                    setSelectedSupplierName('');
+                                    // Reset filter về trạng thái ban đầu
+                                    setFilter(prev => ({ 
+                                        ...prev, 
+                                        categoryId: undefined,
+                                        supplierId: undefined,
+                                        minPrice: undefined,
+                                        maxPrice: undefined
+                                    }));
                                 }}
                             >
                                 <Text style={styles.resetBtnText}>Thiết lập lại</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.applyBtn} onPress={() => setIsFilterOpen(false)}>
+                            <TouchableOpacity 
+                                style={styles.applyBtn} 
+                                onPress={() => {
+                                    // Áp dụng filter với tất cả các điều kiện đã chọn
+                                    const newFilter = { ...filter };
+                                    
+                                    // Áp dụng category
+                                    if (selectedCategoryId) {
+                                        newFilter.categoryId = selectedCategoryId;
+                                    } else {
+                                        newFilter.categoryId = undefined;
+                                    }
+                                    
+                                    // Áp dụng supplier
+                                    if (selectedSupplierId) {
+                                        newFilter.supplierId = selectedSupplierId;
+                                    } else {
+                                        newFilter.supplierId = undefined;
+                                    }
+                                    
+                                    // Áp dụng price range
+                                    if (minPrice && maxPrice) {
+                                        newFilter.minPrice = parseInt(minPrice);
+                                        newFilter.maxPrice = parseInt(maxPrice);
+                                    } else if (minPrice) {
+                                        newFilter.minPrice = parseInt(minPrice);
+                                        newFilter.maxPrice = undefined;
+                                    } else if (maxPrice) {
+                                        newFilter.minPrice = undefined;
+                                        newFilter.maxPrice = parseInt(maxPrice);
+                                    } else {
+                                        newFilter.minPrice = undefined;
+                                        newFilter.maxPrice = undefined;
+                                    }
+                                    
+                                    console.log('Applying filter:', newFilter);
+                                    console.log('Selected category:', selectedCategoryId);
+                                    console.log('Selected supplier:', selectedSupplierId);
+                                    console.log('Price range:', minPrice, '-', maxPrice);
+                                    
+                                    setFilter({ ...newFilter });
+                                    setIsFilterOpen(false);
+                                }}
+                            >
                                 <Text style={styles.applyBtnText}>Áp dụng</Text>
                             </TouchableOpacity>
                         </View>
                     </Animated.View>
                 )}
+
             </View>
             {/* {filterStatus === 'loading' && !isLoadingMore
                 ?
@@ -330,11 +480,60 @@ export const ProductShow = () => {
                 />
             {/* } */}
 
+                {isFilterOpen && (
+                    <TouchableOpacity
+                        style={styles.overlayBlockInteraction}
+                        activeOpacity={1}
+                        onPress={() => setIsFilterOpen(false)}
+                    />
+                )}
+            </View>
+
+            <FlatList<ProductRespondSimplizeDto>
+                data={pages?.data}
+                numColumns={2}
+                keyExtractor={(item, index) => item._id + index}
+                renderItem={renderItem}
+                contentContainerStyle={[styles.list, { paddingTop: 120 }]}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.2}
+                ListFooterComponent={
+                    isLoadingMore ? (
+                        <Text style={styles.loadingText}>Đang tải thêm...</Text>
+                    ) : pages && !pages.hasNextPage ? (
+                        <Text style={styles.loadingText}>Đã tải hết!</Text>
+                    ) : null
+                }
+            />
+            
+            <CategoryPicker
+                visible={isCategoryPickerVisible}
+                onClose={() => setIsCategoryPickerVisible(false)}
+                onSelectCategory={handleCategorySelect}
+                selectedCategoryId={selectedCategoryId}
+            />
+            
+            <SupplierPicker
+                visible={isSupplierPickerVisible}
+                onClose={() => setIsSupplierPickerVisible(false)}
+                onSelectSupplier={handleSupplierSelect}
+                selectedSupplierId={selectedSupplierId}
+            />
         </View>
     );
 };
 
+
 const styles = StyleSheet.create({
+    overlayBlockInteraction: {
+        position: 'absolute',
+        top: 105,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        zIndex: 9,
+    },
     container: {
         flex: 1,
         backgroundColor: colors.background.default,
@@ -733,5 +932,20 @@ const styles = StyleSheet.create({
         width: '100%',
         zIndex: 20,
         elevation: 10,
+    },
+    categorySelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: colors.grey[100],
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        borderRadius: 8,
+        marginTop: 8,
+    },
+    categorySelectorText: {
+        fontSize: 16,
+        color: colors.text.primary,
+        flex: 1,
     },
 });
