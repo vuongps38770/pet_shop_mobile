@@ -6,11 +6,12 @@ import { verifyOtpAddEmail } from '../profile.slice';
 import { colors } from 'src/presentation/shared/theme/colors';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { MainStackParamList } from 'src/presentation/navigation/main-navigation/types';
+import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 
 
 const VerifyOtpAddEmailScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  type RouteProps = RouteProp<MainStackParamList,'VerifyOtpAddEmailScreen'>
+  type RouteProps = RouteProp<MainStackParamList, 'VerifyOtpAddEmailScreen'>
   const route = useRoute<RouteProps>();
   const email = route.params.email
   const [otp, setOtp] = useState('');
@@ -18,7 +19,7 @@ const VerifyOtpAddEmailScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [countdown, setCountdown] = useState(60);
-
+  const navigation = useMainNavigation()
   useEffect(() => {
     setCountdown(60);
     setOtp('');
@@ -68,13 +69,23 @@ const VerifyOtpAddEmailScreen = () => {
       <Text style={styles.countdown}>Mã OTP sẽ hết hạn sau: <Text style={{ color: 'red' }}>{countdown}s</Text></Text>
       {error && <Text style={styles.error}>{error}</Text>}
       {success && <Text style={styles.success}>Xác thực thành công!</Text>}
-      <TouchableOpacity
+      {success ?
+        <TouchableOpacity
+          style={[styles.button, loading && { backgroundColor: '#ccc' }]}
+          onPress={() => {navigation.pop(2)}}
+          disabled={loading || !otp.trim()}
+        >
+          <Text style={styles.buttonText}>Quay lại</Text>
+        </TouchableOpacity>
+        :
+        <TouchableOpacity
         style={[styles.button, loading && { backgroundColor: '#ccc' }]}
         onPress={handleVerify}
         disabled={loading || !otp.trim()}
       >
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Xác thực</Text>}
-      </TouchableOpacity>
+      </TouchableOpacity>  
+    }
     </View>
   );
 };

@@ -18,14 +18,15 @@ type Props = {
   isFavorite: boolean;
   onPress: () => void;
   size?: number;
+  unFavoriteIconColor?:string
 };
 
-export const HeartAnimatedIcon = ({ isFavorite, onPress,size= siz_icon}: Props) => {
+export const HeartAnimatedIcon = ({ isFavorite, onPress,size= siz_icon,unFavoriteIconColor=colors.white}: Props) => {
   const scale = useSharedValue(1);
-  const [iconColor, setIconColor] = useState(isFavorite ? colors.red.main : colors.white);
+  const [iconColor, setIconColor] = useState(isFavorite ? colors.red.main : unFavoriteIconColor);
 
   useEffect(() => {
-    setIconColor(isFavorite ? colors.red.main : colors.white);
+    setIconColor(isFavorite ? colors.red.main : unFavoriteIconColor);
   }, [isFavorite]);
 
   const animatedStyle = useAnimatedStyle(() => {

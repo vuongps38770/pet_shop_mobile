@@ -11,6 +11,7 @@ import {
     ScrollView,
     Animated,
     Easing,
+    ActivityIndicator,
 } from 'react-native';
 import { colors } from 'shared/theme/colors';
 import { Typography } from 'shared/components/Typography';
@@ -78,9 +79,10 @@ export const ProductShow = () => {
     const sectionRefs = useRef<Record<string, any>>({});
     const scrollViewRef = useRef<ScrollView | null>(null);
     filterSections.forEach(s => { if (!sectionRefs.current[s.key]) sectionRefs.current[s.key] = React.createRef<View>(); });
-
-    const filterAnim = useRef(new Animated.Value(0)).current;
-    const FILTER_PANEL_HEIGHT = 380;
+    const filterStatus = useSelector((state: RootState) => state.product.filterStatus)
+    // Animation cho filter panel
+    const filterAnim = useRef(new Animated.Value(0)).current; // 0: đóng, 1: mở
+    const FILTER_PANEL_HEIGHT = 380; // chiều cao panel filter
 
     useEffect(() => {
         Animated.timing(filterAnim, {
@@ -113,11 +115,23 @@ export const ProductShow = () => {
         getData();
     }, [filter]);
 
+    const handleApplyFilter = () => {
+        const newFilter = {
+            ...filter,
+            page: 1, // Reset page to 1 when filters are applied
+            minPrice: minPrice ? Number(minPrice) : undefined,
+            maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        };
+        setFilter(newFilter);
+        setIsFilterOpen(false);
+    };
+
+
     // Log khi pages thay đổi
     useEffect(() => {
         console.log('Pages updated:', pages);
     }, [pages]);
-
+  
     const handleLoadMore = () => {
         if (pages && pages.hasNextPage && !isLoadingMore) {
             setIsLoadingMore(true);
@@ -165,6 +179,7 @@ export const ProductShow = () => {
         }
         setSelectedSection(found);
     };
+
 
     const handleCategorySelect = (categoryId: string, categoryName: string) => {
         setSelectedCategoryId(categoryId);
@@ -255,7 +270,9 @@ export const ProductShow = () => {
                             returnKeyType='search'
                             onSubmitEditing={() => {
                                 if (searchParam.trim() !== "") {
-                                    setFilter((prev) => ({ ...prev, search: searchParam.trim() }));
+                                    setFilter((prev) => ({ ...prev, search: searchParam.trim(), page: 1 }));
+                                }else{
+                                    setFilter((prev) => ({ ...prev, search: undefined, page: 1 }));
                                 }
                             }}
                         />
@@ -437,6 +454,32 @@ export const ProductShow = () => {
                     </Animated.View>
                 )}
 
+            </View>
+            {/* {filterStatus === 'loading' && !isLoadingMore
+                ?
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.app.primary.main} />
+                    <Text style={{ marginTop: 10 }}>Đang tải sản phẩm...</Text>
+                </View>
+                : */}
+                <FlatList<ProductRespondSimplizeDto>
+                    data={pages?.data}
+                    numColumns={2}
+                    keyExtractor={(item: ProductRespondSimplizeDto, index) => item._id + index}
+                    renderItem={renderItem}
+                    contentContainerStyle={[styles.list, { paddingTop: 120 }]}
+                    onEndReached={handleLoadMore}
+                    onEndReachedThreshold={0.2}
+                    ListFooterComponent={
+                        isLoadingMore ? (
+                            <Text style={styles.loadingText}>Đang tải thêm...</Text>
+                        ) : pages && !pages.hasNextPage ? (
+                            <Text style={styles.loadingText}>Đã tải hết!</Text>
+                        ) : null
+                    }
+                />
+            {/* } */}
+
                 {isFilterOpen && (
                     <TouchableOpacity
                         style={styles.overlayBlockInteraction}
@@ -495,6 +538,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background.default,
         paddingHorizontal: 10,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 200,
     },
     header: {
         flexDirection: 'row',

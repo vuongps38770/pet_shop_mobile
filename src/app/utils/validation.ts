@@ -31,9 +31,9 @@ export const registerSchema = Yup.object().shape({
   name: Yup.string()
     .required('Tên là bắt buộc')
     .min(2, 'Tên phải có ít nhất 2 ký tự'),
-  email: Yup.string()
-    .required('Email là bắt buộc')
-    .email('Định dạng email không hợp lệ'),
+  // email: Yup.string()
+  //   .required('Email là bắt buộc')
+  //   .email('Định dạng email không hợp lệ'),
   phone: Yup.string()
     .required('Số điện thoại là bắt buộc')
     .matches(/^[0-9]{10}$/, 'Số điện thoại phải có 10 chữ số'),

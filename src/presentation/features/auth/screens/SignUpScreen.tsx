@@ -168,7 +168,7 @@ const SignUpScreen = () => {
                 }
               />
 
-              <FormInput
+              {/* <FormInput
                 label="Email"
                 value={values.email}
                 onChangeText={(text: string) => handleChange("email")(text)}
@@ -185,7 +185,7 @@ const SignUpScreen = () => {
                     color={colors.grey[600]}
                   />
                 }
-              />
+              /> */}
 
               <FormInput
                 label="Số điện thoại"

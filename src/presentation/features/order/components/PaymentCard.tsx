@@ -1,4 +1,3 @@
-// components/PaymentMethodCard.tsx
 import React from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { RadioButton } from "react-native-paper";
@@ -36,7 +35,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
         <Image source={icon} style={styles.cardLogo} />
         <View style={styles.cardInfo}>
           <Text style={styles.cardType}>{title}</Text>
-          <Text style={styles.cardNumberWhite}>1501 **** **** 0001</Text>
+          {/* <Text style={styles.cardNumberWhite}>1501 **** **** 0001</Text> */}
         </View>
         <RadioButton
           value={value}

@@ -58,8 +58,9 @@ export const assets = {
       back: require("../../../../assets/icons/back.png"),
     },
     orderScreen: {
-      momo: require("../../../../assets/icons/zalopaylogo.png"),
-      vnpay: require("../../../../assets/icons/zalopaylogo.png"),
+      momo: require("../../../../assets/images/momo.png"),
+      vnpay: require("../../../../assets/images/vnpay.png"),
+      zalopay: require("../../../../assets/images/zalopay.png"),
     },
     voucher: {
       bookmark: require("../../../../assets/icons/bookmark.png"),
