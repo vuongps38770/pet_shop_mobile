@@ -39,6 +39,8 @@ import PickOrderScreen from "src/presentation/features/chat/screens/PickOrderScr
 import BlogScreen from "src/presentation/features/blog/screens/BlogScreen";
 import PostDetailScreen from "src/presentation/features/blog/screens/PostDetailScreen";
 import NewsScreen from "src/presentation/features/home/screens/NewsScreen";
+import CreatePostScreen from "src/presentation/features/blog/screens/CreateBlogScreen";
+import MyblogScreen from "src/presentation/features/blog/screens/MyblogScreen";
 
 const Stack = createNativeStackNavigator<MainStackParamList>()
 
@@ -58,7 +60,7 @@ const MainNavigator = () => {
       <Stack.Navigator screenOptions={{ animation: "fade" }}>
         <Stack.Screen
           name="MainScreen"
-          component={TabNavigator}
+          component={BlogScreen}
           options={{ headerShown: false }}
         />
 
@@ -193,6 +195,12 @@ const MainNavigator = () => {
         <Stack.Screen
           name="NewsScreen"
           component={NewsScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="CreatePostScreen"
+          component={CreatePostScreen}
           options={{ headerShown: false }}
         />
 

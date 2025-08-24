@@ -4,9 +4,11 @@ import { colors } from '../../../shared/theme/colors';
 import { SPACING, BORDER_RADIUS } from '../../../shared/theme/layout';
 import { Fonts } from '../../../shared/theme/fonts';
 import { BlogComment } from '../types/blog.types';
+import { PostCommentResDto } from 'src/presentation/dto/res/post.res.dto';
+import { formatDate } from 'app/utils/time';
 
 interface CommentItemProps {
-  comment: BlogComment;
+  comment: PostCommentResDto;
   onUserPress?: (userId: string) => void;
   onLikePress?: (commentId: string) => void;
   onReplyPress?: (commentId: string) => void;
@@ -22,7 +24,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     <View style={styles.container}>
       <TouchableOpacity 
         style={styles.userInfo} 
-        onPress={() => onUserPress?.(comment.user.id)}
+        onPress={() => onUserPress?.(comment.user._id)}
       >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>👤</Text>
@@ -30,24 +32,24 @@ const CommentItem: React.FC<CommentItemProps> = ({
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
             <Text style={styles.userName}>{comment.user.name}</Text>
-            <Text style={styles.timestamp}>{comment.timestamp}</Text>
+            <Text style={styles.timestamp}>{formatDate(comment.createdAt).toLocaleString()}</Text>
           </View>
           <Text style={styles.commentText}>{comment.content}</Text>
           
           <View style={styles.commentActions}>
             <TouchableOpacity 
               style={styles.actionButton} 
-              onPress={() => onLikePress?.(comment.id)}
+              onPress={() => onLikePress?.(comment._id)}
             >
               <Text style={styles.actionText}>Thích</Text>
-              {comment.likes > 0 && (
-                <Text style={styles.likeCount}> {comment.likes}</Text>
+              {comment.likeList.length > 0 && (
+                <Text style={styles.likeCount}> {comment.likeList.length}</Text>
               )}
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.actionButton} 
-              onPress={() => onReplyPress?.(comment.id)}
+              onPress={() => onReplyPress?.(comment._id)}
             >
               <Text style={styles.actionText}>Trả lời</Text>
             </TouchableOpacity>

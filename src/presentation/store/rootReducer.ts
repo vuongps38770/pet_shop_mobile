@@ -14,6 +14,7 @@ import pickVoucher from '../features/order/pick-voucher.slice';
 import notification from '../features/notification/notification.slice';
 import explore from '../features/home/explore.slice';
 import chat from '../features/chat/slice';
+import blog from '../features/blog/blog.slice';
 import app from './slices';
 
 const appReducer = combineReducers({
@@ -33,6 +34,7 @@ const appReducer = combineReducers({
   notification,
   explore,
   chat,
+  blog
 });
 
 const rootReducer = (state: any, action: any) => {

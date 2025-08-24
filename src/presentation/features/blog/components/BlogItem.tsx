@@ -3,27 +3,35 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'rea
 import { colors } from '../../../shared/theme/colors';
 import { SPACING, BORDER_RADIUS } from '../../../shared/theme/layout';
 import { Fonts } from '../../../shared/theme/fonts';
+import { PostResDto } from 'src/presentation/dto/res/post.res.dto';
+import { HeartAnimatedIcon } from 'shared/components/HeartAnimatedIcon';
+import ImageVideoSlider from 'shared/components/image-video-slider';
+import { formatDate } from 'app/utils/time';
 
 const { width } = Dimensions.get('window');
 
-interface BlogPost {
-  id: string;
-  user: {
-    name: string;
-    avatar?: string;
-  };
-  content?: string;
-  image?: string;
-  likes: number;
-  comments: number;
-  timestamp: string;
-}
+
 
 interface BlogItemProps {
-  post: BlogPost;
+  post: {
+    user: {
+      name: string,
+      avatar:string
+    }
+    createdAt: string,
+    content: string,
+    mediaList?: {
+      url: string,
+      type:string
+    }[],
+    _id: string,
+    totalLikes: number,
+    isLiked:boolean
+  };
   onLikePress?: (postId: string) => void;
   onCommentPress?: (postId: string) => void;
   onSharePress?: (postId: string) => void;
+  isVisible?: boolean;
 }
 
 const BlogItem: React.FC<BlogItemProps> = ({
@@ -31,17 +39,18 @@ const BlogItem: React.FC<BlogItemProps> = ({
   onLikePress,
   onCommentPress,
   onSharePress,
+  isVisible=true
 }) => {
   return (
     <View style={styles.container}>
       {/* User Info */}
       <View style={styles.userInfo}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>👤</Text>
+          <Image source={{uri:post.user.avatar}} style={{width:44, height:44, borderRadius:50}}/>
         </View>
         <View style={styles.userDetails}>
           <Text style={styles.userName}>{post.user.name}</Text>
-          <Text style={styles.timestamp}>{post.timestamp}</Text>
+          <Text style={styles.timestamp}>{formatDate(post.createdAt)}</Text>
         </View>
       </View>
 
@@ -51,41 +60,40 @@ const BlogItem: React.FC<BlogItemProps> = ({
       )}
 
       {/* Image */}
-      {post.image && (
+      {post.mediaList && post.mediaList.length>0 && (
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: post.image }}
-            style={styles.image}
-            resizeMode="cover"
+
+          <ImageVideoSlider
+            height={300}
+            medias={post.mediaList.map((item)=>({
+              type:item.type,
+              urls:item.url
+            }))}
+            autoScroll={false}
+            isVisible={isVisible}
           />
         </View>
       )}
 
       {/* Actions */}
       <View style={styles.actions}>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => onLikePress?.(post.id)}
+        <TouchableOpacity
+          style={styles.actionButton}
+          // onPress={() => onLikePress?.(post._id)}
         >
-          <Text style={styles.actionIcon}>❤️</Text>
-          <Text style={styles.actionText}>{post.likes}</Text>
+          <HeartAnimatedIcon isFavorite={post.isLiked} onPress={() => onLikePress?.(post._id)} size={24} unFavoriteIconColor={colors.black}/>
+          <Text style={styles.actionText}>{post.totalLikes}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => onCommentPress?.(post.id)}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => onCommentPress?.(post._id)}
         >
           <Text style={styles.actionIcon}>💬</Text>
-          <Text style={styles.actionText}>{post.comments}</Text>
+          {/* <Text style={styles.actionText}>{post.comments}</Text> */}
         </TouchableOpacity>
 
-        {/* <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => onSharePress?.(post.id)}
-        >
-          <Text style={styles.actionIcon}>📤</Text>
-          <Text style={styles.actionText}>Chia sẻ</Text>
-        </TouchableOpacity> */}
+
       </View>
     </View>
   );

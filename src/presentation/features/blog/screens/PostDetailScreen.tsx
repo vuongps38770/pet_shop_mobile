@@ -10,64 +10,22 @@ import { BlogPost, BlogComment } from '../types/blog.types';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { MainStackParamList } from 'src/presentation/navigation/main-navigation/types';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
+import { BlogItem } from '../components';
+import { PostCommentResDto } from 'src/presentation/dto/res/post.res.dto';
+import { useSelector } from 'react-redux';
+import { RootState } from 'src/presentation/store/store';
+import { useUserInfo } from 'shared/hooks/useUserInfo';
 
 
 const PostDetailScreen: React.FC = () => {
   const route = useRoute<RouteProp<MainStackParamList, 'PostDetailScreen'>>();
   const navigation = useMainNavigation();
-  const postId = route?.params?.postId || '1';
-  
-  // Mock data - trong thực tế sẽ fetch từ API dựa trên postId
-  const post: BlogPost = {
-    id: postId,
-    user: {
-      id: '1',
-      name: 'Nguyễn Văn A',
-    },
-    content: 'Chú mèo nhà tôi rất thích chơi bóng đá! 🐱⚽',
-    image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop',
-    likes: 12,
-    comments: 5,
-    timestamp: '2 giờ trước',
-    isLiked: false,
-  };
+  const postId = route?.params?.postId || '';
+  const post = route?.params?.post || null;
+  const {postCommentsPagination} = useSelector((state:RootState)=>state.blog)
+  const {user} = useUserInfo()
 
   const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState<BlogComment[]>([
-    {
-      id: '1',
-      postId: post.id,
-      user: {
-        id: '2',
-        name: 'Trần Thị B',
-      },
-      content: 'Mèo nhà bạn thật đáng yêu! 😍',
-      timestamp: '1 giờ trước',
-      likes: 3,
-    },
-    {
-      id: '2',
-      postId: post.id,
-      user: {
-        id: '3',
-        name: 'Lê Văn C',
-      },
-      content: 'Bóng đá là môn thể thao yêu thích của mèo nhà mình luôn! ⚽',
-      timestamp: '30 phút trước',
-      likes: 1,
-    },
-    {
-      id: '3',
-      postId: post.id,
-      user: {
-        id: '4',
-        name: 'Phạm Thị D',
-      },
-      content: 'Có ai biết cách dạy mèo chơi bóng không? Mình muốn thử! 🐱',
-      timestamp: '15 phút trước',
-      likes: 0,
-    },
-  ]);
 
   const handleBackPress = useCallback(() => {
     navigation.goBack();
@@ -98,13 +56,7 @@ const PostDetailScreen: React.FC = () => {
   }, []);
 
   const handleCommentLikePress = useCallback((commentId: string) => {
-    setComments(prevComments =>
-      prevComments.map(comment =>
-        comment.id === commentId
-          ? { ...comment, likes: comment.likes + 1 }
-          : comment
-      )
-    );
+
   }, []);
 
   const handleCommentReplyPress = useCallback((commentId: string) => {
@@ -112,29 +64,10 @@ const PostDetailScreen: React.FC = () => {
   }, []);
 
   const handleSubmitComment = useCallback(() => {
-    if (!commentText.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập nội dung bình luận');
-      return;
-    }
 
-    const newComment: BlogComment = {
-      id: Date.now().toString(),
-      postId: post.id,
-      user: {
-        id: 'current-user',
-        name: 'Bạn',
-      },
-      content: commentText.trim(),
-      timestamp: 'Vừa xong',
-      likes: 0,
-    };
+  }, [commentText]);
 
-    setComments(prevComments => [newComment, ...prevComments]);
-    setCommentText('');
-    Alert.alert('Thành công', 'Bình luận đã được đăng!');
-  }, [commentText, post.id]);
-
-  const renderComment = useCallback(({ item }: { item: BlogComment }) => (
+  const renderComment = useCallback(({ item }: { item: PostCommentResDto }) => (
     <CommentItem
       comment={item}
       onUserPress={handleUserPress}
@@ -143,21 +76,13 @@ const PostDetailScreen: React.FC = () => {
     />
   ), [handleUserPress, handleCommentLikePress, handleCommentReplyPress]);
 
-  const keyExtractor = useCallback((item: BlogComment) => item.id, []);
+  const keyExtractor = useCallback((item: PostCommentResDto) => item._id, []);
 
-  const ListHeaderComponent = useCallback(() => (
-    <PostDetailItem
-      post={post}
-      onLikePress={handleLikePress}
-      onCommentPress={handleCommentPress}
-      onSharePress={handleSharePostPress}
-      onUserPress={handleUserPress}
-    />
-  ), [post, handleLikePress, handleCommentPress, handleSharePostPress, handleUserPress]);
-
+  if (!post)
+    return null;
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <PostDetailHeader
@@ -165,16 +90,41 @@ const PostDetailScreen: React.FC = () => {
         onSharePress={handleSharePress}
         onMorePress={handleMorePress}
       />
-      
+
+
       <FlatList
-        data={comments}
+        data={postCommentsPagination?.data || []}
         renderItem={renderComment}
         keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeaderComponent}
+        ListHeaderComponent={() => {
+          return (
+            <BlogItem
+              post={{
+                _id: post._id,
+                content: post.content,
+                createdAt: post.createdAt,
+                mediaList: post.mediaList?.map((i) => ({
+                  url: i.url,
+                  type: i.type
+                })),
+                totalLikes: post.totalLikes || 0,
+                user: {
+                  name: post.user.name,
+                  avatar: post.user.avatar
+                },
+                isLiked: post.likedByMe || false
+              }}
+              onLikePress={handleLikePress}
+              onCommentPress={handleCommentPress}
+              onSharePress={handleSharePress}
+              isVisible={true}
+            />
+          )
+        }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
       />
-      
+
       <CommentInput
         value={commentText}
         onChangeText={setCommentText}
