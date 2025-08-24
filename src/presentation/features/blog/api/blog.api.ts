@@ -50,3 +50,15 @@ export const getPostCommentsApi = async (postId: string,page:number,limit:number
 export const createCommentApi = async (dto:CreatePostCommentDto)=> {
     return await axiosInstance.post(`post/comment`,dto);
 }
+
+export const deleteCommentApi = async (commentId: string) => {
+    return await axiosInstance.delete(`post/comment/${commentId}`);
+}
+
+export const getCommentReplyApi = async (commentId: string, page: number, limit: number) => {
+    return await axiosInstance.get(`post/comment-reply/${commentId}?page=${page}&limit=${limit}`);
+}
+
+export const likeToggleCommentApi = async (commentId: string) => {
+    return await axiosInstance.post(`post/comment/like/${commentId}`);
+}
