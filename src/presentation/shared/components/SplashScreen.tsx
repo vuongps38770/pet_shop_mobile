@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Animated, Easing, StatusBar } from 'react-native';
 import { colors } from 'theme/colors';
 import Logo from 'assets/images/logo.svg'
 import PawUp from 'assets/icons/PawUp.svg'
@@ -76,12 +76,13 @@ const SplashScreen = () => {
 
     return (
         <View style={styles.container}>
+            <StatusBar backgroundColor={colors.app.primary.main} barStyle="light-content" />
             {pawPrintsConfig.map((config, index) => {
                 const PawComponent = config.type === 'up' ? PawUp : PawDown;
                 const pawPrintAnimatedStyle: any = {
                     position: 'absolute',
-                    width: 90, // Increased size for paw prints
-                    height: 90, // Increased size for paw prints
+                    width: 90, 
+                    height: 90, 
                     transform: [
                         { scale: pawPrintAnims[index].scale },
                     ],

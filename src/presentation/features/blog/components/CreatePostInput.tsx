@@ -4,10 +4,11 @@ import { colors } from '../../../shared/theme/colors';
 import { SPACING, BORDER_RADIUS } from '../../../shared/theme/layout';
 
 interface CreatePostInputProps {
-  value: string;
-  onChangeText: (text: string) => void;
+  value?: string;
+  onChangeText?: (text: string) => void;
   onImagePress?: () => void;
   onEmojiPress?: () => void;
+  onInputPress?: () => void;
   userAvatar?: string;
 }
 
@@ -17,6 +18,7 @@ const CreatePostInput: React.FC<CreatePostInputProps> = ({
   onImagePress,
   onEmojiPress,
   userAvatar,
+  onInputPress
 }) => {
   return (
     <View style={styles.container}>
@@ -25,27 +27,29 @@ const CreatePostInput: React.FC<CreatePostInputProps> = ({
           <Text style={styles.avatarText}>👤</Text>
         </View>
       </View>
-      
+
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder="Bạn đang nghĩ gì?"
-          placeholderTextColor={colors.grey[500]}
-          multiline
-          numberOfLines={2}
-        />
-        
-        <View style={styles.iconContainer}>
+        <TouchableOpacity onPress={onInputPress}>
+          <TextInput
+            style={styles.input}
+            placeholder="Bạn đang nghĩ gì?"
+            placeholderTextColor={colors.grey[500]}
+            multiline
+            numberOfLines={2}
+            editable={false}
+          />
+        </TouchableOpacity>
+
+
+        {/* <View style={styles.iconContainer}>
           <TouchableOpacity style={styles.iconButton} onPress={onImagePress}>
             <Text style={styles.iconText}>🖼️</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.iconButton} onPress={onEmojiPress}>
             <Text style={styles.iconText}>😊</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
     </View>
   );

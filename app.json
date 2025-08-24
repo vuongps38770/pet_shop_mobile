@@ -27,6 +27,13 @@
     },
     "plugins": [
       [
+      "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      [
         "expo-dev-client",
         {
           "launchMode": "most-recent"
