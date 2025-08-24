@@ -1,31 +1,52 @@
-import React, { useState, useCallback } from 'react';
-import { View, FlatList, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { View, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { colors } from '../../../shared/theme/colors';
 import { SPACING } from '../../../shared/theme/layout';
 import PostDetailHeader from '../components/PostDetailHeader';
 import PostDetailItem from '../components/PostDetailItem';
-import CommentItem from '../components/CommentItem';
 import CommentInput from '../components/CommentInput';
+import CommentList from '../components/CommentList';
 import { BlogPost, BlogComment } from '../types/blog.types';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { MainStackParamList } from 'src/presentation/navigation/main-navigation/types';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import { BlogItem } from '../components';
-import { PostCommentResDto } from 'src/presentation/dto/res/post.res.dto';
-import { useSelector } from 'react-redux';
-import { RootState } from 'src/presentation/store/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from 'src/presentation/store/store';
 import { useUserInfo } from 'shared/hooks/useUserInfo';
-
+import { useComment } from '../hooks/useComment';
+import { fetchPostComments } from '../blog.slice';
+import { PostCommentResDto } from 'src/presentation/dto/res/post.res.dto';
 
 const PostDetailScreen: React.FC = () => {
   const route = useRoute<RouteProp<MainStackParamList, 'PostDetailScreen'>>();
   const navigation = useMainNavigation();
+  const dispatch = useDispatch<AppDispatch>();
   const postId = route?.params?.postId || '';
   const post = route?.params?.post || null;
-  const {postCommentsPagination} = useSelector((state:RootState)=>state.blog)
+  const {postCommentsPagination, postCommentsStatus} = useSelector((state:RootState)=>state.blog)
   const {user} = useUserInfo()
 
-  const [commentText, setCommentText] = useState('');
+  // Sử dụng useComment hook
+  const {
+    commentText,
+    setCommentText,
+    replyTo,
+    isLoading: commentLoading,
+    handleCreateComment,
+    handleDeleteComment,
+    handleLikeComment,
+    handleReplyToComment,
+    handleCancelReply,
+    handleToggleExpanded,
+  } = useComment(postId);
+
+  // Load comments khi component mount
+  useEffect(() => {
+    if (postId) {
+      dispatch(fetchPostComments({ postId, page: 1, limit: 20 }));
+    }
+  }, [postId, dispatch]);
 
   const handleBackPress = useCallback(() => {
     navigation.goBack();
@@ -56,27 +77,22 @@ const PostDetailScreen: React.FC = () => {
   }, []);
 
   const handleCommentLikePress = useCallback((commentId: string) => {
+    handleLikeComment(commentId);
+  }, [handleLikeComment]);
 
-  }, []);
+  const handleCommentReplyPress = useCallback((comment: PostCommentResDto,) => {
+    if (comment) {
+      handleReplyToComment(comment);
+    }
+  }, [postCommentsPagination?.data, handleReplyToComment]);
 
-  const handleCommentReplyPress = useCallback((commentId: string) => {
-    Alert.alert('Trả lời', `Trả lời bình luận ${commentId}`);
-  }, []);
+  const handleCommentDeletePress = useCallback((commentId: string) => {
+    handleDeleteComment(commentId);
+  }, [handleDeleteComment]);
 
   const handleSubmitComment = useCallback(() => {
-
-  }, [commentText]);
-
-  const renderComment = useCallback(({ item }: { item: PostCommentResDto }) => (
-    <CommentItem
-      comment={item}
-      onUserPress={handleUserPress}
-      onLikePress={handleCommentLikePress}
-      onReplyPress={handleCommentReplyPress}
-    />
-  ), [handleUserPress, handleCommentLikePress, handleCommentReplyPress]);
-
-  const keyExtractor = useCallback((item: PostCommentResDto) => item._id, []);
+    handleCreateComment();
+  }, [handleCreateComment]);
 
   if (!post)
     return null;
@@ -91,45 +107,48 @@ const PostDetailScreen: React.FC = () => {
         onMorePress={handleMorePress}
       />
 
-
-      <FlatList
-        data={postCommentsPagination?.data || []}
-        renderItem={renderComment}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={() => {
-          return (
-            <BlogItem
-              post={{
-                _id: post._id,
-                content: post.content,
-                createdAt: post.createdAt,
-                mediaList: post.mediaList?.map((i) => ({
-                  url: i.url,
-                  type: i.type
-                })),
-                totalLikes: post.totalLikes || 0,
-                user: {
-                  name: post.user.name,
-                  avatar: post.user.avatar
-                },
-                isLiked: post.likedByMe || false
-              }}
-              onLikePress={handleLikePress}
-              onCommentPress={handleCommentPress}
-              onSharePress={handleSharePress}
-              isVisible={true}
-            />
-          )
-        }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
-      />
+      <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+        <BlogItem
+          post={{
+            _id: post._id,
+            content: post.content,
+            createdAt: post.createdAt,
+            mediaList: post.mediaList?.map((i) => ({
+              url: i.url,
+              type: i.type
+            })),
+            totalLikes: post.totalLikes || 0,
+            user: {
+              name: post.user.name,
+              avatar: post.user.avatar
+            },
+            isLiked: post.likedByMe || false
+          }}
+          onLikePress={handleLikePress}
+          onCommentPress={handleCommentPress}
+          onSharePress={handleSharePress}
+          isVisible={true}
+        />
+        
+        <CommentList
+          comments={postCommentsPagination?.data || []}
+          onUserPress={handleUserPress}
+          onLikePress={handleCommentLikePress}
+          onReplyPress={handleCommentReplyPress}
+          onDeletePress={handleCommentDeletePress}
+          onToggleExpanded={handleToggleExpanded}
+        />
+      </ScrollView>
 
       <CommentInput
         value={commentText}
         onChangeText={setCommentText}
         onSubmit={handleSubmitComment}
+        onCancelReply={handleCancelReply}
+        replyTo={replyTo || undefined}
         placeholder="Viết bình luận..."
+        userAvatar={user?.avatar}
+        isLoading={commentLoading}
       />
     </KeyboardAvoidingView>
   );
@@ -139,6 +158,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
+  },
+  contentContainer: {
+    flex: 1,
   },
   listContainer: {
     flexGrow: 1,

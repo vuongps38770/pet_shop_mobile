@@ -1,8 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { PostCommentResDto, PostResDto } from '../../dto/res/post.res.dto';
 import { BasePaginationRespondDto } from 'src/presentation/dto/res/pagination-respond.dto';
-import { fetchBlogsApi, createPostApi, likeTogglePostApi, getMyPostsApi, getPostByIdApi, getPostCommentsApi } from './api/blog.api';
-import { CreatePostDto } from 'src/presentation/dto/req/post.req.dto';
+import { fetchBlogsApi, createPostApi, likeTogglePostApi, getMyPostsApi, getPostByIdApi, getPostCommentsApi, createCommentApi, deleteCommentApi, getCommentReplyApi, likeToggleCommentApi } from './api/blog.api';
+import { CreatePostDto, CreatePostCommentDto } from 'src/presentation/dto/req/post.req.dto';
+
+// Extend PostCommentResDto để có replies
+export interface CommentWithReplies extends PostCommentResDto {
+  replies: PostCommentResDto[];
+  isExpanded?: boolean;
+}
 
 export interface BlogState {
     posts: PostResDto[];
@@ -12,9 +18,16 @@ export interface BlogState {
     createStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
     myBlogs: PostResDto[]
     fetchMyBlogsStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
-    postCommentsPagination: BasePaginationRespondDto<PostCommentResDto> | null;
+    postCommentsPagination: BasePaginationRespondDto<CommentWithReplies> | null;
     postCommentsStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
     fetchMoreCommentsStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    // Comment states
+    createCommentStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    deleteCommentStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    commentRepliesPagination: BasePaginationRespondDto<PostCommentResDto> | null;
+    commentRepliesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    fetchMoreCommentRepliesStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+    likeCommentStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
 }
 
 const initialState: BlogState = {
@@ -27,7 +40,14 @@ const initialState: BlogState = {
     myBlogs: [],
     fetchMoreCommentsStatus: 'idle',
     postCommentsPagination: null,
-    postCommentsStatus: 'idle'
+    postCommentsStatus: 'idle',
+    // Comment states
+    createCommentStatus: 'idle',
+    deleteCommentStatus: 'idle',
+    commentRepliesPagination: null,
+    commentRepliesStatus: 'idle',
+    fetchMoreCommentRepliesStatus: 'idle',
+    likeCommentStatus: 'idle'
 };
 
 export const fetchBlogs = createAsyncThunk(
@@ -87,7 +107,45 @@ export const fetchPostComments = createAsyncThunk(
     'blog/fetchPostComments',
     async ({ postId, page, limit }: { postId: string, page: number, limit: number }) => {
         const response = await getPostCommentsApi(postId, page, limit);
-        return response.data.data as BasePaginationRespondDto<PostCommentResDto>;
+        console.log("userr",response.data.data.data[0].user);
+        
+        // Map dữ liệu từ API response sang PostCommentResDto format
+        const mappedData = response.data.data.data.map((item: any) => {
+          // Xử lý cả trường hợp user và userId
+          const userData = item.user || item.userId;
+          
+          const mappedItem = {
+            _id: item._id,
+            postId: item.postId,
+            parent_id: item.parent_id,
+            root_id: item.root_id,
+            content: item.content,
+            likeList: item.likeList || [],
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            __v: item.__v,
+            user: {
+              _id: userData._id,
+              name: userData.name,
+              avatar: userData.avatar
+            },
+            replyCount: item.replyCount,
+            replyRegex: item.replyRegex
+          };
+          
+          console.log('fetchPostComments mapped item:', {
+            original: item,
+            userData,
+            mapped: mappedItem
+          });
+          
+          return mappedItem;
+        });
+        
+        return {
+            ...response.data.data,
+            data: mappedData
+        } as BasePaginationRespondDto<PostCommentResDto>;
     }
 )
 
@@ -95,9 +153,184 @@ export const fetchMoreComments = createAsyncThunk(
     'blog/fetchMorePostComments',
     async ({ postId, page, limit }: { postId: string, page: number, limit: number }) => {
         const response = await getPostCommentsApi(postId, page, limit);
-        return response.data.data as BasePaginationRespondDto<PostCommentResDto>;
+        
+        // Map dữ liệu từ API response sang PostCommentResDto format
+        const mappedData = response.data.data.data.map((item: any) => {
+          // Xử lý cả trường hợp user và userId
+          const userData = item.user || item.userId;
+          
+          return {
+            _id: item._id,
+            postId: item.postId,
+            parent_id: item.parent_id,
+            root_id: item.root_id,
+            content: item.content,
+            likeList: item.likeList || [],
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            __v: item.__v,
+            user: {
+              _id: userData._id,
+              name: userData.name,
+              avatar: userData.avatar
+            },
+            replyCount: item.replyCount,
+            replyRegex: item.replyRegex
+          };
+        });
+        
+        return {
+            ...response.data.data,
+            data: mappedData
+        } as BasePaginationRespondDto<PostCommentResDto>;
     }
 )
+
+export const createComment = createAsyncThunk(
+    'blog/createComment',
+    async ({ data }: { data: CreatePostCommentDto }) => {
+        const response = await createCommentApi(data);
+        const commentData = response.data.data;
+        
+        // Xử lý cả trường hợp user và userId
+        const userData = commentData.user || commentData.userId;
+        
+        // Map dữ liệu từ API response sang PostCommentResDto format
+        return {
+            _id: commentData._id,
+            postId: commentData.postId,
+            parent_id: commentData.parent_id,
+            root_id: commentData.root_id,
+            content: commentData.content,
+            likeList: commentData.likeList || [],
+            createdAt: commentData.createdAt,
+            updatedAt: commentData.updatedAt,
+            __v: commentData.__v,
+            user: {
+                _id: userData._id,
+                name: userData.name,
+                avatar: userData.avatar
+            },
+            replyCount: commentData.replyCount,
+            replyRegex: commentData.replyRegex
+        } as PostCommentResDto;
+    }
+);
+
+export const deleteComment = createAsyncThunk(
+    'blog/deleteComment',
+    async ({ commentId }: { commentId: string }) => {
+        await deleteCommentApi(commentId);
+        return commentId;
+    }
+);
+
+export const fetchCommentReplies = createAsyncThunk(
+    'blog/fetchCommentReplies',
+    async ({ commentId, page, limit }: { commentId: string, page: number, limit: number }) => {
+        console.log('fetchCommentReplies thunk called with:', { commentId, page, limit });
+        const response = await getCommentReplyApi(commentId, page, limit);
+        console.log("rep",response.data);
+        console.log("rep.data",response.data.data);
+        console.log("rep.data type:", typeof response.data.data);
+        console.log("rep.data is array:", Array.isArray(response.data.data));
+        
+        let repliesData = [];
+        if (response.data && response.data.data) {
+            if (Array.isArray(response.data.data)) {
+                repliesData = response.data.data;
+            } else if (typeof response.data.data === 'object') {
+                console.log("response.data.data keys:", Object.keys(response.data.data));
+                repliesData = response.data.data.replies || response.data.data.data || [];
+            }
+        }
+        
+        console.log("repliesData:", repliesData);
+        
+        // Map dữ liệu từ API response sang PostCommentResDto format
+        const mappedData = repliesData.map((item: any) => {
+          // Xử lý cả trường hợp user và userId
+          const userData = item.user || item.userId;
+          
+          return {
+            _id: item._id,
+            postId: item.postId,
+            parent_id: item.parent_id,
+            root_id: item.root_id,
+            content: item.content,
+            likeList: item.likeList || [],
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            __v: item.__v,
+            user: {
+              _id: userData._id,
+              name: userData.name,
+              avatar: userData.avatar
+            },
+            replyCount: item.replyCount,
+            replyRegex: item.replyRegex
+          };
+        });
+        
+        console.log('fetchCommentReplies mapped data:', mappedData);
+        
+        return {
+            commentId,
+            data: {
+                ...response.data,
+                data: mappedData
+            }
+        };
+    }
+);
+
+export const fetchMoreCommentReplies = createAsyncThunk(
+    'blog/fetchMoreCommentReplies',
+    async ({ commentId, page, limit }: { commentId: string, page: number, limit: number }) => {
+        const response = await getCommentReplyApi(commentId, page, limit);
+        
+        // Map dữ liệu từ API response sang PostCommentResDto format
+        const mappedData = response.data.data.map((item: any) => {
+          // Xử lý cả trường hợp user và userId
+          const userData = item.user || item.userId;
+          
+          return {
+            _id: item._id,
+            postId: item.postId,
+            parent_id: item.parent_id,
+            root_id: item.root_id,
+            content: item.content,
+            likeList: item.likeList || [],
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            __v: item.__v,
+            user: {
+              _id: userData._id,
+              name: userData.name,
+              avatar: userData.avatar
+            },
+            replyCount: item.replyCount,
+            replyRegex: item.replyRegex
+          };
+        });
+        
+        return {
+            commentId,
+            data: {
+                ...response.data,
+                data: mappedData
+            }
+        };
+    }
+);
+
+export const likeToggleComment = createAsyncThunk(
+    'blog/likeToggleComment',
+    async ({ commentId }: { commentId: string }) => {
+        const response = await likeToggleCommentApi(commentId);
+        return response.data.data as { commentId: string, likedByMe: boolean, totalLikes: number };
+    }
+);
 
 // export const deletePost = createAsyncThunk(
 //     'blog/deletePost'
@@ -114,6 +347,25 @@ const blogSlice = createSlice({
         },
         resetCreateStatus(state) {
             state.createStatus = 'idle'
+        },
+        resetCommentStatuses(state) {
+            state.createCommentStatus = 'idle';
+            state.deleteCommentStatus = 'idle';
+            state.commentRepliesStatus = 'idle';
+            state.fetchMoreCommentRepliesStatus = 'idle';
+            state.likeCommentStatus = 'idle';
+        },
+        toggleCommentExpanded(state, action) {
+            const { commentId } = action.payload;
+            if (state.postCommentsPagination?.data) {
+                const commentIndex = state.postCommentsPagination.data.findIndex(
+                    comment => comment._id === commentId
+                );
+                if (commentIndex !== -1) {
+                    state.postCommentsPagination.data[commentIndex].isExpanded = 
+                        !state.postCommentsPagination.data[commentIndex].isExpanded;
+                }
+            }
         }
 
     },
@@ -156,7 +408,84 @@ const blogSlice = createSlice({
                 state.error = action.error.message || 'Đăng bài thất bại';
             })
 
+            // Create comment
+            .addCase(createComment.pending, (state) => {
+                state.createCommentStatus = 'loading';
+                state.error = null;
+            })
+            .addCase(createComment.fulfilled, (state, action) => {
+                state.createCommentStatus = 'succeeded';
+                
+                if (state.postCommentsPagination?.data) {
+                    // Nếu là comment gốc, thêm vào đầu danh sách
+                    if (!action.payload.parent_id) {
+                        state.postCommentsPagination.data.unshift({
+                            ...action.payload,
+                            replies: [],
+                            isExpanded: false
+                        });
+                    } else {
+                        // Nếu là reply comment, thêm vào replies của root comment
+                        const rootCommentIndex = state.postCommentsPagination.data.findIndex(
+                            comment => comment._id === action.payload.root_id
+                        );
+                        if (rootCommentIndex !== -1) {
+                            // Thêm reply vào mảng replies
+                            if (!state.postCommentsPagination.data[rootCommentIndex].replies) {
+                                state.postCommentsPagination.data[rootCommentIndex].replies = [];
+                            }
+                            state.postCommentsPagination.data[rootCommentIndex].replies.push(action.payload);
+                            
+                            // Tăng replyCount
+                            state.postCommentsPagination.data[rootCommentIndex].replyCount = 
+                                (state.postCommentsPagination.data[rootCommentIndex].replyCount || 0) + 1;
+                            
+                            // Tự động expand để hiển thị reply mới
+                            state.postCommentsPagination.data[rootCommentIndex].isExpanded = true;
+                            
+                            console.log('Added reply to root comment:', {
+                                rootCommentId: action.payload.root_id,
+                                replyId: action.payload._id,
+                                newReplyCount: state.postCommentsPagination.data[rootCommentIndex].replyCount,
+                                isExpanded: state.postCommentsPagination.data[rootCommentIndex].isExpanded
+                            });
+                        }
+                    }
+                }
+            })
+            .addCase(createComment.rejected, (state, action) => {
+                state.createCommentStatus = 'failed';
+                state.error = action.error.message || 'Tạo comment thất bại';
+            })
 
+            // Delete comment
+            .addCase(deleteComment.pending, (state) => {
+                state.deleteCommentStatus = 'loading';
+                state.error = null;
+            })
+            .addCase(deleteComment.fulfilled, (state, action) => {
+                state.deleteCommentStatus = 'succeeded';
+                // Xóa comment khỏi danh sách
+                if (state.postCommentsPagination?.data) {
+                    // Xóa comment gốc
+                    state.postCommentsPagination.data = state.postCommentsPagination.data.filter(
+                        comment => comment._id !== action.payload
+                    );
+                    
+                    // Xóa reply khỏi replies của comment gốc và giảm replyCount
+                    state.postCommentsPagination.data.forEach(comment => {
+                        const hasReply = comment.replies.some(reply => reply._id === action.payload);
+                        if (hasReply) {
+                            comment.replies = comment.replies.filter(reply => reply._id !== action.payload);
+                            comment.replyCount = Math.max(0, (comment.replyCount || 0) - 1);
+                        }
+                    });
+                }
+            })
+            .addCase(deleteComment.rejected, (state, action) => {
+                state.deleteCommentStatus = 'failed';
+                state.error = action.error.message || 'Xóa comment thất bại';
+            })
 
             .addCase(likePostToggle.fulfilled, (state, action) => {
                 const { postId, likedByMe, totalLikes } = action.payload;
@@ -187,7 +516,16 @@ const blogSlice = createSlice({
             })
             .addCase(fetchPostComments.fulfilled, (state, action) => {
                 state.postCommentsStatus = 'succeeded';
-                state.postCommentsPagination = action.payload;
+                // Chuyển đổi PostCommentResDto thành CommentWithReplies
+                const commentsWithReplies: CommentWithReplies[] = (action.payload.data || []).map(comment => ({
+                    ...comment,
+                    replies: [],
+                    isExpanded: false
+                }));
+                state.postCommentsPagination = {
+                    ...action.payload,
+                    data: commentsWithReplies
+                };
             })
             .addCase(fetchPostComments.rejected, (state, action) => {
                 state.postCommentsStatus = 'failed';
@@ -204,7 +542,12 @@ const blogSlice = createSlice({
             .addCase(fetchMoreComments.fulfilled, (state, action) => {
                 state.fetchMoreCommentsStatus = 'succeeded';
                 const existingData = state.postCommentsPagination?.data ?? [];
-                const newData = action.payload.data ?? [];
+                // Chuyển đổi PostCommentResDto thành CommentWithReplies
+                const newData: CommentWithReplies[] = (action.payload.data ?? []).map(comment => ({
+                    ...comment,
+                    replies: [],
+                    isExpanded: false
+                }));
                 state.postCommentsPagination = {
                     ...state.postCommentsPagination,
                     data: [...existingData, ...newData],
@@ -213,8 +556,97 @@ const blogSlice = createSlice({
                     totalPages: action.payload.totalPages
                 };
             })
+
+            // Comment replies
+            .addCase(fetchCommentReplies.pending, (state) => {
+                console.log('fetchCommentReplies.pending');
+                state.commentRepliesStatus = 'loading';
+            })
+            .addCase(fetchCommentReplies.fulfilled, (state, action) => {
+                console.log('fetchCommentReplies.fulfilled called');
+                state.commentRepliesStatus = 'succeeded';
+                // Thêm replies vào comment gốc
+                const { commentId, data } = action.payload;
+                console.log('fetchCommentReplies.fulfilled:', {
+                    commentId,
+                    repliesCount: data.data?.length || 0,
+                    replies: data.data
+                });
+                
+                if (state.postCommentsPagination?.data) {
+                    const rootCommentIndex = state.postCommentsPagination.data.findIndex(
+                        comment => comment._id === commentId
+                    );
+                    console.log('rootCommentIndex:', rootCommentIndex);
+                    
+                    if (rootCommentIndex !== -1) {
+                        state.postCommentsPagination.data[rootCommentIndex].replies = data.data || [];
+                        state.postCommentsPagination.data[rootCommentIndex].isExpanded = true;
+                        
+                        console.log('Updated comment:', {
+                            commentId: state.postCommentsPagination.data[rootCommentIndex]._id,
+                            repliesCount: state.postCommentsPagination.data[rootCommentIndex].replies.length,
+                            isExpanded: state.postCommentsPagination.data[rootCommentIndex].isExpanded
+                        });
+                    }
+                }
+            })
+            .addCase(fetchCommentReplies.rejected, (state, action) => {
+                console.log('fetchCommentReplies.rejected:', action.error);
+                state.commentRepliesStatus = 'failed';
+                state.error = action.error.message || 'Fetch comment replies failed';
+            })
+            .addCase(fetchMoreCommentReplies.pending, (state) => {
+                state.fetchMoreCommentRepliesStatus = 'loading';
+            })
+            .addCase(fetchMoreCommentReplies.fulfilled, (state, action) => {
+                state.fetchMoreCommentRepliesStatus = 'succeeded';
+                // Thêm thêm replies vào comment gốc
+                const { commentId, data } = action.payload;
+                if (state.postCommentsPagination?.data) {
+                    const rootCommentIndex = state.postCommentsPagination.data.findIndex(
+                        comment => comment._id === commentId
+                    );
+                    if (rootCommentIndex !== -1) {
+                        const existingReplies = state.postCommentsPagination.data[rootCommentIndex].replies;
+                        const newReplies = data.data || [];
+                        state.postCommentsPagination.data[rootCommentIndex].replies = [...existingReplies, ...newReplies];
+                    }
+                }
+            })
+            .addCase(likeToggleComment.fulfilled, (state, action) => {
+                const { commentId, likedByMe, totalLikes } = action.payload;
+                if (state.postCommentsPagination?.data) {
+                    const commentIndex = state.postCommentsPagination.data.findIndex(comment => comment._id === commentId);
+                    if (commentIndex !== -1) {
+                        // Cập nhật likeList dựa trên likedByMe
+                        if (likedByMe) {
+                            // Thêm user hiện tại vào likeList nếu chưa có
+                            if (!state.postCommentsPagination.data[commentIndex].likeList.includes(commentId)) {
+                                state.postCommentsPagination.data[commentIndex].likeList.push(commentId);
+                            }
+                        } else {
+                            // Xóa user hiện tại khỏi likeList
+                            state.postCommentsPagination.data[commentIndex].likeList = state.postCommentsPagination.data[commentIndex].likeList.filter(id => id !== commentId);
+                        }
+                    }
+                }
+            })
+            .addCase(toggleCommentExpanded, (state, action) => {
+                const { commentId } = action.payload;
+                if (state.postCommentsPagination?.data) {
+                    const commentIndex = state.postCommentsPagination.data.findIndex(comment => comment._id === commentId);
+                    if (commentIndex !== -1) {
+                        state.postCommentsPagination.data[commentIndex].isExpanded = !state.postCommentsPagination.data[commentIndex].isExpanded;
+                        console.log('toggleCommentExpanded:', {
+                            commentId,
+                            newIsExpanded: state.postCommentsPagination.data[commentIndex].isExpanded
+                        });
+                    }
+                }
+            })
     },
 });
 
-export const { resetBlogs, resetCreateStatus } = blogSlice.actions;
+export const { resetBlogs, resetCreateStatus, resetCommentStatuses, toggleCommentExpanded } = blogSlice.actions;
 export default blogSlice.reducer;
