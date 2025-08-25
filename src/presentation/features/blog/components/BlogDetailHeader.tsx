@@ -5,14 +5,16 @@ import { SPACING, BORDER_RADIUS } from '../../../shared/theme/layout';
 import { Fonts } from '../../../shared/theme/fonts';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ProfileIcon from 'assets/icons/bottomTab/user-active.svg'
-interface BlogHeaderProps {
+interface BlogDetailHeaderProps {
   onBackPress?: () => void;
   onProfilePress?: () => void;
+  title?: string;
 }
 
-const BlogHeader: React.FC<BlogHeaderProps> = ({
+const BlogDetailHeader: React.FC<BlogDetailHeaderProps> = ({
   onBackPress,
   onProfilePress,
+  title
 }) => {
   return (
     <View style={styles.container}>
@@ -22,11 +24,11 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
           </TouchableOpacity>
         </View>
 
-      <Text style={styles.title}>Cộng đồng</Text>
+      <Text style={styles.title}>{title}</Text>
 
       <TouchableOpacity style={styles.iconButton} onPress={onProfilePress}>
         <View style={styles.profileIcon}>
-          <ProfileIcon width={24} height={24} />
+          {/* <ProfileIcon width={24} height={24} /> */}
         </View>
       </TouchableOpacity>
     </View>
@@ -72,4 +74,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BlogHeader;
+export default BlogDetailHeader;

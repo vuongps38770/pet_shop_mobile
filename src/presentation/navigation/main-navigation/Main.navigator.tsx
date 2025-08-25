@@ -60,7 +60,7 @@ const MainNavigator = () => {
       <Stack.Navigator screenOptions={{ animation: "fade" }}>
         <Stack.Screen
           name="MainScreen"
-          component={BlogScreen}
+          component={TabNavigator}
           options={{ headerShown: false }}
         />
 
@@ -203,6 +203,17 @@ const MainNavigator = () => {
           component={CreatePostScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="MyPostScreen"
+          component={MyblogScreen}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="PostScreen"
+          component={BlogScreen}
+          options={{ headerShown: false }}
+        />
+        
 
       </Stack.Navigator>
 

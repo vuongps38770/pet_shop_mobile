@@ -24,24 +24,17 @@ const CommentReplies: React.FC<CommentRepliesProps> = ({
   onReplyPress,
   onDeletePress,
   onHideReplies,
+  
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { postCommentsPagination, fetchMoreCommentRepliesStatus } = useSelector((state: RootState) => state.blog);
+  const { postCommentsPagination, commentLoadingList } = useSelector((state: RootState) => state.blog);
   
-  // Tìm comment gốc và lấy replies từ Redux state
   const rootComment = postCommentsPagination?.data?.find(comment => comment._id === commentId);
   const replies = rootComment?.replies || [];
   const replyCount = rootComment?.replyCount || 0;
-  const isLoadingMore = fetchMoreCommentRepliesStatus === 'loading';
-  const hasMore = replies.length < replyCount;
+  const isLoadingMore = commentLoadingList.includes(commentId);
 
-  console.log('CommentReplies Debug:', {
-    commentId,
-    repliesCount: replies.length,
-    replyCount,
-    hasMore,
-    replies: replies.map(r => ({ id: r._id, content: r.content }))
-  });
+  const hasMore = replies.length < replyCount;
 
   const handleLoadMore = async () => {
     if (hasMore && !isLoadingMore) {
@@ -54,8 +47,6 @@ const CommentReplies: React.FC<CommentRepliesProps> = ({
     console.log('CommentReplies: No replies to show');
     return null;
   }
-
-  console.log('CommentReplies: Rendering', replies.length, 'replies');
 
   return (
     <View style={styles.container}>

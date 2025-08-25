@@ -5,6 +5,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  Text,
 } from 'react-native';
 import { useDispatch } from "react-redux";
 
@@ -17,7 +18,8 @@ import AppModal from "shared/components/modals/AppModal";
 import { useMainNavigation } from "shared/hooks/navigation-hooks/useMainNavigationHooks";
 import { useUserInfo } from "shared/hooks/useUserInfo";
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
+import AntIcon from 'react-native-vector-icons/AntDesign'
+import { is } from "date-fns/locale";
 const ProfileScreen = () => {
   const groupedMenuItems = [
     [
@@ -26,12 +28,14 @@ const ProfileScreen = () => {
         title: "Thông tin cá nhân",
         icon: "person",
         color: colors.app.primary.main,
+        src: 'material-icons'
       },
       {
         id: "2",
         title: "Địa chỉ",
         icon: "location-on",
         color: colors.app.primary.main,
+        src: 'material-icons'
       },
     ],
     [
@@ -46,18 +50,29 @@ const ProfileScreen = () => {
         title: "Yêu thích",
         icon: "favorite",
         color: colors.app.primary.main,
+        src: 'material-icons'
       },
       {
         id: "5",
         title: "Voucher",
         icon: "card-giftcard",
         color: colors.app.primary.main,
+        src: 'material-icons'
       },
       {
         id: "6",
         title: "Thông báo",
         icon: "notifications",
         color: colors.app.primary.main,
+        src: 'material-icons'
+      },
+      {
+        id: "6-post",
+        title: "Pet social",
+        icon: "earth",
+        color: colors.app.primary.main,
+        src: 'ant-icons',
+        isNew: true
       },
     ],
     [
@@ -66,18 +81,21 @@ const ProfileScreen = () => {
         title: "Nhắn tin với shop",
         icon: "chat",
         color: colors.app.primary.main,
+        src: 'material-icons'
       },
       {
         id: "7",
         title: "Câu hỏi thường gặp",
         icon: "help-outline",
         color: colors.app.primary.main,
+        src: 'material-icons'
       },
       {
         id: "8",
         title: "Đăng xuất",
         icon: "logout",
         color: '#e53935',
+        src: 'material-icons'
       },
     ],
   ];
@@ -96,10 +114,10 @@ const ProfileScreen = () => {
         content="Bạn có chắc muốn đăng xuất?"
         title="Đăng xuất tài khoản"
         onNegativePress={() => { setIsModalVisible(!isModalVisible) }}
-        onPositivePress={async () => { 
+        onPositivePress={async () => {
           await dispatch(logOut()).unwrap();
           dispatch({ type: 'RESET_ALL_STATE' });
-         }}
+        }}
         onClose={() => { setIsModalVisible(!isModalVisible) }}
       />
       <View style={styles.header}>
@@ -140,16 +158,28 @@ const ProfileScreen = () => {
                   navigator.navigate("ChatList");
                 } else if (item.id == "6") {
                   navigator.navigate("Notification");
+                }else if (item.id == "6-post") {
+                  navigator.navigate("PostScreen");
                 }
               }}>
               <View
                 style={[styles.iconContainer, { backgroundColor: item.color }]}
               >
-                <Icon name={item.icon} size={22} color={item.id === "8" ? colors.white : colors.white} />
+                {item.src === 'material-icons' ? (
+                  <Icon name={item.icon} size={22} color={item.id === "8" ? colors.white : colors.white} />
+                ) : item.src === 'ant-icons' ? (
+                  <AntIcon name={item.icon} size={22} color={colors.white} />
+                ) : null}
+
               </View>
               <Typography variant="body1" style={styles.menuText}>
                 {item.title}
               </Typography>
+              {item?.isNew && (
+                <View style={styles.newTag}>
+                  <Text style={styles.newTagText}>Mới</Text>
+                </View>
+              )}
               <Icon name="chevron-right" size={22} color={colors.grey[700]} style={styles.arrowIcon} />
             </TouchableOpacity>
           ))}
@@ -172,6 +202,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.grey[200],
+  },
+  newTag: {
+    backgroundColor: '#e53935',
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 8,
+    alignSelf: 'center',
+  },
+  newTagText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   backButton: {
     padding: 8,

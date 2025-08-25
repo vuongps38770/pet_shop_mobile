@@ -17,10 +17,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
-import { fetchMyBlogs } from '../blog.slice';
+import { fetchMyBlogs,deletePost } from '../blog.slice';
 import { PostResDto } from 'src/presentation/dto/res/post.res.dto';
 import { useUserInfo } from 'shared/hooks/useUserInfo';
-import { BlogHeader, BlogItem, CreatePostInput } from '../components';
+import { BlogHeader, BlogItem, CreatePostInput, MyBlogHeader } from '../components';
 import { colors } from 'theme/colors';
 
 const MyblogScreen: React.FC = () => {
@@ -57,8 +57,7 @@ const MyblogScreen: React.FC = () => {
     });
     const onRefresh = async () => {
         setRefreshing(true);
-        // dispatch(resetBlogs())
-        // await dispatch(fetchBlogs({ page, limit: 20 }))
+        await dispatch(fetchMyBlogs());
         setRefreshing(false);
     };
 
@@ -83,7 +82,7 @@ const MyblogScreen: React.FC = () => {
         // navigation.navigate('EditBlog', { blog });
     };
 
-    const handleDeletePost = (blogId: string) => {
+    const handleDeletePost = (postId: string) => {
         Alert.alert(
             'Xác nhận xóa',
             'Bạn có chắc chắn muốn xóa bài đăng này không?',
@@ -93,7 +92,7 @@ const MyblogScreen: React.FC = () => {
                     text: 'Xóa',
                     style: 'destructive',
                     onPress: () => {
-                        // dispatch(deleteBlog(blogId));
+                        dispatch(deletePost({postId}));
                     },
                 },
             ],
@@ -123,24 +122,6 @@ const MyblogScreen: React.FC = () => {
             isVisible={isVisible}
         />
     ), [handleLikePress, handleCommentPress, handleSharePress]);
-    const renderBlogItem = ({ item }: { item: PostResDto }) => (
-        <View style={styles.blogItemContainer}>
-            <View style={styles.blogContent}>
-                <Text style={styles.blogTitle}>{item.content}</Text>
-                <Text style={styles.blogContentText} numberOfLines={2}>
-                    {item.content}
-                </Text>
-            </View>
-            <View style={styles.actionsContainer}>
-                <TouchableOpacity onPress={() => handleEditPost(item)} style={styles.actionButton}>
-                    <Ionicons name="pencil" size={24} color="#007AFF" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeletePost(item._id)} style={styles.actionButton}>
-                    <Ionicons name="trash" size={24} color="#FF3B30" />
-                </TouchableOpacity>
-            </View>
-        </View>
-    );
 
     if (fetchMyBlogsStatus === 'loading') {
         return (
@@ -157,12 +138,10 @@ const MyblogScreen: React.FC = () => {
         >
             <StatusBar backgroundColor={colors.app.primary.main} barStyle="light-content" />
 
-            <BlogHeader
-            // onSearchPress={handleSearchPress}
-            // onProfilePress={handleProfilePress}
-            />
+            <MyBlogHeader onBackPress={()=>navigation.goBack()}/>
 
             <CreatePostInput
+                userAvatar={user?.avatar}
                 // value={newPostText}
                 // onChangeText={setNewPostText}
                 // onImagePress={handleImagePress}

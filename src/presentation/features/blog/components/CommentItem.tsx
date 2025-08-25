@@ -54,10 +54,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const renderContent = () => {
-    
+
     if (comment.replyRegex && comment.parent_id) {
       const parts = comment.content.split(comment.replyRegex);
-      
+
       if (parts.length === 2) {
         if (comment.parent_id === comment.root_id) {
           return <Text style={styles.commentText}>{parts[1]}</Text>;
@@ -71,26 +71,26 @@ const CommentItem: React.FC<CommentItemProps> = ({
         }
       }
     }
-    
+
     // Comment gốc hoặc không có replyRegex
     return <Text style={styles.commentText}>{comment.content}</Text>;
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.userInfo} 
+      <TouchableOpacity
+        style={styles.userInfo}
         onPress={() => onUserPress?.(comment.user._id)}
       >
         <View style={styles.avatar}>
           {comment.user.avatar ? (
-            <Image 
-              source={{ uri: comment.user.avatar }} 
+            <Image
+              source={{ uri: comment.user.avatar }}
               style={styles.avatarImage}
             />
           ) : (
             <Text style={styles.avatarText}>
-              {comment.user.name||""}
+              {comment.user.name || ""}
             </Text>
           )}
         </View>
@@ -105,10 +105,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
             )}
           </View>
           {renderContent()}
-          
+
           <View style={styles.commentActions}>
-            <TouchableOpacity 
-              style={styles.actionButton} 
+            <TouchableOpacity
+              style={styles.actionButton}
               onPress={() => onLikePress?.(comment._id)}
             >
               <Text style={styles.actionText}>Thích</Text>
@@ -116,22 +116,25 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 <Text style={styles.likeCount}>{comment.likeList.length}</Text>
               )}
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionButton} 
+
+            <TouchableOpacity
+              style={styles.actionButton}
               onPress={handleReplyPress}
             >
               <Text style={styles.actionText}>Trả lời</Text>
             </TouchableOpacity>
 
-            {comment.replyCount && comment.replyCount > 0 && (
-              <TouchableOpacity 
-                style={styles.actionButton} 
+            {(comment.replyCount || 0) > 0 && (
+              <TouchableOpacity
+                style={styles.actionButton}
                 onPress={() => onViewRepliesPress?.(comment._id)}
                 disabled={isLoadingReplies}
               >
                 <Text style={styles.actionText}>
-                  {isLoadingReplies ? 'Đang tải...' : (showReplies ? `Xem ${comment.replyCount} phản hồi` : `Hiện ${comment.replyCount} phản hồi`)}
+                  {isLoadingReplies
+                    ? 'Đang tải...'
+                    : `Hiện ${comment.replyCount} phản hồi`
+                  }
                 </Text>
               </TouchableOpacity>
             )}

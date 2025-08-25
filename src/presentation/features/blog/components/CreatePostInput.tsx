@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Text, Image } from 'react-native';
 import { colors } from '../../../shared/theme/colors';
 import { SPACING, BORDER_RADIUS } from '../../../shared/theme/layout';
 
@@ -17,14 +17,17 @@ const CreatePostInput: React.FC<CreatePostInputProps> = ({
   onChangeText,
   onImagePress,
   onEmojiPress,
-  userAvatar,
+  userAvatar="",
   onInputPress
 }) => {
   return (
     <View style={styles.container}>
       <View style={styles.avatarContainer}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>👤</Text>
+          <Image
+            source={{ uri: userAvatar }}
+            style={styles.avatar}
+          />
         </View>
       </View>
 

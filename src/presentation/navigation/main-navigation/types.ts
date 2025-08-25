@@ -37,6 +37,8 @@ export type MainStackParamList = {
   VerifyOtpAddEmailScreen:{email:string},
   PickOrderScreen:undefined,
   PostDetailScreen:{postId:string,post?:PostResDto},
+  MyPostScreen:undefined,
+  PostScreen:undefined,
   CreatePostScreen:undefined,
   NewsScreen: { blog: BlogRespondDto }
 };
