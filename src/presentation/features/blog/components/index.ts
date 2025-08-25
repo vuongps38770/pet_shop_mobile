@@ -1,4 +1,6 @@
 export { default as BlogHeader } from './BlogHeader';
+export { default as MyBlogHeader } from './MyBlogHeader';
+export { default as BlogDetailHeader } from './BlogDetailHeader';
 export { default as BlogItem } from './BlogItem';
 export { default as CommentInput } from './CommentInput';
 export { default as CommentItem } from './CommentItem';

@@ -80,14 +80,14 @@ const CommentInput: React.FC<CommentInputProps> = ({
       {replyTo && (
         <View style={styles.replyToContainer}>
           <Text style={styles.replyToText}>
-            <Text>Trả lời</Text>
+            <Text>Trả lời </Text>
             <Text style={styles.replyToName}>@{replyTo.user.name}</Text>
-            {replyTo.parent_id && replyTo.parent_id !== replyTo.root_id && (
-              <Text style={styles.replyToContext}>(reply con)</Text>
+            {/* {replyTo.parent_id && replyTo.parent_id !== replyTo.root_id && (
+              <Text style={styles.replyToContext}>(reply)</Text>
             )}
             {replyTo.parent_id && replyTo.parent_id === replyTo.root_id && (
-              <Text style={styles.replyToContext}>(reply gốc)</Text>
-            )}
+              <Text style={styles.replyToContext}>(reply)</Text>
+            )} */}
           </Text>
           <TouchableOpacity onPress={onCancelReply} style={styles.cancelReplyButton}>
             <Text style={styles.cancelReplyText}>✕</Text>
@@ -130,9 +130,9 @@ const CommentInput: React.FC<CommentInputProps> = ({
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <Animated.View style={[styles.spinner, { transform: [{ rotate: spin }] }]} />
-              <Text style={[styles.submitText, styles.loadingText]}>
+              {/* <Text style={[styles.submitText, styles.loadingText]}>
                 {replyTo ? 'Đang gửi...' : 'Đang đăng...'}
-              </Text>
+              </Text> */}
             </View>
           ) : (
             <Text style={[styles.submitText, isSubmitDisabled && styles.submitTextDisabled]}>

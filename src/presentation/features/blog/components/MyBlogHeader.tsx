@@ -4,13 +4,12 @@ import { colors } from '../../../shared/theme/colors';
 import { SPACING, BORDER_RADIUS } from '../../../shared/theme/layout';
 import { Fonts } from '../../../shared/theme/fonts';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ProfileIcon from 'assets/icons/bottomTab/user-active.svg'
 interface BlogHeaderProps {
   onBackPress?: () => void;
   onProfilePress?: () => void;
 }
 
-const BlogHeader: React.FC<BlogHeaderProps> = ({
+const MyBlogHeader: React.FC<BlogHeaderProps> = ({
   onBackPress,
   onProfilePress,
 }) => {
@@ -22,11 +21,10 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
           </TouchableOpacity>
         </View>
 
-      <Text style={styles.title}>Cộng đồng</Text>
+      <Text style={styles.title}>Bài đăng của tôi</Text>
 
       <TouchableOpacity style={styles.iconButton} onPress={onProfilePress}>
         <View style={styles.profileIcon}>
-          <ProfileIcon width={24} height={24} />
         </View>
       </TouchableOpacity>
     </View>
@@ -72,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BlogHeader;
+export default MyBlogHeader;

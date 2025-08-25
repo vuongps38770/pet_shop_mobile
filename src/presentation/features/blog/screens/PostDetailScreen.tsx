@@ -10,12 +10,12 @@ import { BlogPost, BlogComment } from '../types/blog.types';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { MainStackParamList } from 'src/presentation/navigation/main-navigation/types';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
-import { BlogItem } from '../components';
+import { BlogDetailHeader, BlogItem } from '../components';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from 'src/presentation/store/store';
 import { useUserInfo } from 'shared/hooks/useUserInfo';
 import { useComment } from '../hooks/useComment';
-import { fetchPostComments } from '../blog.slice';
+import { fetchPostComments, resetComment } from '../blog.slice';
 import { PostCommentResDto } from 'src/presentation/dto/res/post.res.dto';
 
 const PostDetailScreen: React.FC = () => {
@@ -24,8 +24,8 @@ const PostDetailScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const postId = route?.params?.postId || '';
   const post = route?.params?.post || null;
-  const {postCommentsPagination, postCommentsStatus} = useSelector((state:RootState)=>state.blog)
-  const {user} = useUserInfo()
+  const { postCommentsPagination, postCommentsStatus } = useSelector((state: RootState) => state.blog)
+  const { user } = useUserInfo()
 
   // Sử dụng useComment hook
   const {
@@ -44,6 +44,7 @@ const PostDetailScreen: React.FC = () => {
   // Load comments khi component mount
   useEffect(() => {
     if (postId) {
+      dispatch(resetComment())
       dispatch(fetchPostComments({ postId, page: 1, limit: 20 }));
     }
   }, [postId, dispatch]);
@@ -97,60 +98,66 @@ const PostDetailScreen: React.FC = () => {
   if (!post)
     return null;
   return (
-    <KeyboardAvoidingView
+    <View
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <PostDetailHeader
+
+      <BlogDetailHeader
         onBackPress={handleBackPress}
-        onSharePress={handleSharePress}
-        onMorePress={handleMorePress}
+        title={`Bài viết của ${post.user.name}`}
       />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={90}
+      >
+        <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          <BlogItem
+            post={{
+              _id: post._id,
+              content: post.content,
+              createdAt: post.createdAt,
+              mediaList: post.mediaList?.map((i) => ({
+                url: i.url,
+                type: i.type
+              })),
+              totalLikes: post.totalLikes || 0,
+              user: {
+                name: post.user.name,
+                avatar: post.user.avatar
+              },
+              isLiked: post.likedByMe || false
+            }}
+            onLikePress={handleLikePress}
+            onCommentPress={handleCommentPress}
+            onSharePress={handleSharePress}
+            isVisible={true}
+          />
 
-      <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
-        <BlogItem
-          post={{
-            _id: post._id,
-            content: post.content,
-            createdAt: post.createdAt,
-            mediaList: post.mediaList?.map((i) => ({
-              url: i.url,
-              type: i.type
-            })),
-            totalLikes: post.totalLikes || 0,
-            user: {
-              name: post.user.name,
-              avatar: post.user.avatar
-            },
-            isLiked: post.likedByMe || false
-          }}
-          onLikePress={handleLikePress}
-          onCommentPress={handleCommentPress}
-          onSharePress={handleSharePress}
-          isVisible={true}
-        />
-        
-        <CommentList
-          comments={postCommentsPagination?.data || []}
-          onUserPress={handleUserPress}
-          onLikePress={handleCommentLikePress}
-          onReplyPress={handleCommentReplyPress}
-          onDeletePress={handleCommentDeletePress}
-          onToggleExpanded={handleToggleExpanded}
-        />
-      </ScrollView>
+          <CommentList
+            comments={postCommentsPagination?.data || []}
+            onUserPress={handleUserPress}
+            onLikePress={handleCommentLikePress}
+            onReplyPress={handleCommentReplyPress}
+            onDeletePress={handleCommentDeletePress}
+            onToggleExpanded={handleToggleExpanded}
+          />
+        </ScrollView>
 
-      <CommentInput
-        value={commentText}
-        onChangeText={setCommentText}
-        onSubmit={handleSubmitComment}
-        onCancelReply={handleCancelReply}
-        replyTo={replyTo || undefined}
-        placeholder="Viết bình luận..."
-        userAvatar={user?.avatar}
-        isLoading={commentLoading}
-      />
-    </KeyboardAvoidingView>
+        <CommentInput
+          value={commentText}
+          onChangeText={setCommentText}
+          onSubmit={handleSubmitComment}
+          onCancelReply={handleCancelReply}
+          replyTo={replyTo || undefined}
+          placeholder="Viết bình luận..."
+          userAvatar={user?.avatar}
+          isLoading={commentLoading}
+        />
+      </KeyboardAvoidingView>
+
+
+    </View >
   );
 };
 

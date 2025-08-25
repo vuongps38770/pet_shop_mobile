@@ -7,10 +7,11 @@ import CreatePostInput from '../components/CreatePostInput';
 import BlogItem from '../components/BlogItem';
 import { useMainNavigation } from 'shared/hooks/navigation-hooks/useMainNavigationHooks';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchMoreBlogs, fetchBlogs,resetBlogs,likePostToggle } from '../blog.slice';
+import { fetchMoreBlogs, fetchBlogs, resetBlogs, likePostToggle } from '../blog.slice';
 import { AppDispatch, RootState } from 'src/presentation/store/store';
 import { PostResDto } from 'src/presentation/dto/res/post.res.dto';
 import { useIsFocused } from '@react-navigation/native';
+import { useUserInfo } from 'shared/hooks/useUserInfo';
 const BlogScreen: React.FC = () => {
   const [newPostText, setNewPostText] = useState('');
   const navigation = useMainNavigation()
@@ -19,7 +20,7 @@ const BlogScreen: React.FC = () => {
   const [page, setPage] = useState(1)
   const [loadingMore, setLoadingMore] = useState(false);
 
-
+  const { user } = useUserInfo()
   const isFocused = useIsFocused();
   useEffect(() => {
     if (!isFocused) {
@@ -47,13 +48,18 @@ const BlogScreen: React.FC = () => {
 
   }, [dispatch, loadingMore, page, pagination?.totalPages]);
 
+  const handleBackPress = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   const handleSearchPress = useCallback(() => {
-    Alert.alert('Tìm kiếm', 'Chức năng tìm kiếm sẽ được phát triển sau');
   }, []);
 
   const handleProfilePress = useCallback(() => {
-    Alert.alert('Hồ sơ', 'Chức năng hồ sơ sẽ được phát triển sau');
-  }, []);
+    console.log("profile");
+
+    navigation.navigate('MyPostScreen');
+  }, [navigation]);
 
   const handleImagePress = useCallback(() => {
     Alert.alert('Thêm ảnh', 'Chức năng thêm ảnh sẽ được phát triển sau');
@@ -64,13 +70,13 @@ const BlogScreen: React.FC = () => {
   }, []);
 
   const handleLikePress = useCallback((postId: string) => {
-    console.log("presss",postId);
-    
+    console.log("presss", postId);
+
     dispatch(likePostToggle({ postId }))
   }, []);
 
   const handleCommentPress = useCallback((post: PostResDto) => {
-    navigation?.navigate('PostDetailScreen', { postId: post._id,post });
+    navigation?.navigate('PostDetailScreen', { postId: post._id, post });
   }, [navigation]);
 
   const handleSharePress = useCallback((postId: string) => {
@@ -95,7 +101,7 @@ const BlogScreen: React.FC = () => {
         isLiked: item.likedByMe || false
       }}
       onLikePress={handleLikePress}
-      onCommentPress={()=>handleCommentPress(item)}
+      onCommentPress={() => handleCommentPress(item)}
       onSharePress={handleSharePress}
       isVisible={isVisible}
     />
@@ -137,11 +143,12 @@ const BlogScreen: React.FC = () => {
       <StatusBar backgroundColor={colors.app.primary.main} barStyle="light-content" />
 
       <BlogHeader
-        onSearchPress={handleSearchPress}
+        onBackPress={handleBackPress}
         onProfilePress={handleProfilePress}
       />
 
       <CreatePostInput
+        userAvatar={user?.avatar}
         value={newPostText}
         onChangeText={setNewPostText}
         onImagePress={handleImagePress}
@@ -150,19 +157,21 @@ const BlogScreen: React.FC = () => {
       />
 
       <FlatList<PostResDto>
-        refreshing={refreshing} 
-        onRefresh={onRefresh}
         data={posts}
         renderItem={({ item }) => renderPost({ item, isVisible: visibleItem === item._id })}
         keyExtractor={keyExtractor}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        updateCellsBatchingPeriod={30}
+        onEndReached={handelFetchMore}
+        onEndReachedThreshold={0.2}
         showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         contentContainerStyle={styles.listContainer}
         onViewableItemsChanged={onViewableItemsChanged.current}
         viewabilityConfig={viewConfigRef.current}
-        onEndReached={() => {
-          handelFetchMore()
-        }}
-        onEndReachedThreshold={0.2}
       />
     </KeyboardAvoidingView >
   );
